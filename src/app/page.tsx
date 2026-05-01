@@ -1,65 +1,122 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import Link from "next/link";
+import { ArrowRight, Upload } from "lucide-react";
+import { Navbar } from "@/components/navbar";
+import { HeroSection } from "@/components/hero-section";
+import { ProductCard } from "@/components/product-card";
+import { CategoryCards } from "@/components/category-cards";
+import { Footer } from "@/components/footer";
+import { getFeaturedProducts, getRecommendedProducts } from "@/lib/data/products";
+
+export default function HomePage() {
+  const featured = getFeaturedProducts();
+  const recommended = getRecommendedProducts();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <main>
+      <Navbar />
+
+      {/* Hero Section */}
+      <HeroSection />
+
+      {/* Featured Products */}
+      <section className="py-20 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-end justify-between mb-10">
+            <div>
+              <span className="text-xs font-medium text-primary uppercase tracking-widest">
+                Flagship
+              </span>
+              <h2 className="font-heading text-3xl md:text-4xl font-bold text-on-surface mt-2 tracking-tight">
+                Our flagship precision prints.
+              </h2>
+            </div>
+            <Link
+              href="/products"
+              className="hidden md:flex items-center gap-2 text-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              View all
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            {featured.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Browse by Category */}
+      <section className="py-20 px-6 bg-surface-container-low">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="font-heading text-3xl md:text-4xl font-bold text-on-surface mb-10 tracking-tight">
+            Browse by Category
+          </h2>
+          <CategoryCards />
+        </div>
+      </section>
+
+      {/* Recommendations */}
+      <section className="py-20 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-end justify-between mb-10">
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-on-surface tracking-tight">
+              You might also like
+            </h2>
+            <Link
+              href="/products"
+              className="hidden md:flex items-center gap-2 text-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              See more
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+            {recommended.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Custom Upload CTA */}
+      <section className="py-20 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="relative overflow-hidden rounded-3xl gradient-primary p-10 md:p-16">
+            {/* Background pattern */}
+            <div className="absolute inset-0 opacity-10" style={{
+              backgroundImage: "radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
+              backgroundSize: "32px 32px",
+            }} />
+
+            <div className="relative z-10 max-w-xl">
+              <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-6">
+                <Upload className="w-7 h-7 text-white" />
+              </div>
+              <h2 className="font-heading text-3xl md:text-4xl font-bold text-white tracking-tight mb-4">
+                Have a custom file?
+              </h2>
+              <p className="text-white/80 leading-relaxed mb-8">
+                Upload your .STL or .OBJ models directly. We provide instant material analysis and precision slicing.
+              </p>
+              <Link
+                href="/upload"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white text-primary font-semibold text-sm hover:bg-white/90 transition-all shadow-lg"
+                id="upload-cta"
+              >
+                Upload Your Model
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      <Footer />
+    </main>
   );
 }

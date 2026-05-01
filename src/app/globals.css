@@ -1,26 +1,157 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@custom-variant dark (&:is(.dark *));
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-display: swap;
+  src: url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap");
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: #fcf9f8;
+  --color-foreground: #323233;
+  --color-card: #ffffff;
+  --color-card-foreground: #323233;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #323233;
+  --color-primary: #005bc0;
+  --color-primary-dim: #004fa9;
+  --color-primary-foreground: #f7f7ff;
+  --color-secondary: #f0eded;
+  --color-secondary-foreground: #323233;
+  --color-muted: #f6f3f2;
+  --color-muted-foreground: #5f5f5f;
+  --color-accent: #f0eded;
+  --color-accent-foreground: #323233;
+  --color-destructive: #9f403d;
+  --color-destructive-foreground: #fff7f6;
+  --color-border: rgba(178, 178, 177, 0.15);
+  --color-input: #f0eded;
+  --color-ring: #005bc0;
+  --color-chart-1: #005bc0;
+  --color-chart-2: #5e5f5f;
+  --color-chart-3: #5f5c78;
+  --color-chart-4: #9f403d;
+  --color-chart-5: #7b7b7a;
+
+  --color-surface: #fcf9f8;
+  --color-surface-dim: #dbdad9;
+  --color-surface-container: #f0eded;
+  --color-surface-container-low: #f6f3f2;
+  --color-surface-container-high: #eae8e7;
+  --color-surface-container-highest: #e4e2e2;
+  --color-surface-container-lowest: #ffffff;
+  --color-on-surface: #323233;
+  --color-on-surface-variant: #5f5f5f;
+  --color-outline: #7b7b7a;
+  --color-outline-variant: rgba(178, 178, 177, 0.15);
+  --color-primary-container: #d8e2ff;
+  --color-tertiary: #5f5c78;
+
+  --color-sidebar-background: #fcf9f8;
+  --color-sidebar-foreground: #323233;
+  --color-sidebar-primary: #005bc0;
+  --color-sidebar-primary-foreground: #f7f7ff;
+  --color-sidebar-accent: #f0eded;
+  --color-sidebar-accent-foreground: #323233;
+  --color-sidebar-border: rgba(178, 178, 177, 0.15);
+  --color-sidebar-ring: #005bc0;
+
+  --radius-lg: 1.5rem;
+  --radius-md: 1rem;
+  --radius-sm: 0.75rem;
+  --radius-xl: 2rem;
+  --radius-2xl: 2.5rem;
+  --radius-3xl: 3rem;
+
+  --font-heading: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Manrope", system-ui, sans-serif;
+  --font-sans: "Manrope", system-ui, sans-serif;
+
+  --animate-fade-in: fade-in 0.5s ease-out;
+  --animate-slide-up: slide-up 0.5s ease-out;
+  --animate-slide-down: slide-down 0.3s ease-out;
+  --animate-scale-in: scale-in 0.3s ease-out;
+  --animate-float: float 6s ease-in-out infinite;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+    font-family: var(--font-body);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  .glass {
+    background: rgba(252, 249, 248, 0.72);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  .glass-dark {
+    background: rgba(30, 30, 30, 0.72);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  .gradient-primary {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dim) 100%);
+  }
+
+  .gradient-hero {
+    background: var(--color-background);
+  }
+
+  .shadow-ambient {
+    box-shadow: 0 8px 60px rgba(0, 91, 192, 0.06), 0 2px 20px rgba(50, 50, 51, 0.04);
+  }
+
+  .shadow-ambient-lg {
+    box-shadow: 0 16px 80px rgba(0, 91, 192, 0.08), 0 4px 40px rgba(50, 50, 51, 0.06);
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, #323233 0%, #5f5f5f 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
 }
