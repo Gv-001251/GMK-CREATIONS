@@ -7,28 +7,82 @@ import { UploadFile } from "@/components/upload-file";
 import { useCartStore } from "@/lib/store/cart-store";
 import { materials } from "@/lib/data/materials";
 import { finishes } from "@/lib/data/materials";
-import { Minus, Plus, ShoppingCart, Calculator, ArrowRight } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Calculator, Box, Weight, Layers } from "lucide-react";
+import { STLAnalysis } from "@/lib/utils/stl-parser";
+
+interface MaterialDensityInfo {
+  density: number; // g/cm³
+  costPerGram: number; // INR
+}
+
+const materialPricingInfo: Record<string, MaterialDensityInfo> = {
+  "standard-pla": { density: 1.24, costPerGram: 5.00 },
+  "resin-8k": { density: 1.15, costPerGram: 18.00 },
+  "carbon-fiber-petg": { density: 1.27, costPerGram: 12.00 },
+  "nylon-pa12": { density: 1.01, costPerGram: 15.00 },
+};
+
+const finishMultipliers: Record<string, number> = {
+  matte: 1.0,
+  satin: 1.0,
+  gloss: 1.15,
+  raw: 0.9,
+  metallic: 1.3,
+  translucent: 1.15,
+};
 
 export default function UploadPage() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [analysis, setAnalysis] = useState<STLAnalysis | null>(null);
   const [selectedMaterial, setSelectedMaterial] = useState(materials[0].id);
   const [selectedFinish, setSelectedFinish] = useState(finishes[0].id);
   const [quantity, setQuantity] = useState(1);
   const { addItem } = useCartStore();
 
   const selectedMaterialData = materials.find((m) => m.id === selectedMaterial);
-  const basePrice = 49.99;
-  const calculatedPrice = basePrice * (selectedMaterialData?.priceMultiplier || 1);
+  
+  // Calculate dynamic volume-based pricing
+  let volumeCm3 = 0;
+  let estimatedWeightG = 0;
+  let calculatedUnitPrice = 399.00; // Fallback default price
+
+  if (analysis) {
+    // volume is in mm3, convert to cm3 (ml)
+    volumeCm3 = analysis.volume / 1000;
+    
+    // Get density & cost coefficients
+    const coeff = materialPricingInfo[selectedMaterial] || { density: 1.2, costPerGram: 5.00 };
+    estimatedWeightG = volumeCm3 * coeff.density;
+    
+    // Base setup fee of ₹150.00 + cost of material + finish multiplier
+    const baseSetupFee = 150.00;
+    const materialCost = estimatedWeightG * coeff.costPerGram;
+    const finishMultiplier = finishMultipliers[selectedFinish] || 1.0;
+    
+    calculatedUnitPrice = (baseSetupFee + materialCost) * finishMultiplier;
+  } else if (selectedMaterialData) {
+    // Mock base estimate prior to uploading
+    calculatedUnitPrice = 399.00 * selectedMaterialData.priceMultiplier;
+  }
 
   const handleAddToCart = () => {
     if (!uploadedFile) return;
+    
+    const sizeString = analysis 
+      ? `${analysis.dimensions.x}×${analysis.dimensions.y}×${analysis.dimensions.z}mm`
+      : "Custom Size";
+
+    const weightString = estimatedWeightG > 0
+      ? ` (${estimatedWeightG.toFixed(1)}g)`
+      : "";
+
     addItem({
       productId: `custom-${Date.now()}`,
       name: `Custom Print: ${uploadedFile.name}`,
-      price: calculatedPrice,
+      price: calculatedUnitPrice,
       image: "/images/hero-sphere.png",
-      material: selectedMaterialData?.name || "",
-      finish: finishes.find((f) => f.id === selectedFinish)?.name || "",
+      material: `${selectedMaterialData?.name || "Standard PLA"}${weightString}`,
+      finish: `${finishes.find((f) => f.id === selectedFinish)?.name || "Matte"} (${sizeString})`,
     });
   };
 
@@ -36,7 +90,7 @@ export default function UploadPage() {
     <main>
       <Navbar />
 
-      <div className="pt-28 pb-20 px-6">
+      <div className="pt-28 pb-20 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="max-w-2xl mb-12">
@@ -54,7 +108,14 @@ export default function UploadPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Upload Area */}
             <div>
-              <UploadFile onFileUploaded={(file) => setUploadedFile(file)} />
+              <UploadFile 
+                onFileUploaded={(file) => setUploadedFile(file)} 
+                onAnalysisComplete={(results) => setAnalysis(results)}
+                onRemoveFile={() => {
+                  setUploadedFile(null);
+                  setAnalysis(null);
+                }}
+              />
 
               {/* Material Selection */}
               <div className="mt-10">
@@ -128,6 +189,35 @@ export default function UploadPage() {
                   </h3>
                 </div>
 
+                {/* Model Details Block (Rendered upon successful analysis) */}
+                {analysis && (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6 p-4 rounded-xl bg-surface-container">
+                    <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-surface-container-low text-center">
+                      <Box className="w-4 h-4 text-primary mb-1" />
+                      <span className="text-[10px] text-on-surface-variant uppercase font-semibold">Dimensions</span>
+                      <span className="text-xs font-bold text-on-surface mt-0.5">
+                        {analysis.dimensions.x}×{analysis.dimensions.y}×{analysis.dimensions.z} <span className="text-[9px] font-normal text-on-surface-variant">mm</span>
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-surface-container-low text-center">
+                      <Weight className="w-4 h-4 text-primary mb-1" />
+                      <span className="text-[10px] text-on-surface-variant uppercase font-semibold">Est. Weight</span>
+                      <span className="text-xs font-bold text-on-surface mt-0.5">
+                        {estimatedWeightG.toFixed(1)} <span className="text-[9px] font-normal text-on-surface-variant">g</span>
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-surface-container-low text-center">
+                      <Layers className="w-4 h-4 text-primary mb-1" />
+                      <span className="text-[10px] text-on-surface-variant uppercase font-semibold">Polygons</span>
+                      <span className="text-xs font-bold text-on-surface mt-0.5">
+                        {analysis.triangleCount.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-4 mb-8">
                   <div className="flex justify-between">
                     <span className="text-sm text-on-surface-variant">File</span>
@@ -147,6 +237,14 @@ export default function UploadPage() {
                       {finishes.find((f) => f.id === selectedFinish)?.name}
                     </span>
                   </div>
+                  {analysis && (
+                    <div className="flex justify-between">
+                      <span className="text-sm text-on-surface-variant">Calculated Volume</span>
+                      <span className="text-sm font-medium text-on-surface">
+                        {volumeCm3.toFixed(2)} cm³
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-sm text-on-surface-variant">Est. Production</span>
                     <span className="text-sm font-medium text-on-surface">5-7 Days</span>
@@ -177,7 +275,7 @@ export default function UploadPage() {
                 <div className="flex justify-between items-center pt-4 border-t border-outline-variant mb-6">
                   <span className="font-heading font-bold text-lg">Estimated Price</span>
                   <span className="font-heading font-bold text-2xl text-primary">
-                    ${(calculatedPrice * quantity).toFixed(2)}
+                    ₹{(calculatedUnitPrice * quantity).toFixed(2)}
                   </span>
                 </div>
 
@@ -192,7 +290,7 @@ export default function UploadPage() {
                 </button>
 
                 <p className="text-xs text-on-surface-variant text-center mt-4">
-                  Price is estimated. Final quote after review.
+                  {analysis ? "Price calculation is based on volume & weight density." : "Base estimated price. Real-time pricing applies after upload."}
                 </p>
               </div>
             </div>

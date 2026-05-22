@@ -7,11 +7,38 @@ import { HeroSection } from "@/components/hero-section";
 import { ProductCard } from "@/components/product-card";
 import { CategoryCards } from "@/components/category-cards";
 import { Footer } from "@/components/footer";
-import { getFeaturedProducts, getRecommendedProducts } from "@/lib/data/products";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/lib/store/auth-store";
+import { useProductsStore } from "@/lib/store/products-store";
 
 export default function HomePage() {
-  const featured = getFeaturedProducts();
-  const recommended = getRecommendedProducts();
+  const { fetchProducts, getFeaturedProducts, getRecommendedProducts } = useProductsStore();
+  const { user, isAuthenticated } = useAuthStore();
+  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    fetchProducts();
+  }, [fetchProducts]);
+
+  const featured = mounted ? getFeaturedProducts() : [];
+  const recommended = mounted ? getRecommendedProducts() : [];
+
+  useEffect(() => {
+    if (isAuthenticated && user?.role === "admin") {
+      router.replace("/admin");
+    }
+  }, [isAuthenticated, user, router]);
+
+  if (isAuthenticated && user?.role === "admin") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <main>
@@ -21,7 +48,7 @@ export default function HomePage() {
       <HeroSection />
 
       {/* Featured Products */}
-      <section className="py-20 px-6">
+      <section className="py-20 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-end justify-between mb-10">
             <div>
@@ -50,7 +77,7 @@ export default function HomePage() {
       </section>
 
       {/* Browse by Category */}
-      <section className="py-20 px-6 bg-surface-container-low">
+      <section className="py-20 px-4 sm:px-6 bg-surface-container-low">
         <div className="max-w-7xl mx-auto">
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-on-surface mb-10 tracking-tight">
             Browse by Category
@@ -60,7 +87,7 @@ export default function HomePage() {
       </section>
 
       {/* Recommendations */}
-      <section className="py-20 px-6">
+      <section className="py-20 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-end justify-between mb-10">
             <h2 className="font-heading text-3xl md:text-4xl font-bold text-on-surface tracking-tight">
@@ -84,7 +111,7 @@ export default function HomePage() {
       </section>
 
       {/* Custom Upload CTA */}
-      <section className="py-20 px-6">
+      <section className="py-20 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           <div className="relative overflow-hidden rounded-3xl gradient-primary p-10 md:p-16">
             {/* Background pattern */}

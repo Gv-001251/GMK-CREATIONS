@@ -12,9 +12,11 @@ interface AuthGuardProps {
 
 export function AuthGuard({ children, requiredRole, redirectTo }: AuthGuardProps) {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, isLoading } = useAuthStore();
 
   useEffect(() => {
+    if (isLoading) return; // Wait for auth initialization
+
     if (!isAuthenticated) {
       const currentPath = window.location.pathname;
       router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
@@ -24,9 +26,9 @@ export function AuthGuard({ children, requiredRole, redirectTo }: AuthGuardProps
     if (requiredRole && user?.role !== requiredRole) {
       router.push(redirectTo || "/");
     }
-  }, [isAuthenticated, user, requiredRole, router, redirectTo]);
+  }, [isAuthenticated, user, requiredRole, router, redirectTo, isLoading]);
 
-  if (!isAuthenticated) {
+  if (isLoading || !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />

@@ -12,7 +12,7 @@ interface ProductCardProps {
   variant?: "default" | "compact";
 }
 
-export function ProductCard({ product, variant = "default" }: ProductCardProps) {
+export function ProductCard({ product }: ProductCardProps) {
   const { addItem } = useCartStore();
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -42,6 +42,7 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
           fill
           className="object-cover transition-transform duration-700 group-hover:scale-105"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 20vw"
+          unoptimized={product.image.startsWith("http")}
         />
 
         {/* Badge */}
@@ -79,7 +80,7 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
           {product.description}
         </p>
         <p className="text-sm font-semibold text-primary mt-2">
-          {product.priceLabel || `$${product.price.toFixed(2)}`}
+          {product.priceLabel || `₹${product.price.toFixed(2)}`}
         </p>
       </div>
     </Link>

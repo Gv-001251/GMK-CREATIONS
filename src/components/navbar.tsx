@@ -17,8 +17,10 @@ export function Navbar() {
   const itemCount = useCartStore((s) => s.items.reduce((c, i) => c + i.quantity, 0));
   const { user, isAuthenticated, logout } = useAuthStore();
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
@@ -39,13 +41,35 @@ export function Navbar() {
     { label: "Home", href: "/" },
     { label: "Browse", href: "/products" },
     { label: "Portfolio", href: "/upload" },
-    { label: "Contact", href: "/" },
+    { label: "Contact", href: "/#footer" },
   ];
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     setUserDropdownOpen(false);
   };
+
+  const handleNavLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, label: string, href: string) => {
+    if (label === "Contact") {
+      const footer = document.getElementById("footer");
+      if (footer) {
+        e.preventDefault();
+        footer.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.location.hash === "#footer") {
+      const footer = document.getElementById("footer");
+      if (footer) {
+        const timer = setTimeout(() => {
+          footer.scrollIntoView({ behavior: "smooth" });
+        }, 300);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [pathname]);
 
   return (
     <>
@@ -56,9 +80,9 @@ export function Navbar() {
             : "bg-background py-4"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
           {/* Left: Hamburger + Logo */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3">
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="lg:hidden p-2 rounded-lg hover:bg-surface-container transition-colors"
@@ -71,7 +95,7 @@ export function Navbar() {
               )}
             </button>
             <Link href="/" className="flex items-center gap-2 group">
-              <span className="font-heading text-base md:text-lg font-extrabold tracking-tight text-on-surface">
+              <span className="font-heading text-sm sm:text-base md:text-lg font-extrabold tracking-tight text-on-surface">
                 GMK - 3D CREATIONS
               </span>
             </Link>
@@ -83,6 +107,7 @@ export function Navbar() {
               <Link
                 key={link.label}
                 href={link.href}
+                onClick={(e) => handleNavLinkClick(e, link.label, link.href)}
                 className={`text-sm font-medium transition-colors relative pb-1 ${
                   pathname === link.href
                     ? "text-primary font-semibold border-b-2 border-primary"
@@ -97,7 +122,7 @@ export function Navbar() {
           {/* Right: User + Cart */}
           <div className="flex items-center gap-2">
             {/* User Auth */}
-            {isAuthenticated && user ? (
+            {mounted && isAuthenticated && user ? (
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
@@ -153,7 +178,7 @@ export function Navbar() {
             ) : (
               <Link
                 href="/login"
-                className="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-surface-container transition-colors text-sm font-medium text-on-surface-variant hover:text-on-surface"
+                className="flex items-center gap-2 px-2.5 sm:px-4 py-2 rounded-full hover:bg-surface-container transition-colors text-sm font-medium text-on-surface-variant hover:text-on-surface"
                 id="login-link"
               >
                 <User className="w-4 h-4" />
@@ -169,7 +194,7 @@ export function Navbar() {
               id="cart-button"
             >
               <ShoppingCart className="w-5 h-5 text-on-surface" />
-              {itemCount > 0 && (
+              {mounted && itemCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full gradient-primary text-[10px] font-bold text-white flex items-center justify-center animate-scale-in">
                   {itemCount}
                 </span>
@@ -191,7 +216,10 @@ export function Navbar() {
                       ? "text-primary font-semibold"
                       : "text-on-surface hover:text-primary"
                   }`}
-                  onClick={() => setMobileOpen(false)}
+                  onClick={(e) => {
+                    setMobileOpen(false);
+                    handleNavLinkClick(e, link.label, link.href);
+                  }}
                 >
                   {link.label}
                 </Link>
@@ -199,7 +227,7 @@ export function Navbar() {
 
               {/* Mobile auth links */}
               <div className="border-t border-outline-variant pt-4 mt-2">
-                {isAuthenticated && user ? (
+                {mounted && isAuthenticated && user ? (
                   <>
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold">
@@ -221,8 +249,8 @@ export function Navbar() {
                       </Link>
                     )}
                     <button
-                      onClick={() => {
-                        handleLogout();
+                      onClick={async () => {
+                        await handleLogout();
                         setMobileOpen(false);
                       }}
                       className="flex items-center gap-3 py-2 text-sm font-medium text-destructive"

@@ -7,11 +7,14 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { useCartStore } from "@/lib/store/cart-store";
 import { useAuthStore } from "@/lib/store/auth-store";
+import { useProductsStore } from "@/lib/store/products-store";
+import { getDeliveryEstimate } from "@/lib/utils/date-estimator";
 import { Minus, Plus, Trash2, ArrowRight, ShoppingBag, Tag, LogIn } from "lucide-react";
 import { useState } from "react";
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, clearCart } = useCartStore();
+  const { items, removeItem, updateQuantity } = useCartStore();
+  const { products } = useProductsStore();
   const { isAuthenticated } = useAuthStore();
   const router = useRouter();
   const [promoCode, setPromoCode] = useState("");
@@ -60,55 +63,69 @@ export default function CartPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
               {/* Cart Items */}
               <div className="lg:col-span-2 space-y-4">
-                {items.map((item) => (
-                  <div
-                    key={`${item.productId}-${item.material}-${item.finish}`}
-                    className="flex gap-5 p-5 rounded-2xl bg-surface-container-low"
-                  >
-                    <div className="relative w-28 h-28 rounded-xl overflow-hidden bg-surface-container-highest flex-shrink-0">
-                      <Image src={item.image} alt={item.name} fill className="object-cover" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <h3 className="font-heading text-base font-semibold text-on-surface">
-                            {item.name}
-                          </h3>
-                          <p className="text-sm text-on-surface-variant mt-1">
-                            {item.material} · {item.finish}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => removeItem(item.productId)}
-                          className="p-2 hover:bg-destructive/10 rounded-full transition-colors"
-                          aria-label={`Remove ${item.name}`}
-                        >
-                          <Trash2 className="w-4 h-4 text-on-surface-variant" />
-                        </button>
+                {items.map((item) => {
+                  const product = products.find((p) => p.id === item.productId);
+                  const productionDays = product?.productionDays ?? 5;
+                  const estArrival = getDeliveryEstimate(productionDays);
+                  return (
+                    <div
+                      key={`${item.productId}-${item.material}-${item.finish}`}
+                      className="flex gap-5 p-5 rounded-2xl bg-surface-container-low"
+                    >
+                      <div className="relative w-28 h-28 rounded-xl overflow-hidden bg-surface-container-highest shrink-0">
+                        <Image
+                          src={item.image}
+                          alt={item.name}
+                          fill
+                          className="object-cover"
+                          unoptimized={item.image.startsWith("http")}
+                        />
                       </div>
-                      <div className="flex items-center justify-between mt-4">
-                        <div className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-surface-container">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <h3 className="font-heading text-base font-semibold text-on-surface">
+                              {item.name}
+                            </h3>
+                            <p className="text-sm text-on-surface-variant mt-1">
+                              {item.material} · {item.finish}
+                            </p>
+                            <p className="text-xs text-emerald-600 font-medium mt-1">
+                              Estimated Arrival: {estArrival}
+                            </p>
+                          </div>
                           <button
-                            onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                            className="p-1 hover:bg-surface-container-high rounded-full transition-colors"
+                            onClick={() => removeItem(item.productId, item.material, item.finish)}
+                            className="p-2 hover:bg-destructive/10 rounded-full transition-colors"
+                            aria-label={`Remove ${item.name}`}
                           >
-                            <Minus className="w-3.5 h-3.5" />
-                          </button>
-                          <span className="text-sm font-medium w-6 text-center">{item.quantity}</span>
-                          <button
-                            onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                            className="p-1 hover:bg-surface-container-high rounded-full transition-colors"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
+                            <Trash2 className="w-4 h-4 text-on-surface-variant" />
                           </button>
                         </div>
-                        <span className="font-heading text-lg font-bold text-on-surface">
-                          ${(item.price * item.quantity).toFixed(2)}
-                        </span>
+                        <div className="flex items-center justify-between mt-4">
+                          <div className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-surface-container">
+                            <button
+                              onClick={() => updateQuantity(item.productId, item.material, item.finish, item.quantity - 1)}
+                              className="p-1 hover:bg-surface-container-high rounded-full transition-colors"
+                            >
+                              <Minus className="w-3.5 h-3.5" />
+                            </button>
+                            <span className="text-sm font-medium w-6 text-center">{item.quantity}</span>
+                            <button
+                              onClick={() => updateQuantity(item.productId, item.material, item.finish, item.quantity + 1)}
+                              className="p-1 hover:bg-surface-container-high rounded-full transition-colors"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          <span className="font-heading text-lg font-bold text-on-surface">
+                            ₹{(item.price * item.quantity).toFixed(2)}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Order Summary */}
@@ -138,24 +155,24 @@ export default function CartPage() {
                   <div className="space-y-3 mb-6">
                     <div className="flex justify-between">
                       <span className="text-sm text-on-surface-variant">Subtotal</span>
-                      <span className="text-sm font-medium">${total.toFixed(2)}</span>
+                      <span className="text-sm font-medium">₹{total.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-on-surface-variant">Shipping</span>
                       <span className="text-sm font-medium">
-                        {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
+                        {shipping === 0 ? "Free" : `₹${shipping.toFixed(2)}`}
                       </span>
                     </div>
                     {shipping === 0 && (
                       <p className="text-xs text-emerald-600 font-medium">
-                        🎉 Free shipping on orders over $100
+                        🎉 Free shipping on orders over ₹100
                       </p>
                     )}
                   </div>
 
                   <div className="flex justify-between items-center pt-4 border-t border-outline-variant mb-6">
                     <span className="font-heading font-bold text-lg">Total</span>
-                    <span className="font-heading font-bold text-xl">${grandTotal.toFixed(2)}</span>
+                    <span className="font-heading font-bold text-xl">₹{grandTotal.toFixed(2)}</span>
                   </div>
 
                   <button

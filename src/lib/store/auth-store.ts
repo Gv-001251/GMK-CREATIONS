@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createClient } from "@/lib/supabase/client";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 export type UserRole = "admin" | "user";
 
@@ -10,118 +11,103 @@ export interface User {
   role: UserRole;
 }
 
-interface RegisteredUser {
-  id: string;
-  email: string;
-  name: string;
-  password: string;
-  role: UserRole;
-}
-
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
-  registeredUsers: RegisteredUser[];
-  login: (email: string, password: string) => { success: boolean; error?: string };
-  register: (email: string, password: string, name: string) => { success: boolean; error?: string };
-  logout: () => void;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
   isAdmin: () => boolean;
+  initialize: () => Promise<void>;
 }
 
-// Hardcoded admin credentials
+// Any account registered with this email is automatically given the admin role.
 const ADMIN_EMAIL = "admin@gmk3d.com";
-const ADMIN_PASSWORD = "admin123";
-const ADMIN_USER: User = {
-  id: "admin-001",
-  email: ADMIN_EMAIL,
-  name: "GMK Admin",
-  role: "admin",
-};
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
-      user: null,
-      isAuthenticated: false,
-      registeredUsers: [],
+function toUser(su: SupabaseUser): User {
+  return {
+    id: su.id,
+    email: su.email ?? "",
+    name: su.user_metadata?.name ?? su.email?.split("@")[0] ?? "User",
+    role: su.email?.toLowerCase() === ADMIN_EMAIL ? "admin" : "user",
+  };
+}
 
-      login: (email: string, password: string) => {
-        // Check admin credentials
-        if (email.toLowerCase() === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-          set({ user: ADMIN_USER, isAuthenticated: true });
-          return { success: true };
-        }
+export const useAuthStore = create<AuthState>()((set, get) => ({
+  user: null,
+  isAuthenticated: false,
+  isLoading: true,
 
-        // Check registered users
-        const registeredUser = get().registeredUsers.find(
-          (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-        );
+  initialize: async () => {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-        if (registeredUser) {
-          const { password: _, ...userWithoutPassword } = registeredUser;
-          set({ user: userWithoutPassword, isAuthenticated: true });
-          return { success: true };
-        }
-
-        return { success: false, error: "Invalid email or password" };
-      },
-
-      register: (email: string, password: string, name: string) => {
-        const { registeredUsers } = get();
-
-        // Check if admin email
-        if (email.toLowerCase() === ADMIN_EMAIL) {
-          return { success: false, error: "This email is already registered" };
-        }
-
-        // Check if user already exists
-        if (registeredUsers.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
-          return { success: false, error: "An account with this email already exists" };
-        }
-
-        // Validate
-        if (password.length < 6) {
-          return { success: false, error: "Password must be at least 6 characters" };
-        }
-
-        if (!name.trim()) {
-          return { success: false, error: "Name is required" };
-        }
-
-        const newUser: RegisteredUser = {
-          id: `user-${Date.now()}`,
-          email: email.toLowerCase(),
-          name: name.trim(),
-          password,
-          role: "user",
-        };
-
-        const { password: _, ...userWithoutPassword } = newUser;
-
-        set({
-          registeredUsers: [...registeredUsers, newUser],
-          user: userWithoutPassword,
-          isAuthenticated: true,
-        });
-
-        return { success: true };
-      },
-
-      logout: () => {
-        set({ user: null, isAuthenticated: false });
-      },
-
-      isAdmin: () => {
-        return get().user?.role === "admin";
-      },
-    }),
-    {
-      name: "gmk-auth",
-      partialize: (state) => ({
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
-        registeredUsers: state.registeredUsers,
-      }),
+    if (user) {
+      set({ user: toUser(user), isAuthenticated: true, isLoading: false });
+    } else {
+      set({ user: null, isAuthenticated: false, isLoading: false });
     }
-  )
-);
+
+    // Keep state in sync with Supabase auth changes (e.g. token refresh, sign-out in another tab)
+    supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        set({ user: toUser(session.user), isAuthenticated: true });
+      } else {
+        set({ user: null, isAuthenticated: false });
+      }
+    });
+  },
+
+  login: async (email: string, password: string) => {
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) return { success: false, error: error.message };
+    if (data.user) {
+      set({ user: toUser(data.user), isAuthenticated: true });
+    }
+    return { success: true };
+  },
+
+  register: async (email: string, password: string, name: string) => {
+    if (password.length < 6) {
+      return { success: false, error: "Password must be at least 6 characters" };
+    }
+    if (!name.trim()) {
+      return { success: false, error: "Name is required" };
+    }
+
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name: name.trim() } },
+    });
+    if (error) return { success: false, error: error.message };
+
+    // If a session exists the user is immediately authenticated
+    if (data.session && data.user) {
+      set({ user: toUser(data.user), isAuthenticated: true });
+      return { success: true };
+    }
+
+    // Email confirmation may be required — inform the user
+    return {
+      success: false,
+      error: "Account created — check your email to confirm, then sign in.",
+    };
+  },
+
+  logout: async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    set({ user: null, isAuthenticated: false });
+  },
+
+  isAdmin: () => get().user?.role === "admin",
+}));

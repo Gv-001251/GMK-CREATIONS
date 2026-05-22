@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import Link from "next/link";
 import { Navbar } from "@/components/navbar";
 import { ProductGrid } from "@/components/product-grid";
 import { Footer } from "@/components/footer";
-import { products } from "@/lib/data/products";
+import { useProductsStore } from "@/lib/store/products-store";
 import { SlidersHorizontal } from "lucide-react";
 
 const filterTabs = [
@@ -14,24 +15,33 @@ const filterTabs = [
 ];
 
 export default function ProductsPage() {
+  const { products, fetchProducts } = useProductsStore();
   const [activeFilter, setActiveFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [mounted, setMounted] = useState(false);
   const productsPerPage = 10;
 
+  useEffect(() => {
+    setMounted(true);
+    fetchProducts();
+  }, [fetchProducts]);
+
+  const activeProducts = mounted ? products : [];
+
   const filteredProducts = useMemo(() => {
-    if (activeFilter === "all") return products;
+    if (activeFilter === "all") return activeProducts;
     if (activeFilter === "industrial") {
-      return products.filter((p) =>
+      return activeProducts.filter((p) =>
         ["custom-parts", "edc-gear", "prototypes"].includes(p.category)
       );
     }
     if (activeFilter === "organic") {
-      return products.filter((p) =>
+      return activeProducts.filter((p) =>
         ["decor", "miniatures", "jewelry"].includes(p.category)
       );
     }
-    return products;
-  }, [activeFilter]);
+    return activeProducts;
+  }, [activeFilter, activeProducts]);
 
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
   const paginatedProducts = filteredProducts.slice(
@@ -43,7 +53,7 @@ export default function ProductsPage() {
     <main>
       <Navbar />
 
-      <div className="pt-28 pb-20 px-6">
+      <div className="pt-28 pb-20 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
@@ -118,25 +128,8 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Compact Footer */}
-      <footer className="py-8 px-6 bg-surface-container-low">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div>
-            <span className="font-heading text-sm font-bold text-on-surface">
-              GMK — 3D CREATIONS
-            </span>
-            <p className="text-xs text-on-surface-variant mt-1">
-              © {new Date().getFullYear()} GMK — 3D CREATIONS. Precision Engineered.
-            </p>
-          </div>
-          <div className="flex items-center gap-6 text-xs text-on-surface-variant">
-            <a href="/" className="hover:text-primary transition-colors">Privacy Policy</a>
-            <a href="/" className="hover:text-primary transition-colors">Terms of Service</a>
-            <a href="/" className="hover:text-primary transition-colors">Shipping Info</a>
-            <a href="/" className="hover:text-primary transition-colors">Refund Policy</a>
-          </div>
-        </div>
-      </footer>
+      {/* Footer */}
+      <Footer />
     </main>
   );
 }

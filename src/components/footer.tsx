@@ -44,7 +44,7 @@ export function Footer() {
   return (
     <footer className="bg-surface-container-low" id="footer">
       {/* Brand Statement */}
-      <div className="bg-[#e8e6d8] py-16 px-6">
+      <div className="bg-[#e8e6d8] py-16 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto text-center">
           <p className="font-heading text-lg md:text-xl text-on-surface/80 max-w-2xl mx-auto leading-relaxed">
             We have designs that suit your style and which you&apos;re proud to own. From prototypes to art.
@@ -76,7 +76,7 @@ export function Footer() {
       </div>
 
       {/* Footer Links */}
-      <div className="max-w-7xl mx-auto px-6 py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Logo & Info */}
           <div className="lg:w-1/4">

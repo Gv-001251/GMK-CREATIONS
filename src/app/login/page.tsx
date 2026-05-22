@@ -26,18 +26,21 @@ function LoginForm() {
     setError("");
     setLoading(true);
 
-    // Simulate a brief loading state
-    await new Promise((r) => setTimeout(r, 400));
-
     if (mode === "login") {
-      const result = login(email, password);
+      const result = await login(email, password);
       if (result.success) {
-        router.push(redirectTo);
+        // Retrieve the authenticated user from state to check the role
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser?.role === "admin" && redirectTo === "/") {
+          router.push("/admin");
+        } else {
+          router.push(redirectTo);
+        }
       } else {
         setError(result.error || "Login failed");
       }
     } else {
-      const result = register(email, password, name);
+      const result = await register(email, password, name);
       if (result.success) {
         router.push(redirectTo);
       } else {
@@ -52,12 +55,18 @@ function LoginForm() {
     <main>
       <Navbar />
 
-      <div className="min-h-screen flex items-center justify-center px-6 pt-20 pb-12 bg-background">
-        <div className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 pt-28 pb-12 bg-background relative overflow-hidden">
+        {/* Floating Premium Ambient Neon Glows */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+          <div className="absolute top-[15%] left-[-10%] w-[380px] h-[380px] rounded-full bg-primary/8 blur-[110px] animate-pulse duration-5000" />
+          <div className="absolute bottom-[15%] right-[-10%] w-[420px] h-[420px] rounded-full bg-tertiary/10 blur-[130px] animate-pulse duration-7000" />
+        </div>
+
+        <div className="w-full max-w-md relative z-10">
           {/* Header */}
           <div className="text-center mb-10">
-            <Link href="/" className="inline-block mb-6">
-              <span className="font-heading text-xl font-extrabold tracking-tight text-on-surface">
+            <Link href="/" className="inline-block mb-6 hover:scale-105 active:scale-95 transition-all duration-300">
+              <span className="font-heading text-xl font-extrabold tracking-tight text-on-surface bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary to-tertiary">
                 GMK - 3D CREATIONS
               </span>
             </Link>
@@ -72,11 +81,11 @@ function LoginForm() {
           </div>
 
           {/* Form Card */}
-          <div className="bg-surface-container-lowest rounded-3xl p-8 shadow-ambient">
+          <div className="backdrop-blur-xl bg-surface-container-lowest/70 rounded-3xl p-8 shadow-ambient border border-outline-variant transition-all duration-300">
             {/* Error Alert */}
             {error && (
               <div className="flex items-center gap-3 p-4 rounded-2xl bg-destructive/10 text-destructive mb-6 animate-slide-down">
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <AlertCircle className="w-5 h-5 shrink-0" />
                 <p className="text-sm font-medium">{error}</p>
               </div>
             )}
@@ -180,7 +189,7 @@ function LoginForm() {
             </div>
 
             {/* Toggle Mode */}
-            <p className="text-center text-sm text-on-surface-variant">
+            <p className="text-center text-sm text-on-surface-variant mb-6">
               {mode === "login" ? (
                 <>
                   Don&apos;t have an account?{" "}
@@ -211,13 +220,61 @@ function LoginForm() {
                 </>
               )}
             </p>
-          </div>
 
-          {/* Admin hint */}
-          <p className="text-center text-xs text-on-surface-variant/60 mt-6">
-            Admin access: admin@gmk3d.com / admin123
-          </p>
-    </div>
+            {/* Quick Demo Login */}
+            {mode === "login" && (
+              <div className="pt-5 border-t border-outline-variant/60">
+                <p className="text-xs font-semibold text-center text-on-surface-variant uppercase tracking-wider mb-3">
+                  Quick Testing Accounts
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={async () => {
+                      setError("");
+                      setLoading(true);
+                      const result = await login("admin@gmk3d.com", "Admin@123");
+                      if (result.success) {
+                        if (redirectTo === "/") {
+                          router.push("/admin");
+                        } else {
+                          router.push(redirectTo);
+                        }
+                      } else {
+                        setError(result.error || "Admin login failed. Make sure to run the seed API.");
+                      }
+                      setLoading(false);
+                    }}
+                    className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-primary/8 border border-primary/25 text-primary hover:bg-primary/12 hover:scale-[1.03] active:scale-[0.97] hover:shadow-md hover:shadow-primary/5 transition-all duration-300 text-left disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    <span className="text-xs font-bold font-heading">Admin Account</span>
+                    <span className="text-[10px] text-primary/70 mt-0.5">admin@gmk3d.com</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={async () => {
+                      setError("");
+                      setLoading(true);
+                      const result = await login("user@gmk3d.com", "User@123");
+                      if (result.success) {
+                        router.push(redirectTo);
+                      } else {
+                        setError(result.error || "User login failed. Make sure to run the seed API.");
+                      }
+                      setLoading(false);
+                    }}
+                    className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-surface-container/60 border border-outline-variant hover:bg-surface-container hover:scale-[1.03] active:scale-[0.97] hover:shadow-md transition-all duration-300 text-left disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    <span className="text-xs font-bold font-heading">User Account</span>
+                    <span className="text-[10px] text-on-surface-variant mt-0.5">user@gmk3d.com</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </main>
   );

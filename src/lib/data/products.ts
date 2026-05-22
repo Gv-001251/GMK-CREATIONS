@@ -199,7 +199,7 @@ export const products: Product[] = [
     description: "Custom scale building prototypes.",
     longDescription: "Detailed architectural scale models with precise edges and clean lines. Perfect for client presentations and urban planning visualizations.",
     price: 300.00,
-    priceLabel: "From $300",
+    priceLabel: "From ₹300",
     category: "prototypes",
     image: "/images/products/architectural-models.png",
     images: ["/images/products/architectural-models.png"],
