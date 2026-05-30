@@ -31,10 +31,10 @@ function LoginForm() {
       if (result.success) {
         // Retrieve the authenticated user from state to check the role
         const currentUser = useAuthStore.getState().user;
-        if (currentUser?.role === "admin" && redirectTo === "/") {
-          router.push("/admin");
+        if (currentUser?.role === "admin") {
+          router.push(redirectTo === "/" ? "/admin" : redirectTo);
         } else {
-          router.push(redirectTo);
+          router.push(redirectTo.startsWith("/admin") ? "/" : redirectTo);
         }
       } else {
         setError(result.error || "Login failed");
@@ -42,7 +42,7 @@ function LoginForm() {
     } else {
       const result = await register(email, password, name);
       if (result.success) {
-        router.push(redirectTo);
+        router.push(redirectTo.startsWith("/admin") ? "/" : redirectTo);
       } else {
         setError(result.error || "Registration failed");
       }
@@ -66,7 +66,7 @@ function LoginForm() {
           {/* Header */}
           <div className="text-center mb-10">
             <Link href="/" className="inline-block mb-6 hover:scale-105 active:scale-95 transition-all duration-300">
-              <span className="font-heading text-xl font-extrabold tracking-tight text-on-surface bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary to-tertiary">
+              <span className="font-heading text-xl font-extrabold tracking-tight bg-clip-text text-transparent bg-linear-to-r from-primary via-primary to-tertiary">
                 GMK - 3D CREATIONS
               </span>
             </Link>
@@ -259,7 +259,12 @@ function LoginForm() {
                       setLoading(true);
                       const result = await login("user@gmk3d.com", "User@123");
                       if (result.success) {
-                        router.push(redirectTo);
+                        const currentUser = useAuthStore.getState().user;
+                        if (currentUser?.role === "admin") {
+                          router.push(redirectTo === "/" ? "/admin" : redirectTo);
+                        } else {
+                          router.push(redirectTo.startsWith("/admin") ? "/" : redirectTo);
+                        }
                       } else {
                         setError(result.error || "User login failed. Make sure to run the seed API.");
                       }

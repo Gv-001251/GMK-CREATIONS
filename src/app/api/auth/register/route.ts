@@ -1,7 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
+import { safeParseRequest, registerSchema } from "@/lib/validations";
 
 export async function POST(request: Request) {
-  const { email, password, name } = await request.json();
+  const parsed = await safeParseRequest(request, registerSchema);
+  if (!parsed.success) return parsed.response;
+
+  const { email, password, name } = parsed.data;
   const supabase = await createClient();
 
   const { data, error } = await supabase.auth.signUp({
@@ -11,5 +15,5 @@ export async function POST(request: Request) {
   });
 
   if (error) return Response.json({ error: error.message }, { status: 400 });
-  return Response.json({ user: data.user });
+  return Response.json({ user: data.user }, { status: 201 });
 }

@@ -3,14 +3,19 @@ import { createClient, requireAdmin } from "@/lib/supabase/server";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category");
+  const limit = parseInt(searchParams.get("limit") || "50", 10);
+  const offset = parseInt(searchParams.get("offset") || "0", 10);
   const supabase = await createClient();
 
-  let query = supabase.from("products").select("*");
+  let query = supabase.from("products").select("*", { count: "exact" });
   if (category && category !== "all") query = query.eq("category", category);
 
-  const { data, error } = await query;
+  // Apply pagination
+  query = query.range(offset, offset + limit - 1);
+
+  const { data, error, count } = await query;
   if (error) return Response.json({ error: error.message }, { status: 500 });
-  return Response.json(data);
+  return Response.json({ data, count });
 }
 
 export async function POST(request: Request) {

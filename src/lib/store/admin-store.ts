@@ -1,42 +1,12 @@
 import { create } from "zustand";
+import type { Order, OrderItem } from "@/lib/types";
 
-export interface OrderItem {
-  id?: number;
-  order_id: string;
-  product_id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  material: string;
-  finish: string;
-  image?: string;
-}
-
-export interface Order {
-  id: string;
-  user_id: string;
-  user_name: string;
-  user_email: string;
-  items: OrderItem[];
-  subtotal: number;
-  shipping_cost: number;
-  grand_total: number;
-  status: "pending" | "confirmed" | "processing" | "shipped" | "delivered";
-  razorpay_order_id?: string;
-  razorpay_payment_id?: string;
-  created_at: string;
-  shipping_first_name?: string;
-  shipping_last_name?: string;
-  shipping_address?: string;
-  shipping_city?: string;
-  shipping_state?: string;
-  shipping_zip?: string;
-}
+export type { Order, OrderItem };
 
 interface AdminState {
   orders: Order[];
   isLoading: boolean;
-  fetchOrders: () => Promise<void>;
+  fetchOrders: (limit?: number, offset?: number) => Promise<void>;
   updateOrderStatus: (orderId: string, status: Order["status"]) => Promise<void>;
   getTotalRevenue: () => number;
   getTotalOrders: () => number;
@@ -49,15 +19,20 @@ export const useAdminStore = create<AdminState>()((set, get) => ({
   orders: [],
   isLoading: false,
 
-  fetchOrders: async () => {
+  fetchOrders: async (limit = 100, offset = 0) => {
     set({ isLoading: true });
     try {
-      const res = await fetch("/api/orders/list");
+      const res = await fetch(`/api/orders/list?limit=${limit}&offset=${offset}`);
       if (!res.ok) throw new Error("Failed to fetch orders");
-      const data = await res.json();
-      set({ orders: data, isLoading: false });
+      const responseData = await res.json();
+      const items = Array.isArray(responseData) ? responseData : (responseData.data || []);
+      set((state) => ({
+        orders: offset === 0 ? items : [...state.orders, ...items],
+        isLoading: false
+      }));
     } catch {
-      set({ isLoading: false });
+      if (offset === 0) set({ orders: [], isLoading: false });
+      else set({ isLoading: false });
     }
   },
 
@@ -84,16 +59,16 @@ export const useAdminStore = create<AdminState>()((set, get) => ({
 
   getTotalRevenue: () => {
     return get()
-      .orders.filter((o) => o.status !== "pending")
+      .orders.filter((o) => o.status !== "pending" && o.status !== "cancelled")
       .reduce((sum, o) => sum + o.grand_total, 0);
   },
 
   getTotalOrders: () => {
-    return get().orders.filter((o) => o.status !== "pending").length;
+    return get().orders.filter((o) => o.status !== "pending" && o.status !== "cancelled").length;
   },
 
   getAverageOrderValue: () => {
-    const confirmed = get().orders.filter((o) => o.status !== "pending");
+    const confirmed = get().orders.filter((o) => o.status !== "pending" && o.status !== "cancelled");
     if (confirmed.length === 0) return 0;
     return (
       confirmed.reduce((sum, o) => sum + o.grand_total, 0) / confirmed.length
@@ -101,7 +76,7 @@ export const useAdminStore = create<AdminState>()((set, get) => ({
   },
 
   getMonthlySales: () => {
-    const orders = get().orders.filter((o) => o.status !== "pending");
+    const orders = get().orders.filter((o) => o.status !== "pending" && o.status !== "cancelled");
     const monthMap = new Map<string, { revenue: number; orders: number }>();
 
     const monthNames = [

@@ -19,7 +19,7 @@ interface AuthState {
   register: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   isAdmin: () => boolean;
-  initialize: () => Promise<void>;
+  initialize: () => Promise<(() => void) | undefined>;
 }
 
 // Any account registered with this email is automatically given the admin role.
@@ -52,13 +52,15 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     }
 
     // Keep state in sync with Supabase auth changes (e.g. token refresh, sign-out in another tab)
-    supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         set({ user: toUser(session.user), isAuthenticated: true });
       } else {
         set({ user: null, isAuthenticated: false });
       }
     });
+
+    return () => subscription.unsubscribe();
   },
 
   login: async (email: string, password: string) => {

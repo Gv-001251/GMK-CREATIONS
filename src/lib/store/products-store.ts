@@ -5,7 +5,7 @@ import { type Product } from "@/lib/data/products";
 interface ProductsState {
   products: Product[];
   isLoading: boolean;
-  fetchProducts: () => Promise<void>;
+  fetchProducts: (limit?: number, offset?: number) => Promise<void>;
   updatePrice: (productId: string, newPrice: number) => void;
   addProduct: (product: Product) => Promise<void>;
   removeProduct: (productId: string) => void;
@@ -48,21 +48,29 @@ export const useProductsStore = create<ProductsState>()(
       products: [],
       isLoading: false,
 
-      fetchProducts: async () => {
+      fetchProducts: async (limit = 50, offset = 0) => {
         set({ isLoading: true });
         try {
-          const res = await fetch("/api/products");
+          const res = await fetch(`/api/products?limit=${limit}&offset=${offset}`);
           if (!res.ok) throw new Error("API error");
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            set({ products: data.map(rowToProduct), isLoading: false });
+          const responseData = await res.json();
+          const items = Array.isArray(responseData) ? responseData : (responseData.data || []);
+          if (items.length > 0) {
+            set((state) => {
+              // Simple infinite loading: append if offset > 0, else replace
+              const newProducts = items.map(rowToProduct);
+              return {
+                products: offset === 0 ? newProducts : [...state.products, ...newProducts],
+                isLoading: false
+              };
+            });
           } else {
-            // Set to empty array
-            set({ products: [], isLoading: false });
+            if (offset === 0) set({ products: [], isLoading: false });
+            else set({ isLoading: false });
           }
         } catch {
-          // Gracefully set to empty array
-          set({ products: [], isLoading: false });
+          if (offset === 0) set({ products: [], isLoading: false });
+          else set({ isLoading: false });
         }
       },
 

@@ -1,7 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
+import { safeParseRequest, loginSchema } from "@/lib/validations";
 
 export async function POST(request: Request) {
-  const { email, password } = await request.json();
+  const parsed = await safeParseRequest(request, loginSchema);
+  if (!parsed.success) return parsed.response;
+
+  const { email, password } = parsed.data;
   const supabase = await createClient();
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });

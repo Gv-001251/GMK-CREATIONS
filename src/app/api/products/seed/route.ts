@@ -33,6 +33,13 @@ export async function POST() {
     is_new: p.isNew || false,
   }));
 
+  if (rows.length === 0) {
+    return Response.json({
+      message: "No products to seed",
+      count: 0,
+    });
+  }
+
   const { data, error } = await supabase
     .from("products")
     .upsert(rows, { onConflict: "id" })

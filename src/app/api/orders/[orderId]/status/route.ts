@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/server";
+import { safeParseRequest, updateStatusSchema } from "@/lib/validations";
 
 export async function PATCH(
   request: Request,
@@ -11,11 +12,10 @@ export async function PATCH(
   const adminUser = await requireAdmin();
   if (!adminUser) return Response.json({ error: "Forbidden" }, { status: 403 });
 
-  const { status } = await request.json();
-  const validStatuses = ["pending", "confirmed", "processing", "shipped", "delivered"];
-  if (!validStatuses.includes(status)) {
-    return Response.json({ error: "Invalid status" }, { status: 400 });
-  }
+  const parsed = await safeParseRequest(request, updateStatusSchema);
+  if (!parsed.success) return parsed.response;
+
+  const { status } = parsed.data;
 
   const admin = createAdminClient();
   const { error } = await admin
@@ -23,6 +23,9 @@ export async function PATCH(
     .update({ status })
     .eq("id", orderId);
 
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error("Failed to update order status:", error.message);
+    return Response.json({ error: "Failed to update status" }, { status: 500 });
+  }
   return Response.json({ success: true });
 }

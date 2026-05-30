@@ -11,6 +11,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * This route is meant for local development only.
  */
 export async function POST() {
+  // Block this endpoint in production — development only
+  if (process.env.NODE_ENV === "production") {
+    return new Response(null, { status: 404 });
+  }
+
   const supabase = createAdminClient();
 
   const accounts = [

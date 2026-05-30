@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
-import { ShoppingCart, Menu, X, User, LogOut, Shield, ChevronDown } from "lucide-react";
+import { ShoppingCart, Menu, X, User, LogOut, Shield, ChevronDown, ShoppingBag } from "lucide-react";
 import { useCartStore } from "@/lib/store/cart-store";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { CartDrawer } from "./cart-drawer";
@@ -163,6 +163,14 @@ export function Navbar() {
                           Admin Dashboard
                         </Link>
                       )}
+                      <Link
+                        href="/orders"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container transition-colors"
+                      >
+                        <ShoppingBag className="w-4 h-4 text-on-surface-variant" />
+                        My Orders
+                      </Link>
                       <button
                         onClick={handleLogout}
                         className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-destructive hover:bg-destructive/5 transition-colors"
@@ -248,6 +256,14 @@ export function Navbar() {
                         Admin Dashboard
                       </Link>
                     )}
+                    <Link
+                      href="/orders"
+                      className="flex items-center gap-3 py-2 text-sm font-medium text-on-surface"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <ShoppingBag className="w-4 h-4 text-on-surface-variant" />
+                      My Orders
+                    </Link>
                     <button
                       onClick={async () => {
                         await handleLogout();

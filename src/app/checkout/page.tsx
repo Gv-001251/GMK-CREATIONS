@@ -68,13 +68,18 @@ function CheckoutContent() {
   const [currentStep, setCurrentStep] = useState<Step>("shipping");
   const [orderPlaced, setOrderPlaced] = useState(false);
 
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
   const [placedOrderId, setPlacedOrderId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
+
+  useEffect(() => {
+    fetchProducts();
+    if (typeof window !== "undefined" && window.Razorpay) {
+      setRazorpayLoaded(true);
+    }
+  }, [fetchProducts]);
 
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
     firstName: "",
@@ -85,6 +90,38 @@ function CheckoutContent() {
     state: "",
     zip: "",
   });
+
+  useEffect(() => {
+    async function loadLastShippingInfo() {
+      try {
+        const res = await fetch("/api/orders");
+        if (res.ok) {
+          const orders = await res.json();
+          if (Array.isArray(orders) && orders.length > 0) {
+            // Find the most recent order that has shipping details filled
+            const orderWithShipping = orders.find(o => o.shipping_first_name);
+            if (orderWithShipping) {
+              setShippingInfo({
+                firstName: orderWithShipping.shipping_first_name || "",
+                lastName: orderWithShipping.shipping_last_name || "",
+                email: orderWithShipping.shipping_email || user?.email || "",
+                address: orderWithShipping.shipping_address || "",
+                city: orderWithShipping.shipping_city || "",
+                state: orderWithShipping.shipping_state || "",
+                zip: orderWithShipping.shipping_zip || "",
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load last shipping info:", err);
+      }
+    }
+
+    if (user) {
+      loadLastShippingInfo();
+    }
+  }, [user]);
 
 
   const total = items.reduce(
@@ -124,7 +161,7 @@ function CheckoutContent() {
   };
 
   const handlePlaceOrder = async () => {
-    if (!razorpayLoaded) {
+    if (!razorpayLoaded && paymentMethod === "online") {
       setError("Payment system is loading. Please try again.");
       return;
     }
@@ -141,13 +178,23 @@ function CheckoutContent() {
           items,
           shipping,
           shippingInfo,
+          paymentMethod,
         }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to create order");
 
-      // 2. Open Razorpay checkout modal
+      if (paymentMethod === "cod") {
+        // Cash on delivery immediately succeeds on checkout!
+        setPlacedOrderId(data.orderId);
+        setOrderPlaced(true);
+        clearCart();
+        setLoading(false);
+        return;
+      }
+
+      // 2. Open Razorpay checkout modal (for online payment)
       const options: RazorpayOptions = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
         amount: data.amount,
@@ -190,9 +237,17 @@ function CheckoutContent() {
         },
         theme: { color: "#6d5cff" },
         modal: {
-          ondismiss: () => {
+          ondismiss: async () => {
+            // Delete the abandoned order from the backend so it doesn't show as pending
+            try {
+              await fetch(`/api/orders/${data.orderId}`, {
+                method: "DELETE",
+              });
+            } catch (err) {
+              console.error("Failed to delete abandoned order", err);
+            }
             setLoading(false);
-            setError("Payment was cancelled. Your order is saved — you can try again.");
+            setError("Payment was cancelled. Please try again when you're ready.");
           },
         },
       };
@@ -250,6 +305,7 @@ function CheckoutContent() {
       <Script
         src="https://checkout.razorpay.com/v1/checkout.js"
         onLoad={() => setRazorpayLoaded(true)}
+        onError={() => setError("Failed to load Razorpay SDK. Please check your internet connection or disable ad-blockers.")}
       />
 
       <div className="pt-28 pb-20 px-6">
@@ -436,26 +492,71 @@ function CheckoutContent() {
                   <h2 className="font-heading text-xl font-bold text-on-surface">
                     Payment Method
                   </h2>
-                  <div className="p-6 rounded-2xl bg-surface-container-low border-2 border-primary/20">
-                    <div className="flex items-center gap-3 mb-4">
-                      <CreditCard className="w-5 h-5 text-primary" />
-                      <span className="font-medium text-on-surface">
-                        Razorpay Secure Payment
-                      </span>
-                    </div>
-                    <p className="text-sm text-on-surface-variant leading-relaxed">
-                      Your payment will be processed securely via Razorpay.
-                      You&apos;ll be prompted to complete payment using
-                      UPI, credit/debit card, net banking, or wallet when you
-                      place the order.
-                    </p>
-                    <div className="flex items-center gap-4 mt-4 pt-4 border-t border-outline-variant">
-                      <Shield className="w-4 h-4 text-emerald-600" />
-                      <span className="text-xs text-on-surface-variant">
-                        256-bit SSL encrypted · PCI DSS compliant
-                      </span>
-                    </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Online Payment */}
+                    <button
+                      onClick={() => setPaymentMethod("online")}
+                      className={`p-6 rounded-2xl text-left border-2 transition-all ${
+                        paymentMethod === "online"
+                          ? "bg-primary/5 border-primary shadow-sm"
+                          : "bg-surface-container-low border-outline-variant hover:bg-surface-container"
+                      }`}
+                      type="button"
+                    >
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className={`p-2.5 rounded-xl ${paymentMethod === "online" ? "bg-primary/10 text-primary" : "bg-surface-container text-on-surface-variant"}`}>
+                          <CreditCard className="w-5 h-5" />
+                        </div>
+                        <span className="font-heading font-bold text-sm text-on-surface">Online Payment</span>
+                      </div>
+                      <p className="text-xs text-on-surface-variant leading-relaxed">
+                        Pay securely with UPI, Cards, Wallets, or Net Banking via Razorpay.
+                      </p>
+                    </button>
+
+                    {/* Cash on Delivery */}
+                    <button
+                      onClick={() => setPaymentMethod("cod")}
+                      className={`p-6 rounded-2xl text-left border-2 transition-all ${
+                        paymentMethod === "cod"
+                          ? "bg-primary/5 border-primary shadow-sm"
+                          : "bg-surface-container-low border-outline-variant hover:bg-surface-container"
+                      }`}
+                      type="button"
+                    >
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className={`p-2.5 rounded-xl ${paymentMethod === "cod" ? "bg-primary/10 text-primary" : "bg-surface-container text-on-surface-variant"}`}>
+                          <Truck className="w-5 h-5" />
+                        </div>
+                        <span className="font-heading font-bold text-sm text-on-surface">Cash on Delivery</span>
+                      </div>
+                      <p className="text-xs text-on-surface-variant leading-relaxed">
+                        Pay in cash upon delivery at your doorstep. Safe and convenient.
+                      </p>
+                    </button>
                   </div>
+
+                  {paymentMethod === "online" ? (
+                    <div className="p-6 rounded-2xl bg-surface-container-low border border-outline-variant">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Shield className="w-4 h-4 text-emerald-600" />
+                        <span className="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Secure Payment</span>
+                      </div>
+                      <p className="text-xs text-on-surface-variant leading-relaxed">
+                        Your online payment is fully encrypted using standard 256-bit SSL protocols and processed safely through Razorpay&apos;s trusted network.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-6 rounded-2xl bg-surface-container-low border border-outline-variant">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Truck className="w-4 h-4 text-primary" />
+                        <span className="text-xs font-semibold text-primary uppercase tracking-wider">COD Option Selected</span>
+                      </div>
+                      <p className="text-xs text-on-surface-variant leading-relaxed">
+                        No immediate payment required! Just ensure you have the cash ready when the delivery partner arrives with your order.
+                      </p>
+                    </div>
+                  )}
 
                   {/* Shipping Summary */}
                   <div className="p-5 rounded-2xl bg-surface-container-low">
@@ -540,6 +641,8 @@ function CheckoutContent() {
                         <Loader2 className="w-5 h-5 animate-spin" />
                         Processing...
                       </>
+                    ) : paymentMethod === "cod" ? (
+                      <>Confirm Order (₹{grandTotal.toFixed(2)})</>
                     ) : (
                       <>Pay ₹{grandTotal.toFixed(2)} with Razorpay</>
                     )}
