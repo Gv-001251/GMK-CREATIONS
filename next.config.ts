@@ -51,7 +51,7 @@ const nextConfig: NextConfig & { allowedDevOrigins?: string[] } = {
       },
     ];
   },
-  allowedDevOrigins: ["10.34.96.254", "10.34.96.254:3000"],
+  allowedDevOrigins: ["10.99.245.254", "10.99.245.254:3000", "10.34.96.254", "10.34.96.254:3000"],
 };
 
 export default nextConfig;

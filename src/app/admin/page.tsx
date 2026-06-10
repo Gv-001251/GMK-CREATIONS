@@ -17,7 +17,8 @@ export default function AdminOverviewPage() {
     getTotalRevenue, 
     getTotalOrders, 
     getAverageOrderValue, 
-    getMonthlySales 
+    getMonthlySales,
+    getRecentOrders
   } = useAdminStore();
   const { products, fetchProducts } = useProductsStore();
 
@@ -96,47 +97,145 @@ export default function AdminOverviewPage() {
         ))}
       </div>
 
-      {/* Sales Chart */}
-      <div className="p-8 rounded-2xl bg-surface-container-lowest shadow-sm border border-outline-variant">
-        <h3 className="font-heading text-lg font-bold text-on-surface mb-8">
-          Monthly Revenue
-        </h3>
-        {totalOrders === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-on-surface-variant">
-            <BarChart3 className="w-12 h-12 mb-4 opacity-30" />
-            <p className="text-sm font-medium">No sales data yet. Orders will appear here.</p>
-          </div>
-        ) : (
-          <div className="flex items-end gap-6 h-72">
-            {monthlySales.map((item) => {
-              const heightPercent = (item.revenue / maxRevenue) * 100;
-              return (
-                <div
-                  key={item.month}
-                  className="flex-1 flex flex-col items-center gap-3 group"
-                >
-                  <span className="text-xs font-bold text-on-surface opacity-0 group-hover:opacity-100 transition-opacity">
-                    ₹{item.revenue.toFixed(0)}
-                  </span>
-                  <div className="w-full relative bg-surface-container rounded-t-xl overflow-hidden" style={{ height: "220px" }}>
-                    <div
-                      className="absolute bottom-0 left-0 w-full gradient-primary transition-all duration-500 ease-out group-hover:brightness-110"
-                      style={{ height: `${Math.max(heightPercent, 2)}%` }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent" />
+        {/* Sales Chart & Quick Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 p-8 rounded-2xl bg-surface-container-lowest shadow-sm border border-outline-variant">
+          <h3 className="font-heading text-lg font-bold text-on-surface mb-8">
+            Monthly Revenue
+          </h3>
+          {totalOrders === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-on-surface-variant">
+              <BarChart3 className="w-12 h-12 mb-4 opacity-30" />
+              <p className="text-sm font-medium">No sales data yet. Orders will appear here.</p>
+            </div>
+          ) : (
+            <div className="flex items-end gap-6 h-72">
+              {monthlySales.map((item) => {
+                const heightPercent = (item.revenue / maxRevenue) * 100;
+                return (
+                  <div
+                    key={item.month}
+                    className="flex-1 flex flex-col items-center gap-3 group"
+                  >
+                    <span className="text-xs font-bold text-on-surface opacity-0 group-hover:opacity-100 transition-opacity">
+                      ₹{item.revenue.toFixed(0)}
+                    </span>
+                    <div className="w-full relative bg-surface-container rounded-t-xl overflow-hidden" style={{ height: "220px" }}>
+                      <div
+                        className="absolute bottom-0 left-0 w-full gradient-primary transition-all duration-500 ease-out group-hover:brightness-110"
+                        style={{ height: `${Math.max(heightPercent, 2)}%` }}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent" />
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <span className="text-xs font-semibold text-on-surface-variant">
+                        {item.month.split(" ")[0]}
+                      </span>
+                      <p className="text-[10px] font-medium text-on-surface-variant/60 mt-1">
+                        {item.orders} order{item.orders !== 1 ? "s" : ""}
+                      </p>
                     </div>
                   </div>
-                  <div className="text-center">
-                    <span className="text-xs font-semibold text-on-surface-variant">
-                      {item.month.split(" ")[0]}
-                    </span>
-                    <p className="text-[10px] font-medium text-on-surface-variant/60 mt-1">
-                      {item.orders} order{item.orders !== 1 ? "s" : ""}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="p-8 rounded-2xl bg-surface-container-lowest shadow-sm border border-outline-variant flex flex-col">
+          <h3 className="font-heading text-lg font-bold text-on-surface mb-6">
+            Quick Actions
+          </h3>
+          <div className="flex flex-col gap-4 flex-1">
+            <a href="/admin/products" className="flex items-center justify-between p-4 rounded-xl border border-outline-variant hover:border-primary/50 hover:bg-primary/5 transition-all group">
+              <div className="flex items-center gap-3 text-on-surface">
+                <Package className="w-5 h-5 text-primary" />
+                <span className="font-medium">Manage Products</span>
+              </div>
+              <span className="text-primary opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1">→</span>
+            </a>
+            <a href="/admin/orders" className="flex items-center justify-between p-4 rounded-xl border border-outline-variant hover:border-primary/50 hover:bg-primary/5 transition-all group">
+              <div className="flex items-center gap-3 text-on-surface">
+                <ShoppingBag className="w-5 h-5 text-primary" />
+                <span className="font-medium">Manage Orders</span>
+              </div>
+              <span className="text-primary opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1">→</span>
+            </a>
+            <a href="/" className="flex items-center justify-between p-4 rounded-xl border border-outline-variant hover:border-primary/50 hover:bg-primary/5 transition-all group mt-auto">
+              <div className="flex items-center gap-3 text-on-surface">
+                <span className="font-medium">View Storefront</span>
+              </div>
+              <span className="text-primary opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1">→</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Orders Table */}
+      <div className="p-8 rounded-2xl bg-surface-container-lowest shadow-sm border border-outline-variant">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="font-heading text-lg font-bold text-on-surface">
+            Recent Orders
+          </h3>
+          <a href="/admin/orders" className="text-sm font-medium text-primary hover:underline">
+            View All
+          </a>
+        </div>
+        
+        {getRecentOrders(5).length === 0 ? (
+          <div className="text-center py-8 text-on-surface-variant">
+            No recent orders found.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-outline-variant text-sm text-on-surface-variant">
+                  <th className="py-4 px-4 font-medium">Order ID</th>
+                  <th className="py-4 px-4 font-medium">Date</th>
+                  <th className="py-4 px-4 font-medium">Customer</th>
+                  <th className="py-4 px-4 font-medium">Status</th>
+                  <th className="py-4 px-4 font-medium text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {getRecentOrders(5).map((order) => {
+                  const date = new Date(order.created_at).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric"
+                  });
+                  return (
+                    <tr key={order.id} className="border-b border-outline-variant/50 hover:bg-surface-container-lowest/50 transition-colors">
+                      <td className="py-4 px-4 text-sm font-medium text-on-surface">
+                        {order.id.slice(0, 8)}...
+                      </td>
+                      <td className="py-4 px-4 text-sm text-on-surface-variant">
+                        {date}
+                      </td>
+                      <td className="py-4 px-4 text-sm text-on-surface-variant">
+                        {order.shipping_first_name || 'Guest'} {order.shipping_last_name || ''}
+                        <div className="text-xs opacity-70">{order.shipping_email || 'No email provided'}</div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
+                          ${order.status === 'delivered' ? 'bg-emerald-500/10 text-emerald-500' : 
+                            order.status === 'cancelled' ? 'bg-red-500/10 text-red-500' : 
+                            order.status === 'processing' ? 'bg-blue-500/10 text-blue-500' :
+                            'bg-amber-500/10 text-amber-500'}`}
+                        >
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 text-sm font-bold text-on-surface text-right">
+                        ₹{order.grand_total.toFixed(2)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
