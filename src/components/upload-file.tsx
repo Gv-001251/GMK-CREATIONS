@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Upload, FileText, X, CheckCircle, Loader2 } from "lucide-react";
 import { STLAnalysis } from "@/lib/utils/stl-parser";
+import { generateStlThumbnail } from "@/lib/utils/stl-thumbnailer";
 
 interface UploadedFile {
   file: File;
@@ -74,12 +75,23 @@ export function UploadFile({
 
             try {
               if (format === "STL") {
+                // Generate thumbnail on the main thread before transferring the buffer to the worker
+                let thumbnail: string | undefined;
+                try {
+                  thumbnail = generateStlThumbnail(arrayBuffer);
+                } catch (thumbnailError) {
+                  console.error("Failed to generate thumbnail:", thumbnailError);
+                }
+
                 const worker = new Worker(new URL('../lib/utils/stl.worker', import.meta.url));
                 worker.onmessage = (event) => {
                   if (event.data.success) {
                     setIsAnalyzing(false);
                     setAnalyzed(true);
-                    onAnalysisComplete?.(event.data.result);
+                    onAnalysisComplete?.({
+                      ...event.data.result,
+                      thumbnail,
+                    });
                   } else {
                     console.error("Error analyzing 3D model in worker:", event.data.error);
                     fallback();
@@ -144,7 +156,7 @@ export function UploadFile({
     return (
       <div className="rounded-2xl bg-surface-container-low p-6">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
             <FileText className="w-6 h-6 text-primary" />
           </div>
           <div className="flex-1 min-w-0">

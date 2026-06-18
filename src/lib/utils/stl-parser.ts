@@ -6,6 +6,7 @@ export interface STLAnalysis {
     z: number; // height in mm
   };
   triangleCount: number;
+  thumbnail?: string;
 }
 
 interface Point3D {

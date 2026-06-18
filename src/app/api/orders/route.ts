@@ -68,34 +68,40 @@ export async function POST(request: Request) {
 
   // --- Server-side price lookup (prevent price tampering) ---
   const adminDb = createAdminClient();
-  const productIds = items.map((item) => item.productId);
-  const { data: dbProducts, error: productLookupError } = await adminDb
-    .from("products")
-    .select("id, price")
-    .in("id", productIds);
+  const catalogItems = items.filter((item) => !item.productId.startsWith("custom-"));
+  const catalogProductIds = catalogItems.map((item) => item.productId);
+  let priceMap = new Map<string, number>();
 
-  if (productLookupError || !dbProducts) {
-    console.error("Product lookup error:", productLookupError);
-    return Response.json({ error: "Failed to look up product prices" }, { status: 500 });
-  }
+  if (catalogProductIds.length > 0) {
+    const { data: dbProducts, error: productLookupError } = await adminDb
+      .from("products")
+      .select("id, price")
+      .in("id", catalogProductIds);
 
-  const priceMap = new Map(dbProducts.map((p: { id: string; price: number }) => [p.id, p.price]));
+    if (productLookupError || !dbProducts) {
+      console.error("Product lookup error:", productLookupError);
+      return Response.json({ error: "Failed to look up product prices" }, { status: 500 });
+    }
 
-  // Verify all products exist
-  for (const item of items) {
-    if (!priceMap.has(item.productId)) {
-      return Response.json(
-        { error: `Product not found: ${item.productId}` },
-        { status: 400 }
-      );
+    priceMap = new Map(dbProducts.map((p: { id: string; price: number }) => [p.id, p.price]));
+
+    // Verify catalog products exist
+    for (const item of catalogItems) {
+      if (!priceMap.has(item.productId)) {
+        return Response.json(
+          { error: `Product not found: ${item.productId}` },
+          { status: 400 }
+        );
+      }
     }
   }
 
-  // Calculate totals using DB prices, NOT client prices
-  const subtotal = items.reduce(
-    (sum, item) => sum + (priceMap.get(item.productId) || 0) * item.quantity,
-    0
-  );
+  // Calculate totals using DB prices for catalog items, client-passed prices for custom dynamic items
+  const subtotal = items.reduce((sum, item) => {
+    const isCustom = item.productId.startsWith("custom-");
+    const unitPrice = isCustom ? (item.price || 0) : (priceMap.get(item.productId) || 0);
+    return sum + unitPrice * item.quantity;
+  }, 0);
   const shippingCost = subtotal > 100 ? 0 : 12.99;
   const grandTotal = subtotal + shippingCost;
 
@@ -183,17 +189,27 @@ export async function POST(request: Request) {
     return Response.json({ error: "Failed to create order" }, { status: 500 });
   }
 
-  // Store order items using DB-verified prices
-  const orderItems = items.map((item) => ({
-    order_id: orderId,
-    product_id: item.productId,
-    name: item.name || "",
-    price: priceMap.get(item.productId) || 0, // DB price, not client price
-    quantity: item.quantity,
-    material: item.material || null,
-    finish: item.finish || null,
-    image: item.image || null,
-  }));
+  // Store order items using DB-verified prices for catalog and client-passed prices for custom items
+  const orderItems = items.map((item) => {
+    const isCustom = item.productId.startsWith("custom-");
+    const verifiedPrice = isCustom ? (item.price || 0) : (priceMap.get(item.productId) || 0);
+
+    // Carry custom upload path through to finish field using bracket format [File: path]
+    const finishText = item.storagePath
+      ? `${item.finish || ""} [File: ${item.storagePath}]`
+      : item.finish || null;
+
+    return {
+      order_id: orderId,
+      product_id: item.productId,
+      name: item.name || "",
+      price: verifiedPrice,
+      quantity: item.quantity,
+      material: item.material || null,
+      finish: finishText,
+      image: item.image || null,
+    };
+  });
 
   const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
   if (itemsError) {

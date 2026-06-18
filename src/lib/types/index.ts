@@ -9,6 +9,17 @@ export type OrderStatus =
   | "delivered"
   | "cancelled";
 
+export interface CartItem {
+  productId: string;
+  name: string;
+  price: number;
+  image: string;
+  quantity: number;
+  material: string;
+  finish: string;
+  storagePath?: string;
+}
+
 export interface OrderItem {
   id?: number;
   order_id: string;

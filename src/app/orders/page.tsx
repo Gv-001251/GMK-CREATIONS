@@ -273,7 +273,7 @@ function OrdersContent() {
                   {/* Primary Item Preview (Always Visible when collapsed) */}
                   {!isExpanded && order.items && order.items.length > 0 && (
                     <div className="p-6 flex items-center gap-4">
-                      <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-surface-container border border-outline-variant/60 flex-shrink-0 flex items-center justify-center">
+                      <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-surface-container border border-outline-variant/60 shrink-0 flex items-center justify-center">
                         {order.items[0].image ? (
                           <Image
                             src={order.items[0].image || "/images/products/organic-sculptures.png"}
@@ -281,6 +281,7 @@ function OrdersContent() {
                             width={100}
                             height={100}
                             className="w-full h-full object-cover"
+                            unoptimized={order.items[0].image.startsWith("http") || order.items[0].image.startsWith("data:")}
                           />
                         ) : (
                           <Package className="w-6 h-6 text-on-surface-variant/40" />
@@ -314,7 +315,7 @@ function OrdersContent() {
                         {order.items.map((item) => (
                           <div key={item.id} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center gap-4">
                             {/* Thumb */}
-                            <div className="relative w-20 h-20 rounded-2xl overflow-hidden bg-surface-container border border-outline-variant/50 flex-shrink-0 flex items-center justify-center">
+                            <div className="relative w-20 h-20 rounded-2xl overflow-hidden bg-surface-container border border-outline-variant/50 shrink-0 flex items-center justify-center">
                               {item.image ? (
                                 <Image
                                   src={item.image || "/images/products/organic-sculptures.png"}
@@ -322,6 +323,7 @@ function OrdersContent() {
                                   width={100}
                                   height={100}
                                   className="w-full h-full object-cover"
+                                  unoptimized={item.image.startsWith("http") || item.image.startsWith("data:")}
                                 />
                               ) : (
                                 <Package className="w-8 h-8 text-on-surface-variant/40" />
@@ -409,7 +411,7 @@ function OrdersContent() {
                       {(order.status.toLowerCase() === "pending" || order.status.toLowerCase() === "confirmed") && (
                         <div className="mt-6 p-4 rounded-2xl bg-rose-500/5 border border-rose-500/10 flex flex-col sm:flex-row items-center justify-between gap-4">
                           <div className="flex items-start gap-3">
-                            <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500 mt-0.5 flex-shrink-0">
+                            <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500 mt-0.5 shrink-0">
                               <AlertTriangle className="w-4 h-4" />
                             </div>
                             <div className="text-left">
@@ -426,7 +428,7 @@ function OrdersContent() {
                           <button
                             onClick={() => handleCancelOrder(order.id)}
                             disabled={cancellingOrderId === order.id}
-                            className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-rose-500 text-white font-semibold text-xs hover:bg-rose-600 active:scale-95 disabled:opacity-50 disabled:pointer-events-none transition-all hover:shadow-lg hover:shadow-rose-500/10 flex items-center justify-center gap-1.5 flex-shrink-0"
+                            className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-rose-500 text-white font-semibold text-xs hover:bg-rose-600 active:scale-95 disabled:opacity-50 disabled:pointer-events-none transition-all hover:shadow-lg hover:shadow-rose-500/10 flex items-center justify-center gap-1.5 shrink-0"
                           >
                             {cancellingOrderId === order.id ? (
                               <>

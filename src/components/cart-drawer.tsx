@@ -59,7 +59,7 @@ export function CartDrawer() {
                         alt={item.name}
                         fill
                         className="object-cover"
-                        unoptimized={item.image.startsWith("http")}
+                        unoptimized={item.image.startsWith("http") || item.image.startsWith("data:")}
                       />
                     </div>
                     <div className="flex-1 min-w-0">

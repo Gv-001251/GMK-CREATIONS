@@ -9,6 +9,7 @@ export interface CartItem {
   quantity: number;
   material: string;
   finish: string;
+  storagePath?: string;
 }
 
 interface CartState {

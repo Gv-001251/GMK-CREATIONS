@@ -21,6 +21,7 @@ export const orderItemSchema = z.object({
   finish: z.string().optional(),
   image: z.string().optional(),
   price: z.number().optional(), // client may send this but we ignore it
+  storagePath: z.string().optional(),
 });
 
 export const createOrderSchema = z.object({
