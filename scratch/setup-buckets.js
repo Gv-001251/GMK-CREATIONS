@@ -39,7 +39,16 @@ async function run() {
   });
   if (modelsError) {
     if (modelsError.message.includes('already exists')) {
-      console.log("'models' bucket already exists.");
+      console.log("'models' bucket already exists. Updating its settings...");
+      const { data: updatedBucket, error: updateError } = await supabase.storage.updateBucket('models', {
+        public: false,
+        fileSizeLimit: 52428800 // 50MB
+      });
+      if (updateError) {
+        console.error("Error updating 'models' bucket:", updateError);
+      } else {
+        console.log("'models' bucket updated successfully:", updatedBucket);
+      }
     } else {
       console.error("Error creating 'models' bucket:", modelsError);
     }

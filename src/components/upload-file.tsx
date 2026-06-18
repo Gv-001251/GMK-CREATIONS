@@ -130,7 +130,7 @@ export function UploadFile({
       "application/octet-stream": [".stl", ".obj"],
     },
     maxFiles: 1,
-    maxSize: 100 * 1024 * 1024, // 100MB
+    maxSize: 2 * 1024 * 1024 * 1024, // 2GB
   });
 
   const removeFile = () => {
@@ -208,7 +208,7 @@ export function UploadFile({
           </p>
           <p className="text-sm text-on-surface-variant mt-1">
             Supports <span className="font-medium text-on-surface">.STL</span> and{" "}
-            <span className="font-medium text-on-surface">.OBJ</span> files up to 100MB
+            <span className="font-medium text-on-surface">.OBJ</span> files up to 2GB
           </p>
         </div>
         <button

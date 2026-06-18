@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 
 const ALLOWED_EXTENSIONS = new Set(["stl", "obj", "3mf", "step", "stp"]);
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2GB
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   // File size validation
   if (file.size > MAX_FILE_SIZE) {
     return Response.json(
-      { error: "File too large. Maximum size is 50MB." },
+      { error: "File too large. Maximum size is 2GB." },
       { status: 400 }
     );
   }
