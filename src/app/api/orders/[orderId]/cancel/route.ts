@@ -1,11 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import Razorpay from "razorpay";
-
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
+import { getRazorpay } from "@/lib/razorpay";
 
 export async function POST(
   request: Request,
@@ -54,6 +49,7 @@ export async function POST(
   // 5. If the order has been paid online, initiate automated Razorpay refund
   if (order.razorpay_payment_id) {
     try {
+      const razorpay = getRazorpay();
       await razorpay.payments.refund(order.razorpay_payment_id, {
         amount: Math.round(order.grand_total * 100), // in paise (INR smallest unit)
         notes: {

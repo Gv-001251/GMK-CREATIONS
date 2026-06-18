@@ -1,12 +1,7 @@
 import crypto from "crypto";
-import Razorpay from "razorpay";
+import { getRazorpay } from "@/lib/razorpay";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { safeParseRequest, verifyPaymentSchema } from "@/lib/validations";
-
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
 
 export async function POST(request: Request) {
   // Validate request body
@@ -45,6 +40,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    const razorpay = getRazorpay();
     const razorpayOrder = await razorpay.orders.fetch(razorpay_order_id);
     const expectedAmount = Math.round(order.grand_total * 100);
     if (Number(razorpayOrder.amount) !== expectedAmount) {

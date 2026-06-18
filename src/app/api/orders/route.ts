@@ -1,12 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { safeParseRequest, createOrderSchema } from "@/lib/validations";
-import Razorpay from "razorpay";
-
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
+import { getRazorpay } from "@/lib/razorpay";
 
 export async function GET(_request: Request) {
   const supabase = await createClient();
@@ -122,6 +117,7 @@ export async function POST(request: Request) {
     }
 
     try {
+      const razorpay = getRazorpay();
       // Create Razorpay order (amount in paise — INR smallest unit)
       const razorpayOrder = await razorpay.orders.create({
         amount: amountInPaise,
