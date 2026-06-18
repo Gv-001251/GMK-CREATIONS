@@ -271,32 +271,9 @@ function LoginForm() {
             {mode === "login" && (
               <div className="pt-5 border-t border-outline-variant/60">
                 <p className="text-xs font-semibold text-center text-on-surface-variant uppercase tracking-wider mb-3">
-                  Quick Testing Accounts
+                  Quick Testing Account
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={async () => {
-                      setError("");
-                      setLoading(true);
-                      const result = await login("admin@gmk3d.com", "Admin@123");
-                      if (result.success) {
-                        if (redirectTo === "/") {
-                          router.push("/admin");
-                        } else {
-                          router.push(redirectTo);
-                        }
-                      } else {
-                        setError(result.error || "Admin login failed. Make sure to run the seed API.");
-                      }
-                      setLoading(false);
-                    }}
-                    className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-primary/8 border border-primary/25 text-primary hover:bg-primary/12 hover:scale-[1.03] active:scale-[0.97] hover:shadow-md hover:shadow-primary/5 transition-all duration-300 text-left disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                  >
-                    <span className="text-xs font-bold font-heading">Admin Account</span>
-                    <span className="text-[10px] text-primary/70 mt-0.5">admin@gmk3d.com</span>
-                  </button>
+                <div className="grid grid-cols-1 gap-3">
                   <button
                     type="button"
                     disabled={loading}
@@ -316,7 +293,7 @@ function LoginForm() {
                       }
                       setLoading(false);
                     }}
-                    className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-surface-container/60 border border-outline-variant hover:bg-surface-container hover:scale-[1.03] active:scale-[0.97] hover:shadow-md transition-all duration-300 text-left disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-surface-container/60 border border-outline-variant hover:bg-surface-container hover:scale-[1.01] active:scale-[0.99] hover:shadow-md transition-all duration-300 text-left disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <span className="text-xs font-bold font-heading">User Account</span>
                     <span className="text-[10px] text-on-surface-variant mt-0.5">user@gmk3d.com</span>
