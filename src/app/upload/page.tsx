@@ -5,22 +5,16 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { UploadFile } from "@/components/upload-file";
 import { useCartStore } from "@/lib/store/cart-store";
-import { materials } from "@/lib/data/materials";
+import { materials, Material } from "@/lib/data/materials";
 import { finishes } from "@/lib/data/materials";
-import { Minus, Plus, ShoppingCart, Calculator, Box, Weight, Layers } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Calculator, Box, Weight, Layers, Percent, Clock } from "lucide-react";
 import { STLAnalysis } from "@/lib/utils/stl-parser";
 
-interface MaterialDensityInfo {
-  density: number; // g/cm³
-  costPerGram: number; // INR
-}
-
-const materialPricingInfo: Record<string, MaterialDensityInfo> = {
-  "standard-pla": { density: 1.24, costPerGram: 5.00 },
-  "resin-8k": { density: 1.15, costPerGram: 18.00 },
-  "carbon-fiber-petg": { density: 1.27, costPerGram: 12.00 },
-  "nylon-pa12": { density: 1.01, costPerGram: 15.00 },
-};
+// Print speed estimate: ~30 cm³/hr for FDM printing
+const PRINT_SPEED_CM3_PER_HR = 30;
+const PRINT_TIME_COST_PER_HR = 20; // ₹20 per hour
+const MIN_INFILL = 5;
+const MAX_INFILL = 80;
 
 const finishMultipliers: Record<string, number> = {
   matte: 1.0,
@@ -37,29 +31,49 @@ export default function UploadPage() {
   const [selectedMaterial, setSelectedMaterial] = useState(materials[0].id);
   const [selectedFinish, setSelectedFinish] = useState(finishes[0].id);
   const [quantity, setQuantity] = useState(1);
+  const [infillPercent, setInfillPercent] = useState(20); // default 20%
   const { addItem } = useCartStore();
 
-  const selectedMaterialData = materials.find((m) => m.id === selectedMaterial);
+  const selectedMaterialData = materials.find((m) => m.id === selectedMaterial) as Material;
   
-  // Calculate dynamic volume-based pricing
+  // ─── Dynamic volume-based pricing ───────────────────────────────
   let volumeCm3 = 0;
+  let filledVolumeCm3 = 0;
   let estimatedWeightG = 0;
+  let estimatedPrintTimeHrs = 0;
+  let materialCost = 0;
+  let printTimeCost = 0;
   let calculatedUnitPrice = 399.00; // Fallback default price
 
-  if (analysis) {
-    // volume is in mm3, convert to cm3 (ml)
+  if (analysis && selectedMaterialData) {
+    // Volume is in mm³, convert to cm³
     volumeCm3 = analysis.volume / 1000;
     
-    // Get density & cost coefficients
-    const coeff = materialPricingInfo[selectedMaterial] || { density: 1.2, costPerGram: 5.00 };
-    estimatedWeightG = volumeCm3 * coeff.density;
-    
-    // Base setup fee of ₹150.00 + cost of material + finish multiplier
-    const baseSetupFee = 150.00;
-    const materialCost = estimatedWeightG * coeff.costPerGram;
+    // Account for infill (outer shell is always ~100%, inner uses infill %)
+    // Rough model: ~20% shell volume + (infill% × 80% inner volume)
+    const shellFraction = 0.20;
+    const innerFraction = 1 - shellFraction;
+    const effectiveFill = shellFraction + (infillPercent / 100) * innerFraction;
+    filledVolumeCm3 = volumeCm3 * effectiveFill;
+
+    // Weight based on filled volume × material density
+    estimatedWeightG = filledVolumeCm3 * selectedMaterialData.density;
+
+    // Material cost = weight × cost per gram
+    materialCost = estimatedWeightG * selectedMaterialData.costPerGram;
+
+    // Estimate print time based on filled volume
+    estimatedPrintTimeHrs = filledVolumeCm3 / PRINT_SPEED_CM3_PER_HR;
+    if (estimatedPrintTimeHrs < 0.5) estimatedPrintTimeHrs = 0.5; // minimum 30 min
+
+    // Print time cost = hours × ₹20/hr
+    printTimeCost = estimatedPrintTimeHrs * PRINT_TIME_COST_PER_HR;
+
+    // Finish multiplier
     const finishMultiplier = finishMultipliers[selectedFinish] || 1.0;
-    
-    calculatedUnitPrice = (baseSetupFee + materialCost) * finishMultiplier;
+
+    // Total = (material cost + print time cost) × finish multiplier
+    calculatedUnitPrice = (materialCost + printTimeCost) * finishMultiplier;
   } else if (selectedMaterialData) {
     // Mock base estimate prior to uploading
     calculatedUnitPrice = 399.00 * selectedMaterialData.priceMultiplier;
@@ -81,7 +95,7 @@ export default function UploadPage() {
       name: `Custom Print: ${uploadedFile.name}`,
       price: calculatedUnitPrice,
       image: "/images/hero-sphere.png",
-      material: `${selectedMaterialData?.name || "Standard PLA"}${weightString}`,
+      material: `${selectedMaterialData?.name || "PLA"}${weightString} @ ${infillPercent}% infill`,
       finish: `${finishes.find((f) => f.id === selectedFinish)?.name || "Matte"} (${sizeString})`,
     });
   };
@@ -138,7 +152,7 @@ export default function UploadPage() {
                           {material.name}
                         </span>
                         <span className="text-xs text-primary font-medium">
-                          {material.priceMultiplier}x
+                          ₹{material.costPerGram}/g
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-1">
@@ -153,6 +167,41 @@ export default function UploadPage() {
                       </div>
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Infill Percentage */}
+              <div className="mt-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-heading text-lg font-bold text-on-surface flex items-center gap-2">
+                    <Percent className="w-4 h-4 text-primary" />
+                    Infill Density
+                  </h3>
+                  <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">
+                    {infillPercent}%
+                  </span>
+                </div>
+                <div className="p-4 rounded-2xl bg-surface-container-low">
+                  <input
+                    type="range"
+                    min={MIN_INFILL}
+                    max={MAX_INFILL}
+                    value={infillPercent}
+                    onChange={(e) => setInfillPercent(Number(e.target.value))}
+                    className="w-full accent-primary h-2 rounded-full appearance-none cursor-pointer"
+                    style={{
+                      background: `linear-gradient(to right, var(--color-primary) 0%, var(--color-primary) ${((infillPercent - MIN_INFILL) / (MAX_INFILL - MIN_INFILL)) * 100}%, var(--color-surface-container-highest) ${((infillPercent - MIN_INFILL) / (MAX_INFILL - MIN_INFILL)) * 100}%, var(--color-surface-container-highest) 100%)`,
+                    }}
+                    id="infill-slider"
+                  />
+                  <div className="flex justify-between mt-2 text-[10px] text-on-surface-variant font-medium">
+                    <span>{MIN_INFILL}% — Lightweight</span>
+                    <span>Balanced</span>
+                    <span>{MAX_INFILL}% — Strongest</span>
+                  </div>
+                  <p className="text-xs text-on-surface-variant mt-3">
+                    Higher infill = more material, stronger prints, higher cost. 15–20% is typical for decorative items; 50%+ for functional parts.
+                  </p>
                 </div>
               </div>
 
@@ -191,7 +240,7 @@ export default function UploadPage() {
 
                 {/* Model Details Block (Rendered upon successful analysis) */}
                 {analysis && (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6 p-4 rounded-xl bg-surface-container">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 p-4 rounded-xl bg-surface-container">
                     <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-surface-container-low text-center">
                       <Box className="w-4 h-4 text-primary mb-1" />
                       <span className="text-[10px] text-on-surface-variant uppercase font-semibold">Dimensions</span>
@@ -205,6 +254,17 @@ export default function UploadPage() {
                       <span className="text-[10px] text-on-surface-variant uppercase font-semibold">Est. Weight</span>
                       <span className="text-xs font-bold text-on-surface mt-0.5">
                         {estimatedWeightG.toFixed(1)} <span className="text-[9px] font-normal text-on-surface-variant">g</span>
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center p-2 rounded-lg bg-surface-container-low text-center">
+                      <Clock className="w-4 h-4 text-primary mb-1" />
+                      <span className="text-[10px] text-on-surface-variant uppercase font-semibold">Print Time</span>
+                      <span className="text-xs font-bold text-on-surface mt-0.5">
+                        {estimatedPrintTimeHrs < 1 
+                          ? `${Math.round(estimatedPrintTimeHrs * 60)} min`
+                          : `${estimatedPrintTimeHrs.toFixed(1)} hrs`
+                        }
                       </span>
                     </div>
 
@@ -228,7 +288,13 @@ export default function UploadPage() {
                   <div className="flex justify-between">
                     <span className="text-sm text-on-surface-variant">Material</span>
                     <span className="text-sm font-medium text-on-surface">
-                      {selectedMaterialData?.name}
+                      {selectedMaterialData?.name} (₹{selectedMaterialData?.costPerGram}/g)
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-on-surface-variant">Infill</span>
+                    <span className="text-sm font-medium text-on-surface">
+                      {infillPercent}%
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -238,12 +304,45 @@ export default function UploadPage() {
                     </span>
                   </div>
                   {analysis && (
-                    <div className="flex justify-between">
-                      <span className="text-sm text-on-surface-variant">Calculated Volume</span>
-                      <span className="text-sm font-medium text-on-surface">
-                        {volumeCm3.toFixed(2)} cm³
-                      </span>
-                    </div>
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-on-surface-variant">Volume (total)</span>
+                        <span className="text-sm font-medium text-on-surface">
+                          {volumeCm3.toFixed(2)} cm³
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-on-surface-variant">Filled Volume</span>
+                        <span className="text-sm font-medium text-on-surface">
+                          {filledVolumeCm3.toFixed(2)} cm³
+                        </span>
+                      </div>
+                      <div className="border-t border-outline-variant pt-3 space-y-2">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-on-surface-variant">Material Cost</span>
+                          <span className="font-medium text-on-surface">
+                            {estimatedWeightG.toFixed(1)}g × ₹{selectedMaterialData?.costPerGram} = ₹{materialCost.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-on-surface-variant">Print Time Cost</span>
+                          <span className="font-medium text-on-surface">
+                            {estimatedPrintTimeHrs < 1 
+                              ? `${Math.round(estimatedPrintTimeHrs * 60)} min`
+                              : `${estimatedPrintTimeHrs.toFixed(1)} hrs`
+                            } × ₹{PRINT_TIME_COST_PER_HR}/hr = ₹{printTimeCost.toFixed(2)}
+                          </span>
+                        </div>
+                        {(finishMultipliers[selectedFinish] || 1) !== 1 && (
+                          <div className="flex justify-between text-xs">
+                            <span className="text-on-surface-variant">Finish Multiplier</span>
+                            <span className="font-medium text-on-surface">
+                              ×{(finishMultipliers[selectedFinish] || 1).toFixed(2)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </>
                   )}
                   <div className="flex justify-between">
                     <span className="text-sm text-on-surface-variant">Est. Production</span>
@@ -290,7 +389,9 @@ export default function UploadPage() {
                 </button>
 
                 <p className="text-xs text-on-surface-variant text-center mt-4">
-                  {analysis ? "Price calculation is based on volume & weight density." : "Base estimated price. Real-time pricing applies after upload."}
+                  {analysis 
+                    ? `Pricing: ₹${selectedMaterialData?.costPerGram}/g material + ₹${PRINT_TIME_COST_PER_HR}/hr print time, at ${infillPercent}% infill.` 
+                    : "Base estimated price. Real-time pricing applies after upload."}
                 </p>
               </div>
             </div>

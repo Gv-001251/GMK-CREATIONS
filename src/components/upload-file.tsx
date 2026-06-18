@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Upload, FileText, X, CheckCircle, Loader2 } from "lucide-react";
-import { parseSTL, STLAnalysis } from "@/lib/utils/stl-parser";
+import { STLAnalysis } from "@/lib/utils/stl-parser";
 
 interface UploadedFile {
   file: File;
@@ -61,24 +61,7 @@ export function UploadFile({
         if (arrayBuffer instanceof ArrayBuffer) {
           // Add a minor micro-timeout to show the premium analysis animation
           setTimeout(() => {
-            try {
-              let analysis: STLAnalysis;
-              if (format === "STL") {
-                analysis = parseSTL(arrayBuffer);
-              } else {
-                // Fallback realistic metrics for non-STL models (.obj)
-                analysis = {
-                  volume: 15400, // 15.4 cm3
-                  dimensions: { x: 45.2, y: 32.1, z: 65.0 },
-                  triangleCount: 12450,
-                };
-              }
-              setIsAnalyzing(false);
-              setAnalyzed(true);
-              onAnalysisComplete?.(analysis);
-            } catch (error) {
-              console.error("Error analyzing 3D model:", error);
-              // Safe fallback on parsing error
+            const fallback = () => {
               const fallbackAnalysis: STLAnalysis = {
                 volume: 18200,
                 dimensions: { x: 50.0, y: 50.0, z: 50.0 },
@@ -87,6 +70,43 @@ export function UploadFile({
               setIsAnalyzing(false);
               setAnalyzed(true);
               onAnalysisComplete?.(fallbackAnalysis);
+            };
+
+            try {
+              if (format === "STL") {
+                const worker = new Worker(new URL('../lib/utils/stl.worker', import.meta.url));
+                worker.onmessage = (event) => {
+                  if (event.data.success) {
+                    setIsAnalyzing(false);
+                    setAnalyzed(true);
+                    onAnalysisComplete?.(event.data.result);
+                  } else {
+                    console.error("Error analyzing 3D model in worker:", event.data.error);
+                    fallback();
+                  }
+                  worker.terminate();
+                };
+                worker.onerror = (error) => {
+                  console.error("Worker error:", error);
+                  fallback();
+                  worker.terminate();
+                };
+                // Transfer array buffer for zero-copy
+                worker.postMessage({ buffer: arrayBuffer }, [arrayBuffer]);
+              } else {
+                // Fallback realistic metrics for non-STL models (.obj)
+                const analysis: STLAnalysis = {
+                  volume: 15400, // 15.4 cm3
+                  dimensions: { x: 45.2, y: 32.1, z: 65.0 },
+                  triangleCount: 12450,
+                };
+                setIsAnalyzing(false);
+                setAnalyzed(true);
+                onAnalysisComplete?.(analysis);
+              }
+            } catch (error) {
+              console.error("Error starting 3D model analysis:", error);
+              fallback();
             }
           }, 800);
         }

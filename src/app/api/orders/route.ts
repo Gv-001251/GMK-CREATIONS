@@ -8,7 +8,7 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET!,
 });
 
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
   const supabase = await createClient();
 
   // Require authentication
@@ -113,19 +113,48 @@ export async function POST(request: Request) {
   let orderStatus = "pending";
 
   if (paymentMethod === "online") {
-    // Create Razorpay order (amount in paise — INR smallest unit)
-    const razorpayOrder = await razorpay.orders.create({
-      amount: Math.round(grandTotal * 100),
-      currency: "INR",
-      receipt: orderId,
-      notes: {
-        user_id: user.id,
-        user_email: user.email || "",
-      },
-    });
-    razorpayOrderId = razorpayOrder.id;
-    razorpayAmount = Number(razorpayOrder.amount);
-    razorpayCurrency = razorpayOrder.currency;
+    const amountInPaise = Math.round(grandTotal * 100);
+    if (amountInPaise < 100) {
+      return Response.json(
+        { error: "Amount must be at least 100 paise" },
+        { status: 400 }
+      );
+    }
+
+    try {
+      // Create Razorpay order (amount in paise — INR smallest unit)
+      const razorpayOrder = await razorpay.orders.create({
+        amount: amountInPaise,
+        currency: "INR",
+        receipt: orderId,
+        notes: {
+          user_id: user.id,
+          user_email: user.email || "",
+        },
+      });
+      razorpayOrderId = razorpayOrder.id;
+      razorpayAmount = Number(razorpayOrder.amount);
+      razorpayCurrency = razorpayOrder.currency;
+    } catch (err: unknown) {
+      const error = err as { statusCode?: number; status?: number; message?: string };
+      console.error("Razorpay order creation error:", error);
+      // Handle auth failures (return 401)
+      if (
+        error.statusCode === 401 ||
+        error.status === 401 ||
+        (error.message && error.message.toLowerCase().includes("auth")) ||
+        (error.message && error.message.toLowerCase().includes("key"))
+      ) {
+        return Response.json(
+          { error: "Razorpay authentication failed" },
+          { status: 401 }
+        );
+      }
+      return Response.json(
+        { error: error.message || "Failed to create Razorpay order" },
+        { status: 500 }
+      );
+    }
   } else {
     // For COD, the order status starts directly as "confirmed"
     orderStatus = "confirmed";

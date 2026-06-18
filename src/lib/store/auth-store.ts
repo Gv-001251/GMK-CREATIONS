@@ -17,6 +17,7 @@ interface AuthState {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string }>;
+  signInWithGoogle: (redirectTo?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   isAdmin: () => boolean;
   initialize: () => Promise<(() => void) | undefined>;
@@ -109,6 +110,23 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     const supabase = createClient();
     await supabase.auth.signOut();
     set({ user: null, isAuthenticated: false });
+  },
+
+  signInWithGoogle: async (redirectTo?: string) => {
+    const supabase = createClient();
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const redirectUrl = new URL("/auth/callback", origin);
+    if (redirectTo) {
+      redirectUrl.searchParams.set("next", redirectTo);
+    }
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: redirectUrl.toString(),
+      },
+    });
+    if (error) return { success: false, error: error.message };
+    return { success: true };
   },
 
   isAdmin: () => get().user?.role === "admin",

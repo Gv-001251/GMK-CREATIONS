@@ -4,36 +4,28 @@ export interface Material {
   shortName: string;
   properties: string[];
   priceMultiplier: number;
+  density: number;       // g/cm³
+  costPerGram: number;   // INR per gram
 }
 
 export const materials: Material[] = [
   {
-    id: "standard-pla",
-    name: "Standard PLA",
+    id: "pla",
+    name: "PLA",
     shortName: "PLA",
     properties: ["Biodegradable", "Easy to print", "Wide color range"],
     priceMultiplier: 1.0,
+    density: 1.24,       // g/cm³
+    costPerGram: 5.0,    // ₹5 per gram
   },
   {
-    id: "resin-8k",
-    name: "Resin (8K)",
-    shortName: "8K Resin",
-    properties: ["Ultra-high detail", "Smooth surface", "Brittle"],
-    priceMultiplier: 1.8,
-  },
-  {
-    id: "carbon-fiber-petg",
-    name: "Carbon Fiber PETG",
-    shortName: "CF-PETG",
-    properties: ["High strength", "Lightweight", "Heat resistant"],
-    priceMultiplier: 2.2,
-  },
-  {
-    id: "nylon-pa12",
-    name: "Nylon PA12",
-    shortName: "PA12",
-    properties: ["Flexible", "Durable", "Chemical resistant"],
-    priceMultiplier: 2.5,
+    id: "tpu",
+    name: "TPU (Flexible)",
+    shortName: "TPU",
+    properties: ["Flexible", "Shock-absorbing", "Durable"],
+    priceMultiplier: 1.6,
+    density: 1.21,       // g/cm³
+    costPerGram: 8.0,    // ₹8 per gram
   },
 ];
 

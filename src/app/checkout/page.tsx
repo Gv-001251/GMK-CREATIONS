@@ -36,13 +36,28 @@ interface RazorpayOptions {
   description: string;
   order_id: string;
   handler: (response: RazorpayResponse) => void;
-  prefill: { name: string; email: string };
+  prefill: { name: string; email: string; method?: string };
   theme: { color: string };
   modal?: { ondismiss?: () => void };
 }
 
+interface RazorpayFailedResponse {
+  error?: {
+    code?: string;
+    description?: string;
+    source?: string;
+    step?: string;
+    reason?: string;
+    metadata?: {
+      order_id?: string;
+      payment_id?: string;
+    };
+  };
+}
+
 interface RazorpayInstance {
   open: () => void;
+  on: (event: string, handler: (response: RazorpayFailedResponse) => void) => void;
 }
 
 interface RazorpayResponse {
@@ -234,6 +249,7 @@ function CheckoutContent() {
         prefill: {
           name: `${shippingInfo.firstName} ${shippingInfo.lastName}`,
           email: shippingInfo.email,
+          method: "upi",
         },
         theme: { color: "#6d5cff" },
         modal: {
@@ -253,6 +269,9 @@ function CheckoutContent() {
       };
 
       const rzp = new window.Razorpay(options);
+      rzp.on("payment.failed", (response: RazorpayFailedResponse) => {
+        setError(response.error?.description || "Payment failed. Please try again.");
+      });
       rzp.open();
     } catch (err) {
       setError(

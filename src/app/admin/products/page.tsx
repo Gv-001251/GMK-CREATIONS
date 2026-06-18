@@ -248,6 +248,15 @@ export default function AdminProductsPage() {
     setImageUrls(newUrls);
   };
 
+  const makePrimary = (index: number) => {
+    if (index <= 0 || index >= imageUrls.length) return;
+    const newUrls = [...imageUrls];
+    const targetUrl = newUrls[index];
+    newUrls.splice(index, 1);
+    newUrls.unshift(targetUrl);
+    setImageUrls(newUrls);
+  };
+
   const removeImageUrl = (index: number) => setImageUrls((prev) => prev.filter((_, i) => i !== index));
 
   // ── Save (Add or Update) ──
@@ -596,7 +605,7 @@ export default function AdminProductsPage() {
                       key={`${url}-${index}`}
                       className="relative group p-2 rounded-xl border border-outline-variant bg-surface-container-lowest flex flex-col items-center gap-2 hover:border-primary/30 transition-all"
                     >
-                      <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-surface-container flex-shrink-0">
+                      <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-surface-container shrink-0">
                         <Image
                           src={url}
                           alt={`Angle ${index + 1}`}
@@ -610,6 +619,17 @@ export default function AdminProductsPage() {
                             <Star className="w-2.5 h-2.5 fill-current" />
                             <span>Primary</span>
                           </div>
+                        )}
+                        {index > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => makePrimary(index)}
+                            className="absolute top-1 left-1 bg-black/75 hover:bg-amber-500 hover:text-white text-white px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider flex items-center gap-0.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                            title="Set as Primary Image"
+                          >
+                            <Star className="w-2.5 h-2.5" />
+                            <span>Set Main</span>
+                          </button>
                         )}
                       </div>
                       
@@ -669,12 +689,12 @@ export default function AdminProductsPage() {
             >
               {saving ? (
                 <>
-                  <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin flex-shrink-0" />
+                  <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin shrink-0" />
                   <span>{isEditMode ? "Saving Changes..." : "Saving to Database..."}</span>
                 </>
               ) : (
                 <>
-                  <Check className="w-4 h-4 flex-shrink-0" />
+                  <Check className="w-4 h-4 shrink-0" />
                   <span>{isEditMode ? "Save Changes" : "Save Product"}</span>
                 </>
               )}
@@ -749,7 +769,7 @@ export default function AdminProductsPage() {
                   >
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-surface-container border border-outline-variant flex-shrink-0">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-surface-container border border-outline-variant shrink-0">
                           <Image
                             src={product.image || "/images/products/organic-sculptures.png"}
                             alt={product.name}
