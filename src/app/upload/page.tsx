@@ -143,20 +143,52 @@ export default function UploadPage() {
     setUploadError("");
 
     try {
-      const res = await fetch(`/api/upload?filename=${encodeURIComponent(uploadedFile.name)}`, {
+      // 1. Get signed upload URL from server
+      const res = await fetch(`/api/upload`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          filename: uploadedFile.name,
+          fileSize: uploadedFile.size,
+        }),
+      });
+
+      if (!res.ok) {
+        let errorMsg = "Failed to initiate file upload";
+        try {
+          const data = await res.json();
+          errorMsg = data.error || errorMsg;
+        } catch {
+          const text = await res.text();
+          errorMsg = text || errorMsg;
+        }
+        throw new Error(errorMsg);
+      }
+
+      const { signedUrl, path } = await res.json();
+
+      // 2. Upload file directly to Supabase storage via the signed URL
+      const uploadRes = await fetch(signedUrl, {
+        method: "PUT",
         body: uploadedFile,
         headers: {
           "Content-Type": "application/octet-stream",
         },
       });
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to upload file to storage");
+      if (!uploadRes.ok) {
+        let errorMsg = "Direct upload to storage failed";
+        try {
+          const uploadData = await uploadRes.json();
+          errorMsg = uploadData.error || errorMsg;
+        } catch {
+          const text = await uploadRes.text();
+          errorMsg = text || errorMsg;
+        }
+        throw new Error(errorMsg);
       }
-
-      const { path } = await res.json();
       
       // Calculate scaled dimensions
       const scaleMultiplier = scalePercent / 100;

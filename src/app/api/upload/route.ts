@@ -9,9 +9,18 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Get filename from query parameter
-  const { searchParams } = new URL(request.url);
-  const filename = searchParams.get("filename") || "model.stl";
+  let body;
+  try {
+    body = await request.json();
+  } catch (err) {
+    return Response.json({ error: "Invalid request payload" }, { status: 400 });
+  }
+
+  const { filename, fileSize } = body;
+
+  if (!filename) {
+    return Response.json({ error: "Filename is required" }, { status: 400 });
+  }
 
   // File extension validation
   const ext = filename.split(".").pop()?.toLowerCase() || "";
@@ -22,17 +31,8 @@ export async function POST(request: Request) {
     );
   }
 
-  // Read raw request body as ArrayBuffer
-  let arrayBuffer: ArrayBuffer;
-  try {
-    arrayBuffer = await request.arrayBuffer();
-  } catch (err) {
-    console.error("Error reading request body:", err);
-    return Response.json({ error: "Failed to read upload data." }, { status: 400 });
-  }
-
   // File size validation
-  if (arrayBuffer.byteLength > MAX_FILE_SIZE) {
+  if (fileSize && fileSize > MAX_FILE_SIZE) {
     return Response.json(
       { error: "File too large. Maximum size is 2GB." },
       { status: 400 }
@@ -43,26 +43,24 @@ export async function POST(request: Request) {
   const sanitizedName = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
   const path = `${user.id}/${Date.now()}-${sanitizedName}`;
 
-  // Convert to Buffer for Supabase upload
-  const fileBuffer = Buffer.from(arrayBuffer);
-
   const admin = createAdminClient();
-  const { error: uploadError } = await admin.storage
+  const { data, error: uploadError } = await admin.storage
     .from("models")
-    .upload(path, fileBuffer, {
-      contentType: "application/octet-stream",
-    });
+    .createSignedUploadUrl(path);
 
-  if (uploadError) {
-    console.error("File upload failed:", uploadError.message);
-    return Response.json({ error: `File upload failed: ${uploadError.message}` }, { status: 500 });
+  if (uploadError || !data) {
+    console.error("Failed to create signed upload URL:", uploadError?.message);
+    return Response.json(
+      { error: `Failed to create signed upload URL: ${uploadError?.message || "Unknown error"}` },
+      { status: 500 }
+    );
   }
 
   // Record in uploads table
   const { error: insertError } = await supabase.from("uploads").insert({
     user_id: user.id,
     file_name: sanitizedName,
-    file_size: arrayBuffer.byteLength,
+    file_size: fileSize || 0,
     file_format: ext.toUpperCase(),
     storage_path: path,
   });
@@ -71,5 +69,9 @@ export async function POST(request: Request) {
     console.error("Failed to record upload:", insertError.message);
   }
 
-  return Response.json({ path, fileName: sanitizedName }, { status: 201 });
+  return Response.json({
+    signedUrl: data.signedUrl,
+    path,
+    fileName: sanitizedName,
+  }, { status: 200 });
 }
