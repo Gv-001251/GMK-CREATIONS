@@ -6,6 +6,7 @@ import {
   BarChart3, 
   Layers, 
   ClipboardList, 
+  Upload,
   LogOut,
   Globe
 } from "lucide-react";
@@ -19,6 +20,7 @@ export function AdminSidebar() {
     { name: "Overview", href: "/admin", icon: BarChart3 },
     { name: "Products", href: "/admin/products", icon: Layers },
     { name: "Orders", href: "/admin/orders", icon: ClipboardList },
+    { name: "Uploads", href: "/admin/uploads", icon: Upload },
   ];
 
   return (

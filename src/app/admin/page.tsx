@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAdminStore } from "@/lib/store/admin-store";
 import { useProductsStore } from "@/lib/store/products-store";
 import {
@@ -9,7 +9,22 @@ import {
   TrendingUp,
   Package,
   BarChart3,
+  Download,
+  Loader2,
 } from "lucide-react";
+
+// Helper to extract custom file path from the finish column string
+function extractStoragePath(finishText: string | null | undefined): { cleanFinish: string; storagePath: string | null } {
+  if (!finishText) return { cleanFinish: "", storagePath: null };
+  const match = finishText.match(/(.*)\s*\[File:\s*(.*?)\]/);
+  if (match) {
+    return {
+      cleanFinish: match[1].trim(),
+      storagePath: match[2].trim(),
+    };
+  }
+  return { cleanFinish: finishText, storagePath: null };
+}
 
 export default function AdminOverviewPage() {
   const { 
@@ -21,6 +36,38 @@ export default function AdminOverviewPage() {
     getRecentOrders
   } = useAdminStore();
   const { products, fetchProducts } = useProductsStore();
+  const [downloadingPath, setDownloadingPath] = useState<string | null>(null);
+
+  const handleDownloadModel = async (path: string, fileName: string) => {
+    setDownloadingPath(path);
+    try {
+      const res = await fetch("/api/admin/models/sign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to sign URL");
+      }
+
+      const { signedUrl } = await res.json();
+      
+      const a = document.createElement("a");
+      a.href = signedUrl;
+      const parts = path.split("-");
+      const cleanName = parts.slice(1).join("-") || fileName || "model.stl";
+      a.download = cleanName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error("Download error:", err);
+      alert("Failed to download model file. Please verify network connection.");
+    } finally {
+      setDownloadingPath(null);
+    }
+  };
 
   useEffect(() => {
     fetchOrders();
@@ -125,7 +172,7 @@ export default function AdminOverviewPage() {
                         className="absolute bottom-0 left-0 w-full gradient-primary transition-all duration-500 ease-out group-hover:brightness-110"
                         style={{ height: `${Math.max(heightPercent, 2)}%` }}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent" />
+                        <div className="absolute inset-0 bg-linear-to-t from-white/10 to-transparent" />
                       </div>
                     </div>
                     <div className="text-center">
@@ -195,6 +242,7 @@ export default function AdminOverviewPage() {
                   <th className="py-4 px-4 font-medium">Order ID</th>
                   <th className="py-4 px-4 font-medium">Date</th>
                   <th className="py-4 px-4 font-medium">Customer</th>
+                  <th className="py-4 px-4 font-medium">3D Models</th>
                   <th className="py-4 px-4 font-medium">Status</th>
                   <th className="py-4 px-4 font-medium text-right">Total</th>
                 </tr>
@@ -206,9 +254,16 @@ export default function AdminOverviewPage() {
                     day: "numeric",
                     year: "numeric"
                   });
+                  const orderStlFiles = order.items
+                    .map((item) => {
+                      const { storagePath } = extractStoragePath(item.finish);
+                      return storagePath ? { storagePath, name: item.name } : null;
+                    })
+                    .filter((f): f is { storagePath: string; name: string } => !!f);
+
                   return (
                     <tr key={order.id} className="border-b border-outline-variant/50 hover:bg-surface-container-lowest/50 transition-colors">
-                      <td className="py-4 px-4 text-sm font-medium text-on-surface">
+                      <td className="py-4 px-4 text-sm font-medium text-on-surface font-mono">
                         {order.id.slice(0, 8)}...
                       </td>
                       <td className="py-4 px-4 text-sm text-on-surface-variant">
@@ -217,6 +272,34 @@ export default function AdminOverviewPage() {
                       <td className="py-4 px-4 text-sm text-on-surface-variant">
                         {order.shipping_first_name || 'Guest'} {order.shipping_last_name || ''}
                         <div className="text-xs opacity-70">{order.shipping_email || 'No email provided'}</div>
+                      </td>
+                      <td className="py-4 px-4">
+                        {orderStlFiles.length > 0 ? (
+                          <div className="flex flex-col gap-1 max-w-[150px]">
+                            {orderStlFiles.map((file, fIdx) => {
+                              const cleanName = file.name.replace(/^Custom Print:\s*/i, "");
+                              return (
+                                <button
+                                  key={fIdx}
+                                  type="button"
+                                  onClick={() => handleDownloadModel(file.storagePath, file.name)}
+                                  disabled={downloadingPath === file.storagePath}
+                                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-[10px] font-semibold transition-all disabled:opacity-50 text-left truncate w-full"
+                                  title={`Download ${file.name}`}
+                                >
+                                  {downloadingPath === file.storagePath ? (
+                                    <Loader2 className="w-2.5 h-2.5 animate-spin shrink-0" />
+                                  ) : (
+                                    <Download className="w-2.5 h-2.5 shrink-0" />
+                                  )}
+                                  <span className="truncate">{cleanName}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-on-surface-variant/40">—</span>
+                        )}
                       </td>
                       <td className="py-4 px-4">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize

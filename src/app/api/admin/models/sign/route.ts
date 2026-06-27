@@ -1,5 +1,7 @@
-import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/server";
+import { s3Client } from "@/lib/s3";
+import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 export async function POST(request: Request) {
   // Only admin users can request signed URLs
@@ -14,16 +16,19 @@ export async function POST(request: Request) {
       return Response.json({ error: "Path parameter is required" }, { status: 400 });
     }
 
-    // Use admin client which has service role token bypassing RLS
-    const admin = createAdminClient();
-    const { data, error } = await admin.storage.from("models").createSignedUrl(path, 3600); // 1 hour expiration
-
-    if (error) {
-      console.error("Error creating signed URL:", error.message);
+    let signedUrl: string;
+    try {
+      const command = new GetObjectCommand({
+        Bucket: process.env.B2_BUCKET_NAME,
+        Key: path,
+      });
+      signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+    } catch (err: any) {
+      console.error("Error creating B2 presigned download URL:", err.message);
       return Response.json({ error: "Failed to generate signed download link" }, { status: 500 });
     }
 
-    return Response.json({ signedUrl: data.signedUrl });
+    return Response.json({ signedUrl });
   } catch (err) {
     console.error("Sign error:", err);
     return Response.json({ error: "Invalid request payload" }, { status: 400 });

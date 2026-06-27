@@ -24,7 +24,9 @@ export default function HomeClient() {
   }, [fetchProducts]);
 
   const featured = mounted ? getFeaturedProducts() : [];
-  const recommended = mounted ? getRecommendedProducts() : [];
+  const featuredShown = featured.slice(0, 4);
+  const featuredIds = featuredShown.map((p) => p.id);
+  const recommended = mounted ? getRecommendedProducts(featuredIds) : [];
 
 
 
@@ -56,9 +58,9 @@ export default function HomeClient() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-            {featured.map((product) => (
-              <ProductCard key={product.id} product={product} />
+          <div className="grid grid-cols-4 gap-4 md:gap-6 lg:gap-8">
+            {featuredShown.map((product) => (
+              <ProductCard key={product.id} product={product} variant="compact" />
             ))}
           </div>
         </div>

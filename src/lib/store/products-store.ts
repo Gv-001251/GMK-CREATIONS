@@ -12,7 +12,7 @@ interface ProductsState {
   getProductBySlug: (slug: string) => Product | undefined;
   getProductsByCategory: (category: string) => Product[];
   getFeaturedProducts: () => Product[];
-  getRecommendedProducts: (excludeId?: string) => Product[];
+  getRecommendedProducts: (excludeId?: string | string[]) => Product[];
   resetToDefaults: () => void;
 }
 
@@ -217,8 +217,13 @@ export const useProductsStore = create<ProductsState>()(
     },
 
     getRecommendedProducts: (excludeId) => {
+      const excludeIds = Array.isArray(excludeId)
+        ? excludeId
+        : excludeId
+        ? [excludeId]
+        : [];
       return get()
-        .products.filter((p) => p.id !== excludeId)
+        .products.filter((p) => !excludeIds.includes(p.id))
         .slice(0, 4);
     },
 

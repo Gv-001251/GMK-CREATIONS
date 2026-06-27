@@ -199,6 +199,7 @@ export default function ProductDetailClient() {
                   src={galleryImages[activeImageIndex] || product.image}
                   alt={`${product.name} primary angle`}
                   fill
+                  sizes="(max-width: 1024px) 100vw, 640px"
                   className="object-cover transition-transform duration-150 ease-out"
                   priority
                   unoptimized={(galleryImages[activeImageIndex] || product.image).startsWith("http") || (galleryImages[activeImageIndex] || product.image).includes("supabase")}
@@ -230,6 +231,7 @@ export default function ProductDetailClient() {
                         src={img}
                         alt={`${product.name} view ${i + 1}`}
                         fill
+                        sizes="80px"
                         className="object-cover"
                         unoptimized={img.startsWith("http") || img.includes("supabase")}
                       />
@@ -497,6 +499,7 @@ export default function ProductDetailClient() {
                 src={galleryImages[activeImageIndex] || product.image}
                 alt={`${product.name} detail view ${activeImageIndex + 1}`}
                 fill
+                sizes="(max-width: 1024px) 100vw, 1024px"
                 className="object-contain animate-scale-in"
                 unoptimized={(galleryImages[activeImageIndex] || product.image).startsWith("http") || (galleryImages[activeImageIndex] || product.image).includes("supabase")}
               />
@@ -532,6 +535,7 @@ export default function ProductDetailClient() {
                       src={img}
                       alt={`Angle ${i + 1}`}
                       fill
+                      sizes="56px"
                       className="object-cover"
                       unoptimized={img.startsWith("http") || img.includes("supabase")}
                     />

@@ -27,6 +27,9 @@ const nextConfig: NextConfig & { allowedDevOrigins?: string[] } = {
       },
     ],
   },
+  experimental: {
+    proxyClientMaxBodySize: "2gb",
+  },
   async headers() {
     return [
       {

@@ -12,7 +12,7 @@ interface ProductCardProps {
   variant?: "default" | "compact";
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, variant = "default" }: ProductCardProps) {
   const { addItem } = useCartStore();
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -27,6 +27,8 @@ export function ProductCard({ product }: ProductCardProps) {
       finish: product.finishes[0],
     });
   };
+
+  const isCompact = variant === "compact";
 
   return (
     <Link
@@ -46,14 +48,14 @@ export function ProductCard({ product }: ProductCardProps) {
         />
 
         {/* Badge */}
-        {product.badge && (
+        {!isCompact && product.badge && (
           <div className="absolute top-4 left-4">
             <Badge className="bg-primary/90 text-white text-[10px] font-semibold px-3 py-1 rounded-full border-0 backdrop-blur-sm">
               {product.badge}
             </Badge>
           </div>
         )}
-        {product.isNew && (
+        {!isCompact && product.isNew && (
           <div className="absolute top-4 left-4">
             <Badge className="bg-emerald-500/90 text-white text-[10px] font-semibold px-3 py-1 rounded-full border-0 backdrop-blur-sm">
               New
@@ -62,27 +64,31 @@ export function ProductCard({ product }: ProductCardProps) {
         )}
 
         {/* Quick Add */}
-        <button
-          onClick={handleAddToCart}
-          className="absolute bottom-4 right-4 p-3 rounded-full gradient-primary text-white opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-lg hover:shadow-primary/30"
-          aria-label={`Add ${product.name} to cart`}
-        >
-          <ShoppingCart className="w-4 h-4" />
-        </button>
+        {!isCompact && (
+          <button
+            onClick={handleAddToCart}
+            className="absolute bottom-4 right-4 p-3 rounded-full gradient-primary text-white opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-lg hover:shadow-primary/30"
+            aria-label={`Add ${product.name} to cart`}
+          >
+            <ShoppingCart className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Info */}
-      <div className="px-1">
-        <h3 className="font-heading text-base font-semibold text-on-surface tracking-tight group-hover:text-primary transition-colors">
-          {product.name}
-        </h3>
-        <p className="text-sm text-on-surface-variant mt-0.5 line-clamp-1">
-          {product.description}
-        </p>
-        <p className="text-sm font-semibold text-primary mt-2">
-          {product.priceLabel || `₹${product.price.toFixed(2)}`}
-        </p>
-      </div>
+      {!isCompact && (
+        <div className="px-1">
+          <h3 className="font-heading text-base font-semibold text-on-surface tracking-tight group-hover:text-primary transition-colors">
+            {product.name}
+          </h3>
+          <p className="text-sm text-on-surface-variant mt-0.5 line-clamp-1">
+            {product.description}
+          </p>
+          <p className="text-sm font-semibold text-primary mt-2">
+            {product.priceLabel || `₹${product.price.toFixed(2)}`}
+          </p>
+        </div>
+      )}
     </Link>
   );
 }

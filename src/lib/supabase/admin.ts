@@ -1,5 +1,4 @@
 import { createClient } from "@supabase/supabase-js";
-import { fetch as undiciFetch } from "undici";
 
 export function createAdminClient() {
   return createClient(
@@ -8,9 +7,6 @@ export function createAdminClient() {
     {
       auth: {
         persistSession: false,
-      },
-      global: {
-        fetch: undiciFetch as any,
       },
     }
   );

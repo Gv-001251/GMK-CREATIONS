@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { s3Client } from "@/lib/s3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const ALLOWED_EXTENSIONS = new Set(["stl", "obj", "3mf", "step", "stp"]);
 const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2GB
@@ -43,15 +45,18 @@ export async function POST(request: Request) {
   const sanitizedName = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
   const path = `${user.id}/${Date.now()}-${sanitizedName}`;
 
-  const admin = createAdminClient();
-  const { data, error: uploadError } = await admin.storage
-    .from("models")
-    .createSignedUploadUrl(path);
-
-  if (uploadError || !data) {
-    console.error("Failed to create signed upload URL:", uploadError?.message);
+  let signedUrl: string;
+  try {
+    const command = new PutObjectCommand({
+      Bucket: process.env.B2_BUCKET_NAME,
+      Key: path,
+      ContentType: "application/octet-stream",
+    });
+    signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+  } catch (err: any) {
+    console.error("Failed to create presigned upload URL:", err.message);
     return Response.json(
-      { error: `Failed to create signed upload URL: ${uploadError?.message || "Unknown error"}` },
+      { error: `Failed to create presigned upload URL: ${err.message || "Unknown error"}` },
       { status: 500 }
     );
   }
@@ -70,7 +75,7 @@ export async function POST(request: Request) {
   }
 
   return Response.json({
-    signedUrl: data.signedUrl,
+    signedUrl,
     path,
     fileName: sanitizedName,
   }, { status: 200 });

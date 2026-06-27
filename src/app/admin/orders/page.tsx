@@ -111,6 +111,7 @@ export default function AdminOrdersPage() {
                   <th className="py-4 px-6 font-semibold text-on-surface-variant">Order ID</th>
                   <th className="py-4 px-6 font-semibold text-on-surface-variant">Customer</th>
                   <th className="py-4 px-6 font-semibold text-on-surface-variant">Items</th>
+                  <th className="py-4 px-6 font-semibold text-on-surface-variant">3D Models</th>
                   <th className="py-4 px-6 font-semibold text-right text-on-surface-variant">Total</th>
                   <th className="py-4 px-6 font-semibold text-center text-on-surface-variant">Status</th>
                   <th className="py-4 px-6 font-semibold text-right text-on-surface-variant">Date</th>
@@ -119,6 +120,13 @@ export default function AdminOrdersPage() {
               <tbody>
                 {orders.map((order) => {
                   const isExpanded = expandedOrderId === order.id;
+                  const orderStlFiles = order.items
+                    .map(item => {
+                      const { storagePath } = extractStoragePath(item.finish);
+                      return storagePath ? { storagePath, name: item.name } : null;
+                    })
+                    .filter((f): f is { storagePath: string; name: string } => !!f);
+
                   return (
                     <>
                       <tr
@@ -140,6 +148,34 @@ export default function AdminOrdersPage() {
                         </td>
                         <td className="py-4 px-6 text-on-surface-variant">
                           {order.items.length} item{order.items.length !== 1 ? "s" : ""}
+                        </td>
+                        <td className="py-4 px-6" onClick={(e) => e.stopPropagation()}>
+                          {orderStlFiles.length > 0 ? (
+                            <div className="flex flex-col gap-1.5 max-w-[180px]">
+                              {orderStlFiles.map((file, fIdx) => {
+                                const cleanName = file.name.replace(/^Custom Print:\s*/i, "");
+                                return (
+                                  <button
+                                    key={fIdx}
+                                    type="button"
+                                    onClick={() => handleDownloadModel(file.storagePath, file.name)}
+                                    disabled={downloadingPath === file.storagePath}
+                                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold transition-all disabled:opacity-50 text-left truncate w-full"
+                                    title={`Download ${file.name}`}
+                                  >
+                                    {downloadingPath === file.storagePath ? (
+                                      <Loader2 className="w-3 h-3 animate-spin shrink-0" />
+                                    ) : (
+                                      <Download className="w-3 h-3 shrink-0" />
+                                    )}
+                                    <span className="truncate">{cleanName}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-on-surface-variant/40">—</span>
+                          )}
                         </td>
                         <td className="py-4 px-6 text-right font-heading font-bold text-on-surface">
                           ₹{order.grand_total.toFixed(2)}
@@ -173,7 +209,7 @@ export default function AdminOrdersPage() {
                       {/* Expandable Order Detail View */}
                       {isExpanded && (
                         <tr className="bg-surface-container-lowest border-b border-outline-variant">
-                          <td colSpan={7} className="p-6">
+                          <td colSpan={8} className="p-6">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-on-surface">
                               {/* Shipping Information column */}
                               <div className="space-y-3 p-5 rounded-2xl bg-surface-container-low border border-outline-variant">
@@ -210,6 +246,7 @@ export default function AdminOrdersPage() {
                                                 src={item.image}
                                                 alt={item.name}
                                                 fill
+                                                sizes="48px"
                                                 className="object-cover"
                                                 unoptimized={item.image.startsWith("data:")}
                                               />

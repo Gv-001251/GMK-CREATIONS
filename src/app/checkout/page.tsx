@@ -627,6 +627,7 @@ function CheckoutContent() {
                               src={item.image}
                               alt={item.name}
                               fill
+                              sizes="64px"
                               className="object-cover"
                               unoptimized={item.image.startsWith("http") || item.image.startsWith("data:")}
                             />
