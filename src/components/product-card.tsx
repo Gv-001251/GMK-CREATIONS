@@ -42,24 +42,24 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
           src={product.image}
           alt={product.name}
           fill
-          className="object-cover transition-transform duration-700"
+          className="object-contain transition-transform duration-700 group-hover:scale-[1.02]"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 20vw"
           unoptimized={product.image.startsWith("http")}
         />
 
-        {/* Badge */}
-        {!isCompact && product.badge && (
-          <div className="absolute top-4 left-4">
-            <Badge className="bg-primary/90 text-white text-[10px] font-semibold px-3 py-1 rounded-full border-0 backdrop-blur-sm">
-              {product.badge}
-            </Badge>
-          </div>
-        )}
-        {!isCompact && product.isNew && (
-          <div className="absolute top-4 left-4">
-            <Badge className="bg-emerald-500/90 text-white text-[10px] font-semibold px-3 py-1 rounded-full border-0 backdrop-blur-sm">
-              New
-            </Badge>
+        {/* Badges */}
+        {(product.badge || product.isNew) && (
+          <div className="absolute top-4 left-4 flex flex-wrap gap-1.5 z-10">
+            {product.isNew && (
+              <Badge className="bg-emerald-500/90 text-white text-[10px] font-semibold px-3 py-1 rounded-full border-0 backdrop-blur-sm">
+                New
+              </Badge>
+            )}
+            {product.badge && (
+              <Badge className="bg-primary/90 text-white text-[10px] font-semibold px-3 py-1 rounded-full border-0 backdrop-blur-sm">
+                {product.badge}
+              </Badge>
+            )}
           </div>
         )}
 

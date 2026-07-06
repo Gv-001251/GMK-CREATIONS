@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import Link from "next/link";
+import { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { ProductGrid } from "@/components/product-grid";
 import { Footer } from "@/components/footer";
 import { useProductsStore } from "@/lib/store/products-store";
 import { useRealtimeProducts } from "@/lib/hooks/use-realtime-admin";
-import { SlidersHorizontal } from "lucide-react";
+import { categories } from "@/lib/data/categories";
+import { SlidersHorizontal, X } from "lucide-react";
 
 const filterTabs = [
   { id: "all", label: "All Materials" },
@@ -15,8 +16,12 @@ const filterTabs = [
   { id: "organic", label: "Organic" },
 ];
 
-export default function ProductsPage() {
+function ProductsContent() {
   const { products, fetchProducts } = useProductsStore();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const categoryParam = searchParams.get("category");
+
   const [activeFilter, setActiveFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [mounted, setMounted] = useState(false);
@@ -32,26 +37,65 @@ export default function ProductsPage() {
 
   const activeProducts = mounted ? products : [];
 
+  // Find active category if category parameter is present
+  const activeCategory = useMemo(() => {
+    if (!categoryParam) return null;
+    return categories.find((c) => c.slug === categoryParam);
+  }, [categoryParam]);
+
+  // Determine active tab highlighting based on query parameter or state
+  const activeFilterTab = useMemo(() => {
+    if (!categoryParam) return activeFilter;
+    if (["custom-parts", "edc-gear", "prototypes"].includes(categoryParam)) {
+      return "industrial";
+    }
+    if (["decor", "miniatures", "jewelry"].includes(categoryParam)) {
+      return "organic";
+    }
+    return "all";
+  }, [categoryParam, activeFilter]);
+
   const filteredProducts = useMemo(() => {
-    if (activeFilter === "all") return activeProducts;
-    if (activeFilter === "industrial") {
-      return activeProducts.filter((p) =>
-        ["custom-parts", "edc-gear", "prototypes"].includes(p.category)
-      );
+    let list = activeProducts;
+
+    // Filter by category query param if present
+    if (categoryParam) {
+      list = list.filter((p) => p.category === categoryParam);
+    } else {
+      // Otherwise apply material group tab filter
+      if (activeFilter === "industrial") {
+        list = list.filter((p) =>
+          ["custom-parts", "edc-gear", "prototypes"].includes(p.category)
+        );
+      } else if (activeFilter === "organic") {
+        list = list.filter((p) =>
+          ["decor", "miniatures", "jewelry"].includes(p.category)
+        );
+      }
     }
-    if (activeFilter === "organic") {
-      return activeProducts.filter((p) =>
-        ["decor", "miniatures", "jewelry"].includes(p.category)
-      );
-    }
-    return activeProducts;
-  }, [activeFilter, activeProducts]);
+    return list;
+  }, [categoryParam, activeFilter, activeProducts]);
 
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
   const paginatedProducts = filteredProducts.slice(
     (currentPage - 1) * productsPerPage,
     currentPage * productsPerPage
   );
+
+  const handleTabClick = (tabId: string) => {
+    setActiveFilter(tabId);
+    setCurrentPage(1);
+    // Clear URL category search parameter when selecting a main material filter
+    if (categoryParam) {
+      router.push("/products");
+    }
+  };
+
+  const handleClearCategory = () => {
+    router.push("/products");
+    setActiveFilter("all");
+    setCurrentPage(1);
+  };
 
   return (
     <main>
@@ -75,13 +119,10 @@ export default function ProductsPage() {
               {filterTabs.map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => {
-                    setActiveFilter(tab.id);
-                    setCurrentPage(1);
-                  }}
-                  className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
-                    activeFilter === tab.id
-                      ? "bg-on-surface text-background"
+                  onClick={() => handleTabClick(tab.id)}
+                  className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 cursor-pointer ${
+                    activeFilterTab === tab.id
+                      ? "bg-on-surface text-background font-semibold"
                       : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high"
                   }`}
                 >
@@ -94,8 +135,37 @@ export default function ProductsPage() {
             </div>
           </div>
 
+          {/* Active Category Badge */}
+          {activeCategory && (
+            <div className="flex items-center gap-2 mb-8 animate-fade-in">
+              <span className="text-sm text-on-surface-variant">Category:</span>
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary/[0.08] text-primary text-xs font-semibold border border-primary/10 shadow-sm">
+                {activeCategory.name}
+                <button
+                  onClick={handleClearCategory}
+                  className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-primary/20 text-primary transition-colors cursor-pointer"
+                  aria-label="Clear category filter"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            </div>
+          )}
+
           {/* Product Grid */}
-          <ProductGrid products={paginatedProducts} columns={5} />
+          {filteredProducts.length > 0 ? (
+            <ProductGrid products={paginatedProducts} columns={5} />
+          ) : (
+            <div className="text-center py-20 bg-surface-container-low rounded-3xl border border-outline-variant/30">
+              <p className="text-on-surface-variant font-medium">No products found in this category.</p>
+              <button
+                onClick={handleClearCategory}
+                className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 rounded-full gradient-primary text-white text-sm font-semibold transition-all hover:shadow-lg hover:shadow-primary/20 cursor-pointer"
+              >
+                View All Products
+              </button>
+            </div>
+          )}
 
           {/* Pagination */}
           {totalPages > 1 && (
@@ -135,5 +205,25 @@ export default function ProductsPage() {
       {/* Footer */}
       <Footer />
     </main>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense
+      fallback={
+        <main>
+          <Navbar />
+          <div className="pt-40 pb-40 text-center text-on-surface-variant">
+            <div className="inline-block animate-pulse text-sm font-medium">
+              Loading catalog...
+            </div>
+          </div>
+          <Footer />
+        </main>
+      }
+    >
+      <ProductsContent />
+    </Suspense>
   );
 }

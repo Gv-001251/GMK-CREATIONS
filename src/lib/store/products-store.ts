@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { type Product } from "@/lib/data/products";
+import { type Product, products as defaultProducts } from "@/lib/data/products";
 
 interface ProductsState {
   products: Product[];
@@ -44,7 +44,7 @@ function rowToProduct(row: Record<string, unknown>): Product {
 
 export const useProductsStore = create<ProductsState>()(
   (set, get) => ({
-    products: [],
+    products: defaultProducts,
     isLoading: false,
 
     fetchProducts: async (limit = 50, offset = 0) => {

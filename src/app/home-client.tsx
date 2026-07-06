@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight, Upload } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { HeroSection } from "@/components/hero-section";
+import { WhyChooseUs } from "@/components/why-choose-us";
 import { ProductCard } from "@/components/product-card";
 import { CategoryCards } from "@/components/category-cards";
 import { Footer } from "@/components/footer";
@@ -37,6 +38,9 @@ export default function HomeClient() {
       {/* Hero Section */}
       <HeroSection />
 
+      {/* Why Choose Us */}
+      <WhyChooseUs />
+
       {/* Featured Products */}
       <section className="py-20 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
@@ -58,9 +62,9 @@ export default function HomeClient() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-4 gap-4 md:gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
             {featuredShown.map((product) => (
-              <ProductCard key={product.id} product={product} variant="compact" />
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         </div>
