@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRealtimeAdmin } from "@/lib/hooks/use-realtime-admin";
 import { Download, FileDown, Loader2, Search, Trash2 } from "lucide-react";
 import { toast } from "@/components/toast";
 
@@ -20,6 +21,8 @@ export default function AdminUploadsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [downloadingPath, setDownloadingPath] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchUploads = async () => {
     setIsLoading(true);
@@ -30,6 +33,7 @@ export default function AdminUploadsPage() {
       }
       const data = await res.json();
       setUploads(data);
+      setSelectedIds([]); // Clear selection on refresh
     } catch (err: any) {
       console.error("Error loading uploads:", err);
       toast.error("Failed to load uploaded files. Please refresh the page.");
@@ -41,6 +45,9 @@ export default function AdminUploadsPage() {
   useEffect(() => {
     fetchUploads();
   }, []);
+
+  // Live-update: re-fetch whenever any uploads row changes in the DB
+  useRealtimeAdmin({ onUploadsChange: fetchUploads });
 
   const handleDownloadFile = async (path: string, fileName: string) => {
     setDownloadingPath(path);
@@ -75,6 +82,87 @@ export default function AdminUploadsPage() {
     }
   };
 
+  // Handle single deletion
+  const handleDeleteSingle = async (id: number, key: string) => {
+    if (!confirm("Are you sure you want to permanently delete this file from B2 storage and database? This cannot be undone.")) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const res = await fetch("/api/admin/uploads/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [id], keys: [key] }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to delete file");
+      }
+
+      toast.success("File deleted successfully from B2 storage and database.");
+      fetchUploads();
+    } catch (err: any) {
+      console.error("Delete error:", err);
+      toast.error(`Delete failed: ${err.message || "Unknown error"}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Handle bulk deletion
+  const handleDeleteBulk = async () => {
+    if (selectedIds.length === 0) return;
+    
+    if (!confirm(`Are you sure you want to permanently delete the ${selectedIds.length} selected files from B2 storage and database? This cannot be undone.`)) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      // Find keys for all selected IDs
+      const selectedUploads = uploads.filter((u) => selectedIds.includes(u.id));
+      const keys = selectedUploads.map((u) => u.storage_path);
+
+      const res = await fetch("/api/admin/uploads/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: selectedIds, keys }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to delete selected files");
+      }
+
+      toast.success("Selected files deleted successfully.");
+      fetchUploads();
+    } catch (err: any) {
+      console.error("Bulk delete error:", err);
+      toast.error(`Bulk delete failed: ${err.message || "Unknown error"}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleSelectUpload = (id: number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = (filteredUploads: UploadedFile[]) => {
+    const filteredIds = filteredUploads.map((u) => u.id);
+    const allFilteredSelected = filteredIds.every((id) => selectedIds.includes(id));
+
+    if (allFilteredSelected) {
+      // Unselect all filtered items
+      setSelectedIds((prev) => prev.filter((id) => !filteredIds.includes(id)));
+    } else {
+      // Select all filtered items (merge with existing selection)
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...filteredIds])));
+    }
+  };
+
   const formatBytes = (bytes: number, decimals = 2) => {
     if (!bytes || bytes === 0) return "0 Bytes";
     const k = 1024;
@@ -93,12 +181,14 @@ export default function AdminUploadsPage() {
     );
   });
 
+  const allFilteredSelected = filteredUploads.length > 0 && filteredUploads.every((u) => selectedIds.includes(u.id));
+
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
       <div>
         <h1 className="font-heading text-3xl font-bold text-on-surface tracking-tight">Uploads</h1>
         <p className="text-on-surface-variant mt-2">
-          Browse and download custom 3D model files (.stl, .obj) uploaded by users.
+          Browse, download, and delete custom 3D model files (.stl, .obj) uploaded by users.
         </p>
       </div>
 
@@ -123,6 +213,28 @@ export default function AdminUploadsPage() {
         </button>
       </div>
 
+      {/* Bulk actions bar */}
+      {selectedIds.length > 0 && (
+        <div className="flex items-center justify-between p-4 rounded-2xl bg-destructive/10 border border-destructive/20 animate-slide-down">
+          <span className="text-sm font-semibold text-destructive flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-destructive animate-pulse" />
+            {selectedIds.length} file{selectedIds.length > 1 ? "s" : ""} selected for permanent deletion
+          </span>
+          <button
+            onClick={handleDeleteBulk}
+            disabled={isDeleting}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-destructive text-white text-xs font-bold hover:opacity-90 transition-all disabled:opacity-50"
+          >
+            {isDeleting ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Trash2 className="w-3.5 h-3.5" />
+            )}
+            Delete Selected
+          </button>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
           <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
@@ -140,6 +252,14 @@ export default function AdminUploadsPage() {
             <table className="w-full text-sm text-left border-collapse">
               <thead>
                 <tr className="border-b border-outline-variant bg-surface-container-low text-on-surface-variant">
+                  <th className="py-4 px-6 font-semibold w-10">
+                    <input
+                      type="checkbox"
+                      checked={allFilteredSelected}
+                      onChange={() => handleSelectAll(filteredUploads)}
+                      className="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer"
+                    />
+                  </th>
                   <th className="py-4 px-6 font-semibold">File Name</th>
                   <th className="py-4 px-6 font-semibold">Uploaded By</th>
                   <th className="py-4 px-6 font-semibold">Format</th>
@@ -152,8 +272,18 @@ export default function AdminUploadsPage() {
                 {filteredUploads.map((upload) => (
                   <tr
                     key={upload.id}
-                    className="hover:bg-surface-container-low/20 transition-colors text-on-surface"
+                    className={`hover:bg-surface-container-low/20 transition-colors text-on-surface ${
+                      selectedIds.includes(upload.id) ? "bg-primary/5" : ""
+                    }`}
                   >
+                    <td className="py-4 px-6">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(upload.id)}
+                        onChange={() => handleSelectUpload(upload.id)}
+                        className="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer"
+                      />
+                    </td>
                     <td className="py-4 px-6 font-medium max-w-xs truncate" title={upload.file_name}>
                       {upload.file_name}
                     </td>
@@ -181,24 +311,35 @@ export default function AdminUploadsPage() {
                       })}
                     </td>
                     <td className="py-4 px-6 text-right">
-                      <button
-                        type="button"
-                        onClick={() => handleDownloadFile(upload.storage_path, upload.file_name)}
-                        disabled={downloadingPath === upload.storage_path}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl gradient-primary text-white text-xs font-semibold hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {downloadingPath === upload.storage_path ? (
-                          <>
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            Signing...
-                          </>
-                        ) : (
-                          <>
-                            <Download className="w-3.5 h-3.5" />
-                            Download
-                          </>
-                        )}
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadFile(upload.storage_path, upload.file_name)}
+                          disabled={downloadingPath === upload.storage_path}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl gradient-primary text-white text-xs font-semibold hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {downloadingPath === upload.storage_path ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              Signing...
+                            </>
+                          ) : (
+                            <>
+                              <Download className="w-3.5 h-3.5" />
+                              Download
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSingle(upload.id, upload.storage_path)}
+                          disabled={isDeleting}
+                          className="p-2 rounded-xl border border-destructive/20 hover:bg-destructive/10 text-destructive transition-colors disabled:opacity-50"
+                          title="Delete File"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

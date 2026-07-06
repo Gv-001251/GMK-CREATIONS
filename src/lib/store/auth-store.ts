@@ -47,15 +47,31 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     } = await supabase.auth.getUser();
 
     if (user) {
-      set({ user: toUser(user), isAuthenticated: true, isLoading: false });
+      // Fetch the authoritative role from the DB — never trust the email alone
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      const dbRole: UserRole = profile?.role === "admin" ? "admin" : "user";
+      set({ user: { ...toUser(user), role: dbRole }, isAuthenticated: true, isLoading: false });
     } else {
       set({ user: null, isAuthenticated: false, isLoading: false });
     }
 
     // Keep state in sync with Supabase auth changes (e.g. token refresh, sign-out in another tab)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        set({ user: toUser(session.user), isAuthenticated: true });
+        // Re-fetch role from DB on every auth state change
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+
+        const dbRole: UserRole = profile?.role === "admin" ? "admin" : "user";
+        set({ user: { ...toUser(session.user), role: dbRole }, isAuthenticated: true });
       } else {
         set({ user: null, isAuthenticated: false });
       }
@@ -63,6 +79,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
     return () => subscription.unsubscribe();
   },
+
 
   login: async (email: string, password: string) => {
     const supabase = createClient();

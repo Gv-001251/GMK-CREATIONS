@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { safeParseRequest, createOrderSchema } from "@/lib/validations";
 import { getRazorpay } from "@/lib/razorpay";
+import { sendOrderConfirmationEmail } from "@/lib/email";
+import { calculateOrderTotals, CUSTOM_PRINT_MIN_PRICE } from "@/lib/pricing";
 
 export async function GET(_request: Request) {
   const supabase = await createClient();
@@ -96,14 +98,20 @@ export async function POST(request: Request) {
     }
   }
 
-  // Calculate totals using DB prices for catalog items, client-passed prices for custom dynamic items
+  // SECURITY: enforce a minimum price floor on custom prints to prevent price tampering
   const subtotal = items.reduce((sum, item) => {
     const isCustom = item.productId.startsWith("custom-");
-    const unitPrice = isCustom ? (item.price || 0) : (priceMap.get(item.productId) || 0);
+    let unitPrice: number;
+    if (isCustom) {
+      const clientPrice = item.price || 0;
+      unitPrice = Math.max(clientPrice, CUSTOM_PRINT_MIN_PRICE);
+    } else {
+      unitPrice = priceMap.get(item.productId) || 0;
+    }
     return sum + unitPrice * item.quantity;
   }, 0);
-  const shippingCost = subtotal > 100 ? 0 : 12.99;
-  const grandTotal = subtotal + shippingCost;
+
+  const { shippingCost, grandTotal } = calculateOrderTotals(subtotal);
 
   // Generate order ID
   const orderId = `ORD-${Date.now().toString(36).toUpperCase()}`;
@@ -177,6 +185,7 @@ export async function POST(request: Request) {
     shipping_first_name: shippingInfo?.firstName,
     shipping_last_name: shippingInfo?.lastName,
     shipping_email: shippingInfo?.email,
+    shipping_phone: shippingInfo?.phone,
     shipping_address: shippingInfo?.address,
     shipping_city: shippingInfo?.city,
     shipping_state: shippingInfo?.state,
@@ -192,7 +201,8 @@ export async function POST(request: Request) {
   // Store order items using DB-verified prices for catalog and client-passed prices for custom items
   const orderItems = items.map((item) => {
     const isCustom = item.productId.startsWith("custom-");
-    const verifiedPrice = isCustom ? (item.price || 0) : (priceMap.get(item.productId) || 0);
+    const rawPrice = isCustom ? (item.price || 0) : (priceMap.get(item.productId) || 0);
+    const verifiedPrice = isCustom ? Math.max(rawPrice, CUSTOM_PRINT_MIN_PRICE) : rawPrice;
 
     // Carry custom upload path through to finish field using bracket format [File: path]
     const finishText = item.storagePath
@@ -217,6 +227,28 @@ export async function POST(request: Request) {
     // Order was created but items failed — log for manual fix
   }
 
+  // For COD orders, send confirmation email immediately (online orders are emailed after payment verify)
+  if (paymentMethod === "cod") {
+    try {
+      await sendOrderConfirmationEmail({
+        orderId,
+        customerName: shippingInfo?.firstName
+          ? `${shippingInfo.firstName} ${shippingInfo.lastName}`
+          : user.user_metadata?.name || "Customer",
+        customerEmail: shippingInfo?.email || user.email || "",
+        grandTotal,
+        items: orderItems.map((i) => ({
+          name: i.name,
+          quantity: i.quantity,
+          price: i.price,
+          material: i.material || undefined,
+        })),
+      });
+    } catch (emailErr) {
+      console.error("COD confirmation email failed (non-fatal):", emailErr);
+    }
+  }
+
   return Response.json({
     orderId,
     razorpayOrderId,
@@ -225,3 +257,5 @@ export async function POST(request: Request) {
     shipping,
   });
 }
+
+

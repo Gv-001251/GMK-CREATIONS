@@ -6,6 +6,7 @@ import { Footer } from "@/components/footer";
 import { UploadFile } from "@/components/upload-file";
 import { useCartStore } from "@/lib/store/cart-store";
 import { useAuthStore } from "@/lib/store/auth-store";
+import { useUploadStore } from "@/lib/store/upload-store";
 import { materials, Material } from "@/lib/data/materials";
 import { finishes } from "@/lib/data/materials";
 import { Minus, Plus, ShoppingCart, Calculator, Box, Weight, Layers, Percent, Clock, Loader2 } from "lucide-react";
@@ -41,13 +42,17 @@ export default function UploadPage() {
   const [selectedFinish, setSelectedFinish] = useState(finishes[0].id);
   const [quantity, setQuantity] = useState(1);
   const [infillPercent, setInfillPercent] = useState(20); // default 20%
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadError, setUploadError] = useState("");
-  const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadedBytes, setUploadedBytes] = useState(0);
-  const [totalBytes, setTotalBytes] = useState(0);
-  const [uploadSpeed, setUploadSpeed] = useState(0); // bytes/sec
+  const {
+    uploadStatus,
+    uploadProgress,
+    uploadedBytes,
+    totalBytes,
+    uploadSpeed,
+    uploadError,
+    startUpload,
+  } = useUploadStore();
+
+  const isUploading = uploadStatus === "uploading";
   const { addItem } = useCartStore();
   const { isAuthenticated, user } = useAuthStore();
 
@@ -69,6 +74,21 @@ export default function UploadPage() {
       }
     }
   }, [scalePercent, unit, analysis, activeInput]);
+
+  // Warn the user before they reload or close the tab during an active upload
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isUploading) {
+        e.preventDefault();
+        e.returnValue = "";
+        return "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isUploading]);
 
   const handleDimensionChange = (dimension: "x" | "y" | "z", valueStr: string) => {
     // Allow typing decimals and numbers
@@ -145,115 +165,36 @@ export default function UploadPage() {
 
   const handleAddToCart = async () => {
     if (!uploadedFile) return;
-    setIsUploading(true);
-    setUploadError("");
-    setUploadStatus("uploading");
-    setUploadProgress(0);
-    setUploadedBytes(0);
-    setTotalBytes(0);
-    setUploadSpeed(0);
 
     try {
-      // 1. Get signed upload URL from Next.js API endpoint
-      const res = await fetch(`/api/upload`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          filename: uploadedFile.name,
-          fileSize: uploadedFile.size,
-        }),
-      });
+      const scaleMultiplier = scalePercent / 100;
+      const dx = (analysis ? analysis.dimensions.x * scaleMultiplier : 0).toFixed(1);
+      const dy = (analysis ? analysis.dimensions.y * scaleMultiplier : 0).toFixed(1);
+      const dz = (analysis ? analysis.dimensions.z * scaleMultiplier : 0).toFixed(1);
 
-      if (!res.ok) {
-        let errorMsg = "Failed to initiate file upload";
-        try {
-          const data = await res.json();
-          errorMsg = data.error || errorMsg;
-        } catch {
-          const text = await res.text();
-          errorMsg = text || errorMsg;
-        }
-        throw new Error(errorMsg);
-      }
+      const sizeString = analysis 
+        ? `${dx}×${dy}×${dz}mm`
+        : "Custom Size";
 
-      const { signedUrl, path } = await res.json();
+      const weightString = estimatedWeightG > 0
+        ? ` (${estimatedWeightG.toFixed(1)}g)`
+        : "";
 
-      // 2. Perform direct upload to Supabase Storage via signed URL using XMLHttpRequest
-      const xhr = new XMLHttpRequest();
-      xhr.open("PUT", signedUrl);
-      xhr.setRequestHeader("Content-Type", "application/octet-stream");
+      const scaleString = scalePercent !== 100 ? ` [Scaled to ${scalePercent}%]` : "";
 
-      const startTime = Date.now();
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          const pct = Math.round((event.loaded / event.total) * 100);
-          setUploadProgress(pct);
-          setUploadedBytes(event.loaded);
-          setTotalBytes(event.total);
-
-          const elapsedTime = (Date.now() - startTime) / 1000;
-          if (elapsedTime > 0) {
-            setUploadSpeed(event.loaded / elapsedTime);
-          }
-        }
+      const options = {
+        productId: `custom-${Date.now()}`,
+        name: `Custom Print: ${uploadedFile.name}${scaleString}`,
+        price: calculatedUnitPrice,
+        image: analysis?.thumbnail || "/images/hero-sphere.png",
+        material: `${selectedMaterialData?.name || "PLA"}${weightString} @ ${infillPercent}% infill`,
+        finish: `${finishes.find((f) => f.id === selectedFinish)?.name || "Matte"} (${sizeString})`,
+        quantity,
       };
 
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          // Calculate scaled dimensions and add to cart
-          const scaleMultiplier = scalePercent / 100;
-          const dx = (analysis ? analysis.dimensions.x * scaleMultiplier : 0).toFixed(1);
-          const dy = (analysis ? analysis.dimensions.y * scaleMultiplier : 0).toFixed(1);
-          const dz = (analysis ? analysis.dimensions.z * scaleMultiplier : 0).toFixed(1);
-
-          const sizeString = analysis 
-            ? `${dx}×${dy}×${dz}mm`
-            : "Custom Size";
-
-          const weightString = estimatedWeightG > 0
-            ? ` (${estimatedWeightG.toFixed(1)}g)`
-            : "";
-
-          const scaleString = scalePercent !== 100 ? ` [Scaled to ${scalePercent}%]` : "";
-
-          addItem({
-            productId: `custom-${Date.now()}`,
-            name: `Custom Print: ${uploadedFile.name}${scaleString}`,
-            price: calculatedUnitPrice,
-            image: analysis?.thumbnail || "/images/hero-sphere.png",
-            material: `${selectedMaterialData?.name || "PLA"}${weightString} @ ${infillPercent}% infill`,
-            finish: `${finishes.find((f) => f.id === selectedFinish)?.name || "Matte"} (${sizeString})`,
-            storagePath: path,
-          });
-
-          setUploadStatus("success");
-          setIsUploading(false);
-          toast.success("File upload complete! Added to cart.");
-        } else {
-          setUploadStatus("error");
-          setIsUploading(false);
-          setUploadError(`Storage upload failed with status ${xhr.status}`);
-          toast.error(`Upload failed: Storage returned status ${xhr.status}`);
-        }
-      };
-
-      xhr.onerror = () => {
-        setUploadStatus("error");
-        setIsUploading(false);
-        setUploadError("Network connection error");
-        toast.error("Upload failed: Network connection error");
-      };
-
-      xhr.send(uploadedFile);
+      await startUpload(uploadedFile, options);
     } catch (err: any) {
-      console.error("Initiate upload failed:", err);
-      setUploadStatus("error");
-      const errMsg = err.message || "Failed to initiate file upload.";
-      setUploadError(errMsg);
-      toast.error(`Upload failed: ${errMsg}`);
-      setIsUploading(false);
+      console.error("Failed to trigger upload:", err);
     }
   };
 
@@ -282,9 +223,7 @@ export default function UploadPage() {
               <UploadFile 
                 onFileUploaded={(file) => {
                   setUploadedFile(file);
-                  setUploadStatus("idle");
-                  setUploadProgress(0);
-                  setUploadError("");
+                  useUploadStore.setState({ uploadStatus: "idle", uploadProgress: 0, uploadError: null });
                 }} 
                 onAnalysisComplete={(results) => {
                   setAnalysis(results);
@@ -306,9 +245,7 @@ export default function UploadPage() {
                   setUploadedFile(null);
                   setAnalysis(null);
                   setScalePercent(100);
-                  setUploadStatus("idle");
-                  setUploadProgress(0);
-                  setUploadError("");
+                  useUploadStore.setState({ uploadStatus: "idle", uploadProgress: 0, uploadError: null });
                 }}
               />
 
@@ -714,35 +651,7 @@ export default function UploadPage() {
                   </span>
                 </div>
 
-                {uploadStatus === "uploading" && (
-                  <div className="mb-6 p-5 rounded-xl bg-primary/5 border border-primary/10 animate-slide-down space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-primary flex items-center gap-1.5">
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        Uploading 3D model...
-                      </span>
-                      <span className="text-xs font-bold text-primary">{uploadProgress}%</span>
-                    </div>
-                    <div className="h-2.5 w-full bg-surface-container rounded-full overflow-hidden">
-                      <div
-                        className="h-full gradient-primary rounded-full transition-all duration-300"
-                        style={{ width: `${uploadProgress}%` }}
-                      />
-                    </div>
-                    {totalBytes > 0 && (
-                      <div className="flex justify-between text-[11px] text-on-surface-variant font-semibold">
-                        <span>
-                          {(uploadedBytes / (1024 * 1024)).toFixed(1)} MB of {(totalBytes / (1024 * 1024)).toFixed(1)} MB
-                        </span>
-                        {uploadSpeed > 0 && (
-                          <span>
-                            {(uploadSpeed / (1024 * 1024)).toFixed(1)} MB/s
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
+
 
                 {uploadStatus === "success" && (
                   <div className="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-xs font-bold flex items-center gap-2 animate-slide-down">

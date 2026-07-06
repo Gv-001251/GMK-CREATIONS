@@ -6,6 +6,7 @@ import { Navbar } from "@/components/navbar";
 import { ProductGrid } from "@/components/product-grid";
 import { Footer } from "@/components/footer";
 import { useProductsStore } from "@/lib/store/products-store";
+import { useRealtimeProducts } from "@/lib/hooks/use-realtime-admin";
 import { SlidersHorizontal } from "lucide-react";
 
 const filterTabs = [
@@ -25,6 +26,9 @@ export default function ProductsPage() {
     setMounted(true);
     fetchProducts();
   }, [fetchProducts]);
+
+  // Re-fetch products automatically when an admin updates the catalog
+  useRealtimeProducts(fetchProducts);
 
   const activeProducts = mounted ? products : [];
 

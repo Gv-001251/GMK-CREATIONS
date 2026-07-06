@@ -21,6 +21,7 @@ export async function POST(request: Request) {
       const command = new GetObjectCommand({
         Bucket: process.env.B2_BUCKET_NAME,
         Key: path,
+        ResponseContentDisposition: "attachment",
       });
       signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
     } catch (err: any) {

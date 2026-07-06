@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { getRazorpay } from "@/lib/razorpay";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { safeParseRequest, verifyPaymentSchema } from "@/lib/validations";
+import { sendOrderConfirmationEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
   // Validate request body
@@ -71,6 +72,32 @@ export async function POST(request: Request) {
   if (error) {
     console.error("Failed to update order status:", error.message);
     return Response.json({ error: "Failed to confirm order" }, { status: 500 });
+  }
+
+  // Send confirmation email (non-fatal if it fails)
+  try {
+    const { data: fullOrder } = await supabase
+      .from("orders")
+      .select("user_name, user_email, grand_total")
+      .eq("id", orderId)
+      .single();
+
+    const { data: orderItems } = await supabase
+      .from("order_items")
+      .select("name, quantity, price, material")
+      .eq("order_id", orderId);
+
+    if (fullOrder?.user_email) {
+      await sendOrderConfirmationEmail({
+        orderId,
+        customerName: fullOrder.user_name || "Customer",
+        customerEmail: fullOrder.user_email,
+        grandTotal: fullOrder.grand_total,
+        items: orderItems || [],
+      });
+    }
+  } catch (emailErr) {
+    console.error("Failed to send confirmation email (non-fatal):", emailErr);
   }
 
   return Response.json({ success: true, orderId });

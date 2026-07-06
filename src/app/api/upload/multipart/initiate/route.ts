@@ -1,8 +1,7 @@
 import { randomBytes } from "crypto";
 import { createClient } from "@/lib/supabase/server";
 import { s3Client } from "@/lib/s3";
-import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { CreateMultipartUploadCommand } from "@aws-sdk/client-s3";
 
 const ALLOWED_EXTENSIONS = new Set(["stl", "obj", "3mf", "step", "stp"]);
 const MAX_FILE_SIZE = 2 * 1024 * 1024 * 1024; // 2GB
@@ -47,50 +46,24 @@ export async function POST(request: Request) {
   const hash = randomBytes(4).toString("hex"); // 8-char hex prefix for uniqueness
   const path = `${hash}-${sanitizedName}`;
 
-  let signedUrl: string;
   try {
-    const command = new PutObjectCommand({
+    const command = new CreateMultipartUploadCommand({
       Bucket: process.env.B2_BUCKET_NAME,
       Key: path,
       ContentType: "application/octet-stream",
     });
-    signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+
+    const response = await s3Client.send(command);
+    
+    return Response.json({
+      uploadId: response.UploadId,
+      key: path,
+    });
   } catch (err: any) {
-    console.error("Failed to create presigned upload URL:", err.message);
+    console.error("Failed to initiate B2 multipart upload:", err.message);
     return Response.json(
-      { error: `Failed to create presigned upload URL: ${err.message || "Unknown error"}` },
+      { error: `Failed to initiate multipart upload: ${err.message || "Unknown error"}` },
       { status: 500 }
     );
   }
-
-  // Record in uploads table — if this fails, delete the file from B2 to avoid orphans
-  const { error: insertError } = await supabase.from("uploads").insert({
-    user_id: user.id,
-    file_name: sanitizedName,
-    file_size: fileSize || 0,
-    file_format: ext.toUpperCase(),
-    storage_path: path,
-  });
-
-  if (insertError) {
-    console.error("Failed to record upload, cleaning up B2 file:", insertError.message);
-    try {
-      await s3Client.send(new DeleteObjectCommand({
-        Bucket: process.env.B2_BUCKET_NAME,
-        Key: path,
-      }));
-    } catch (cleanupErr: any) {
-      console.error("B2 cleanup after failed DB insert also failed:", cleanupErr.message);
-    }
-    return Response.json(
-      { error: "Failed to record upload. Please try again." },
-      { status: 500 }
-    );
-  }
-
-  return Response.json({
-    signedUrl,
-    path,
-    fileName: sanitizedName,
-  }, { status: 200 });
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Space_Grotesk, Manrope } from "next/font/google";
 import { AuthProvider } from "@/components/auth-provider";
 import { ToastContainer } from "@/components/toast";
+import { FloatingUploadWidget } from "@/components/floating-upload-widget";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -62,6 +63,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           <ToastContainer />
+          <FloatingUploadWidget />
           {children}
         </AuthProvider>
       </body>

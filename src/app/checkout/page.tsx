@@ -10,6 +10,7 @@ import { useAuthStore } from "@/lib/store/auth-store";
 import { useProductsStore } from "@/lib/store/products-store";
 import { getDeliveryEstimate } from "@/lib/utils/date-estimator";
 import { AuthGuard } from "@/components/auth-guard";
+import { calculateOrderTotals } from "@/lib/pricing";
 import {
   ChevronRight,
   CreditCard,
@@ -36,7 +37,7 @@ interface RazorpayOptions {
   description: string;
   order_id: string;
   handler: (response: RazorpayResponse) => void;
-  prefill: { name: string; email: string; method?: string };
+  prefill: { name: string; email: string; contact?: string; method?: string };
   theme: { color: string };
   modal?: { ondismiss?: () => void };
 }
@@ -70,6 +71,7 @@ interface ShippingInfo {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
   address: string;
   city: string;
   state: string;
@@ -100,6 +102,7 @@ function CheckoutContent() {
     firstName: "",
     lastName: "",
     email: user?.email || "",
+    phone: "",
     address: "",
     city: "",
     state: "",
@@ -120,6 +123,7 @@ function CheckoutContent() {
                 firstName: orderWithShipping.shipping_first_name || "",
                 lastName: orderWithShipping.shipping_last_name || "",
                 email: orderWithShipping.shipping_email || user?.email || "",
+                phone: orderWithShipping.shipping_phone || "",
                 address: orderWithShipping.shipping_address || "",
                 city: orderWithShipping.shipping_city || "",
                 state: orderWithShipping.shipping_state || "",
@@ -143,8 +147,7 @@ function CheckoutContent() {
     (sum, item) => sum + item.price * item.quantity,
     0
   );
-  const shipping = total > 100 ? 0 : 12.99;
-  const grandTotal = total + shipping;
+  const { shippingCost: shipping, grandTotal } = calculateOrderTotals(total);
 
   const steps = [
     { id: "shipping" as Step, label: "Shipping", icon: Truck },
@@ -156,6 +159,7 @@ function CheckoutContent() {
     shippingInfo.firstName.trim() &&
     shippingInfo.lastName.trim() &&
     shippingInfo.email.trim() &&
+    shippingInfo.phone.trim() &&
     shippingInfo.address.trim() &&
     shippingInfo.city.trim() &&
     shippingInfo.state.trim() &&
@@ -249,6 +253,7 @@ function CheckoutContent() {
         prefill: {
           name: `${shippingInfo.firstName} ${shippingInfo.lastName}`,
           email: shippingInfo.email,
+          contact: shippingInfo.phone,
           method: "upi",
         },
         theme: { color: "#6d5cff" },
@@ -421,19 +426,35 @@ function CheckoutContent() {
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-on-surface mb-2">
-                      Email *
-                    </label>
-                    <input
-                      type="email"
-                      value={shippingInfo.email}
-                      onChange={(e) => updateShipping("email", e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-surface-container-low text-on-surface text-sm outline-none focus:bg-surface-container-highest focus:ring-2 focus:ring-primary/20 transition-all"
-                      placeholder="john@example.com"
-                      required
-                      id="shipping-email"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-on-surface mb-2">
+                        Email *
+                      </label>
+                      <input
+                        type="email"
+                        value={shippingInfo.email}
+                        onChange={(e) => updateShipping("email", e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl bg-surface-container-low text-on-surface text-sm outline-none focus:bg-surface-container-highest focus:ring-2 focus:ring-primary/20 transition-all"
+                        placeholder="john@example.com"
+                        required
+                        id="shipping-email"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-on-surface mb-2">
+                        Phone *
+                      </label>
+                      <input
+                        type="tel"
+                        value={shippingInfo.phone}
+                        onChange={(e) => updateShipping("phone", e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl bg-surface-container-low text-on-surface text-sm outline-none focus:bg-surface-container-highest focus:ring-2 focus:ring-primary/20 transition-all"
+                        placeholder="Phone number"
+                        required
+                        id="shipping-phone"
+                      />
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-on-surface mb-2">
@@ -592,8 +613,8 @@ function CheckoutContent() {
                       {shippingInfo.city}, {shippingInfo.state}{" "}
                       {shippingInfo.zip}
                     </p>
-                    <p className="text-sm text-on-surface-variant">
-                      {shippingInfo.email}
+                     <p className="text-sm text-on-surface-variant">
+                      {shippingInfo.email} · {shippingInfo.phone}
                     </p>
                   </div>
 

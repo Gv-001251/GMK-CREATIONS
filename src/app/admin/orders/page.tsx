@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment, useMemo } from "react";
 import { useAdminStore } from "@/lib/store/admin-store";
-import { ClipboardList, ChevronDown, ChevronUp, Download, Eye, FileSpreadsheet, Loader2 } from "lucide-react";
+import { useRealtimeAdmin } from "@/lib/hooks/use-realtime-admin";
+import { ClipboardList, ChevronDown, ChevronUp, Download, Loader2, Trash2 } from "lucide-react";
 import Image from "next/image";
+import { toast } from "@/components/toast";
 
 // Helper to extract custom file path from the finish column string
 function extractStoragePath(finishText: string | null | undefined): { cleanFinish: string; storagePath: string | null } {
@@ -22,12 +24,29 @@ export default function AdminOrdersPage() {
   const { fetchOrders, getRecentOrders, updateOrderStatus, isLoading } = useAdminStore();
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [downloadingPath, setDownloadingPath] = useState<string | null>(null);
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
 
-  const orders = getRecentOrders(50);
+  // Live-update: re-fetch whenever any orders row changes in the DB
+  useRealtimeAdmin({ onOrdersChange: fetchOrders });
+
+  const allOrders = useAdminStore((state) => state.orders);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ordersPerPage = 10;
+
+  const totalPages = Math.ceil(allOrders.length / ordersPerPage);
+  
+  const currentOrders = useMemo(() => {
+    const start = (currentPage - 1) * ordersPerPage;
+    return allOrders.slice(start, start + ordersPerPage);
+  }, [allOrders, currentPage, ordersPerPage]);
+
+  const orders = currentOrders; // Keep alias to avoid rewriting local references
+
 
   const statusColors: Record<string, string> = {
     pending: "bg-surface-container text-on-surface-variant border-outline-variant",
@@ -54,47 +73,149 @@ export default function AdminOrdersPage() {
       });
 
       if (!res.ok) {
-        throw new Error("Failed to sign URL");
+        throw new Error("Failed to sign download link");
       }
 
       const { signedUrl } = await res.json();
-      
-      // Trigger file download in browser
+
+      // Trigger download
       const a = document.createElement("a");
       a.href = signedUrl;
-      // Extract original filename from path (the part after timestamp)
-      const parts = path.split("-");
-      const cleanName = parts.slice(1).join("-") || fileName || "model.stl";
+      // Strip the leading 8-char hex hash (e.g. "3a4b5c6d-") from the key to get the original filename
+      const basename = path.split("/").pop() || fileName || "model.stl";
+      const cleanName = basename.replace(/^[0-9a-f]{8}-/i, "") || basename;
       a.download = cleanName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      toast.success("Download started successfully.");
     } catch (err) {
       console.error("Download error:", err);
-      alert("Failed to download model file. Please verify network connection.");
+      toast.error("Failed to download file. Please check connection.");
     } finally {
       setDownloadingPath(null);
     }
   };
 
+  // Delete single order
+  const handleDeleteOrderSingle = async (orderId: string) => {
+    if (!confirm(`Are you sure you want to permanently delete order "${orderId}"? This will delete the order record and clean up any associated custom 3D model files from B2 storage. This cannot be undone.`)) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const res = await fetch("/api/admin/orders/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderIds: [orderId] }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to delete order");
+      }
+
+      toast.success("Order and associated files deleted successfully.");
+      // Refresh local store
+      fetchOrders();
+      setSelectedOrderIds((prev) => prev.filter((id) => id !== orderId));
+    } catch (err: any) {
+      console.error("Order delete error:", err);
+      toast.error(`Delete failed: ${err.message || "Unknown error"}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Delete bulk orders
+  const handleDeleteOrdersBulk = async () => {
+    if (selectedOrderIds.length === 0) return;
+
+    if (!confirm(`Are you sure you want to permanently delete the ${selectedOrderIds.length} selected orders? This will delete the order records and clean up any associated custom 3D model files from B2 storage. This cannot be undone.`)) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const res = await fetch("/api/admin/orders/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderIds: selectedOrderIds }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to delete selected orders");
+      }
+
+      toast.success("Selected orders and associated files deleted successfully.");
+      // Refresh local store
+      fetchOrders();
+      setSelectedOrderIds([]);
+    } catch (err: any) {
+      console.error("Bulk orders delete error:", err);
+      toast.error(`Bulk delete failed: ${err.message || "Unknown error"}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleSelectOrder = (orderId: string) => {
+    setSelectedOrderIds((prev) =>
+      prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId]
+    );
+  };
+
+  const handleSelectAllOrders = () => {
+    const allOrderIds = currentOrders.map((o) => o.id);
+    const allSelected = allOrderIds.every((id) => selectedOrderIds.includes(id));
+
+    if (allSelected) {
+      setSelectedOrderIds((prev) => prev.filter((id) => !allOrderIds.includes(id)));
+    } else {
+      setSelectedOrderIds((prev) => Array.from(new Set([...prev, ...allOrderIds])));
+    }
+  };
+
+  const allOrdersSelected = currentOrders.length > 0 && currentOrders.every((o) => selectedOrderIds.includes(o.id));
+
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
-      <div>
-        <h1 className="font-heading text-3xl font-bold text-on-surface tracking-tight">Orders</h1>
-        <p className="text-on-surface-variant mt-2">Manage customer orders, view custom 3D models, and update shipping statuses.</p>
+    <div className="p-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="font-heading text-3xl font-bold text-on-surface tracking-tight">Orders</h1>
+          <p className="text-on-surface-variant mt-2">
+            Manage customer orders, update tracking status, and download custom 3D models.
+          </p>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between">
-        <h3 className="font-heading text-lg font-bold text-on-surface">
-          Recent Orders ({orders.length})
-        </h3>
-      </div>
+      {/* Bulk actions bar */}
+      {selectedOrderIds.length > 0 && (
+        <div className="flex items-center justify-between p-4 rounded-2xl bg-destructive/10 border border-destructive/20 animate-slide-down">
+          <span className="text-sm font-semibold text-destructive flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-destructive animate-pulse" />
+            {selectedOrderIds.length} order{selectedOrderIds.length > 1 ? "s" : ""} selected for permanent deletion
+          </span>
+          <button
+            onClick={handleDeleteOrdersBulk}
+            disabled={isDeleting}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-destructive text-white text-xs font-bold hover:opacity-90 transition-all disabled:opacity-50"
+          >
+            {isDeleting ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Trash2 className="w-3.5 h-3.5" />
+            )}
+            Delete Selected
+          </button>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
           <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
         </div>
-      ) : orders.length === 0 ? (
+      ) : allOrders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 rounded-2xl bg-surface-container-lowest border border-outline-variant">
           <ClipboardList className="w-12 h-12 text-on-surface-variant/30 mb-4" />
           <p className="text-on-surface-variant text-sm">
@@ -107,6 +228,14 @@ export default function AdminOrdersPage() {
             <table className="w-full text-sm text-left border-collapse">
               <thead>
                 <tr className="border-b border-outline-variant bg-surface-container-low">
+                  <th className="py-4 px-6 font-semibold text-on-surface-variant w-10">
+                    <input
+                      type="checkbox"
+                      checked={allOrdersSelected}
+                      onChange={handleSelectAllOrders}
+                      className="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer"
+                    />
+                  </th>
                   <th className="py-4 px-6 font-semibold text-on-surface-variant w-10"></th>
                   <th className="py-4 px-6 font-semibold text-on-surface-variant">Order ID</th>
                   <th className="py-4 px-6 font-semibold text-on-surface-variant">Customer</th>
@@ -115,6 +244,7 @@ export default function AdminOrdersPage() {
                   <th className="py-4 px-6 font-semibold text-right text-on-surface-variant">Total</th>
                   <th className="py-4 px-6 font-semibold text-center text-on-surface-variant">Status</th>
                   <th className="py-4 px-6 font-semibold text-right text-on-surface-variant">Date</th>
+                  <th className="py-4 px-6 font-semibold text-right text-on-surface-variant">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -128,12 +258,21 @@ export default function AdminOrdersPage() {
                     .filter((f): f is { storagePath: string; name: string } => !!f);
 
                   return (
-                    <>
+                    <Fragment key={order.id}>
                       <tr
-                        key={order.id}
-                        className={`border-b border-outline-variant last:border-0 hover:bg-surface-container-low/30 transition-colors cursor-pointer ${isExpanded ? 'bg-surface-container-low/20' : ''}`}
+                        className={`border-b border-outline-variant last:border-0 hover:bg-surface-container-low/30 transition-colors cursor-pointer ${isExpanded ? 'bg-surface-container-low/20' : ''} ${
+                          selectedOrderIds.includes(order.id) ? "bg-primary/5" : ""
+                        }`}
                         onClick={() => toggleExpand(order.id)}
                       >
+                        <td className="py-4 px-6" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={selectedOrderIds.includes(order.id)}
+                            onChange={() => handleSelectOrder(order.id)}
+                            className="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer"
+                          />
+                        </td>
                         <td className="py-4 px-6">
                           <button type="button" className="text-on-surface-variant hover:text-on-surface">
                             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -142,21 +281,23 @@ export default function AdminOrdersPage() {
                         <td className="py-4 px-6 font-medium text-on-surface font-mono text-xs">
                           {order.id}
                         </td>
-                        <td className="py-4 px-6">
-                          <p className="font-semibold text-on-surface">{order.user_name}</p>
-                          <p className="text-xs text-on-surface-variant mt-0.5">{order.user_email}</p>
+                        <td className="py-4 px-6 text-on-surface">
+                          <div>
+                            <p className="font-semibold">{order.shipping_first_name} {order.shipping_last_name}</p>
+                            <p className="text-xs text-on-surface-variant">{order.shipping_email}</p>
+                          </div>
                         </td>
-                        <td className="py-4 px-6 text-on-surface-variant">
-                          {order.items.length} item{order.items.length !== 1 ? "s" : ""}
+                        <td className="py-4 px-6 font-medium text-on-surface">
+                          {order.items.reduce((sum, item) => sum + item.quantity, 0)} items
                         </td>
                         <td className="py-4 px-6" onClick={(e) => e.stopPropagation()}>
                           {orderStlFiles.length > 0 ? (
-                            <div className="flex flex-col gap-1.5 max-w-[180px]">
-                              {orderStlFiles.map((file, fIdx) => {
-                                const cleanName = file.name.replace(/^Custom Print:\s*/i, "");
+                            <div className="flex flex-col gap-1 max-w-[180px]">
+                              {orderStlFiles.map((file, idx) => {
+                                const cleanName = file.name.replace("Custom Print: ", "");
                                 return (
                                   <button
-                                    key={fIdx}
+                                    key={idx}
                                     type="button"
                                     onClick={() => handleDownloadModel(file.storagePath, file.name)}
                                     disabled={downloadingPath === file.storagePath}
@@ -184,32 +325,41 @@ export default function AdminOrdersPage() {
                           <select
                             value={order.status}
                             onChange={(e) => updateOrderStatus(order.id, e.target.value as typeof statuses[number])}
-                            className={`px-3 py-1.5 rounded-full text-xs font-bold capitalize outline-none cursor-pointer transition-colors border ${
-                              statusColors[order.status] || "bg-surface-container-lowest text-on-surface border-outline-variant"
+                            className={`px-3 py-1 rounded-full text-xs font-bold border outline-none cursor-pointer transition-all ${
+                              statusColors[order.status] || "bg-surface-container text-on-surface-variant"
                             }`}
                           >
-                            {statuses.map((s) => (
-                              <option key={s} value={s} className="bg-surface-container-lowest text-on-surface">
-                                {s}
+                            {statuses.map((status) => (
+                              <option key={status} value={status} className="bg-background text-foreground">
+                                {status.charAt(0).toUpperCase() + status.slice(1)}
                               </option>
                             ))}
                           </select>
                         </td>
-                        <td className="py-4 px-6 text-right text-xs font-medium text-on-surface-variant">
+                        <td className="py-4 px-6 text-right text-on-surface-variant text-xs font-mono">
                           {new Date(order.created_at).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
                             year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit"
                           })}
+                        </td>
+                        <td className="py-4 px-6 text-right" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteOrderSingle(order.id)}
+                            disabled={isDeleting}
+                            className="p-2 rounded-xl border border-destructive/20 hover:bg-destructive/10 text-destructive transition-colors disabled:opacity-50"
+                            title="Delete Order"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </td>
                       </tr>
 
-                      {/* Expandable Order Detail View */}
+                      {/* Expanded Details Row */}
                       {isExpanded && (
-                        <tr className="bg-surface-container-lowest border-b border-outline-variant">
-                          <td colSpan={8} className="p-6">
+                        <tr className="bg-surface-container-low/10">
+                          <td colSpan={10} className="p-6">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-on-surface">
                               {/* Shipping Information column */}
                               <div className="space-y-3 p-5 rounded-2xl bg-surface-container-low border border-outline-variant">
@@ -234,9 +384,10 @@ export default function AdminOrdersPage() {
                                 <div className="space-y-3">
                                   {order.items.map((item, idx) => {
                                     const { cleanFinish, storagePath } = extractStoragePath(item.finish);
+                                    
                                     return (
                                       <div
-                                        key={item.id || idx}
+                                        key={idx}
                                         className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-surface-container-low border border-outline-variant gap-4"
                                       >
                                         <div className="flex items-center gap-4">
@@ -278,12 +429,9 @@ export default function AdminOrdersPage() {
                                           {storagePath && (
                                             <button
                                               type="button"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleDownloadModel(storagePath, item.name);
-                                              }}
+                                              onClick={() => handleDownloadModel(storagePath, item.name)}
                                               disabled={downloadingPath === storagePath}
-                                              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full gradient-primary text-white text-xs font-semibold hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full gradient-primary text-white text-xs font-semibold hover:shadow-md transition-all disabled:opacity-50"
                                             >
                                               {downloadingPath === storagePath ? (
                                                 <>
@@ -308,12 +456,37 @@ export default function AdminOrdersPage() {
                           </td>
                         </tr>
                       )}
-                    </>
+                    </Fragment>
                   );
                 })}
               </tbody>
             </table>
           </div>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between p-6 bg-surface-container-low border-t border-outline-variant">
+              <span className="text-sm text-on-surface-variant">
+                Page {currentPage} of {totalPages} ({allOrders.length} orders total)
+              </span>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 rounded-xl bg-surface-container-highest text-on-surface text-xs font-semibold hover:shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 rounded-xl bg-surface-container-highest text-on-surface text-xs font-semibold hover:shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
