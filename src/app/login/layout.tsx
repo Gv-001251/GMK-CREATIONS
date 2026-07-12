@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Sign In | GMK 3D Creations",
-  description: "Sign in or create an account to start shopping premium 3D printed products.",
+  title: "Login | GMK 3D Creations",
+  description: "Log in to your account to track orders and manage custom 3D prints.",
 };
 
 export default function LoginLayout({ children }: { children: React.ReactNode }) {

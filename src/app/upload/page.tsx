@@ -39,7 +39,7 @@ export default function UploadPage() {
   const [depthInput, setDepthInput] = useState("");
   const [heightInput, setHeightInput] = useState("");
   const [selectedMaterial, setSelectedMaterial] = useState(materials[0].id);
-  const [selectedFinish, setSelectedFinish] = useState(finishes[0].id);
+  const selectedFinish = "matte";
   const [quantity, setQuantity] = useState(1);
   const [infillPercent, setInfillPercent] = useState(20); // default 20%
   const {
@@ -467,27 +467,7 @@ export default function UploadPage() {
                 </div>
               </div>
 
-              {/* Finish Selection */}
-              <div className="mt-8">
-                <h3 className="font-heading text-lg font-bold text-on-surface mb-4">
-                  Select Finish
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {finishes.map((finish) => (
-                    <button
-                      key={finish.id}
-                      onClick={() => setSelectedFinish(finish.id)}
-                      className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
-                        selectedFinish === finish.id
-                          ? "bg-on-surface text-background"
-                          : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high"
-                      }`}
-                    >
-                      {finish.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
+
             </div>
 
             {/* Quote Summary */}
@@ -562,12 +542,7 @@ export default function UploadPage() {
                       {infillPercent}%
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-on-surface-variant">Finish</span>
-                    <span className="text-sm font-medium text-on-surface">
-                      {finishes.find((f) => f.id === selectedFinish)?.name}
-                    </span>
-                  </div>
+
                   {analysis && scalePercent !== 100 && (
                     <div className="flex justify-between text-amber-500 font-medium">
                       <span className="text-sm">Scale</span>

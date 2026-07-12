@@ -19,17 +19,6 @@ const LIMITS: Record<string, { max: number; windowMs: number }> = {
   "/api/admin":           { max: 60,  windowMs: 60_000 },   // 60 admin calls / min
 };
 
-// Clean up stale entries every 5 minutes to prevent memory leaks
-setInterval(() => {
-  const now = Date.now();
-  store.forEach((entry, key) => {
-    const limit = Object.entries(LIMITS).find(([prefix]) => key.includes(prefix));
-    if (limit && now - entry.windowStart > limit[1].windowMs) {
-      store.delete(key);
-    }
-  });
-}, 5 * 60_000);
-
 function getLimit(pathname: string) {
   for (const [prefix, config] of Object.entries(LIMITS)) {
     if (pathname.startsWith(prefix)) return config;
@@ -43,6 +32,18 @@ function checkRateLimit(ip: string, pathname: string): boolean {
 
   const key = `${ip}:${pathname}`;
   const now = Date.now();
+
+  // Lazy cleanup of store if it gets too large
+  if (store.size > 1000) {
+    store.forEach((entry, k) => {
+      const path = k.split(":")[1];
+      const entryLimit = getLimit(path);
+      if (entryLimit && now - entry.windowStart > entryLimit.windowMs) {
+        store.delete(k);
+      }
+    });
+  }
+
   const entry = store.get(key);
 
   if (!entry || now - entry.windowStart > limit.windowMs) {
@@ -56,7 +57,7 @@ function checkRateLimit(ip: string, pathname: string): boolean {
   return true;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Only rate-limit API routes

@@ -69,7 +69,7 @@ export default function CartPage() {
                   const estArrival = getDeliveryEstimate(productionDays);
                   return (
                     <div
-                      key={`${item.productId}-${item.material}-${item.finish}`}
+                      key={`${item.productId}-${item.material}-${item.finish}-${item.primaryColor || ""}-${item.secondaryColor || ""}`}
                       className="flex gap-5 p-5 rounded-2xl bg-surface-container-low"
                     >
                       <div className="relative w-28 h-28 rounded-xl overflow-hidden bg-surface-container-highest shrink-0">
@@ -91,12 +91,26 @@ export default function CartPage() {
                             <p className="text-sm text-on-surface-variant mt-1">
                               {item.material} · {item.finish}
                             </p>
+                            {item.primaryColor && (
+                              <p className="text-xs text-on-surface-variant/80 mt-1 flex flex-wrap items-center gap-1.5">
+                                <span className="font-medium">Color:</span>
+                                {item.secondaryColor ? (
+                                  <>
+                                    <span>Base: {item.primaryColor}</span>
+                                    <span className="text-outline-variant/60">•</span>
+                                    <span>Accent: {item.secondaryColor}</span>
+                                  </>
+                                ) : (
+                                  <span>{item.primaryColor}</span>
+                                )}
+                              </p>
+                            )}
                             <p className="text-xs text-emerald-600 font-medium mt-1">
                               Estimated Arrival: {estArrival}
                             </p>
                           </div>
                           <button
-                            onClick={() => removeItem(item.productId, item.material, item.finish)}
+                            onClick={() => removeItem(item.productId, item.material, item.finish, item.primaryColor, item.secondaryColor)}
                             className="p-2 hover:bg-destructive/10 rounded-full transition-colors"
                             aria-label={`Remove ${item.name}`}
                           >
@@ -106,14 +120,14 @@ export default function CartPage() {
                         <div className="flex items-center justify-between mt-4">
                           <div className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-surface-container">
                             <button
-                              onClick={() => updateQuantity(item.productId, item.material, item.finish, item.quantity - 1)}
+                              onClick={() => updateQuantity(item.productId, item.material, item.finish, item.quantity - 1, item.primaryColor, item.secondaryColor)}
                               className="p-1 hover:bg-surface-container-high rounded-full transition-colors"
                             >
                               <Minus className="w-3.5 h-3.5" />
                             </button>
                             <span className="text-sm font-medium w-6 text-center">{item.quantity}</span>
                             <button
-                              onClick={() => updateQuantity(item.productId, item.material, item.finish, item.quantity + 1)}
+                              onClick={() => updateQuantity(item.productId, item.material, item.finish, item.quantity + 1, item.primaryColor, item.secondaryColor)}
                               className="p-1 hover:bg-surface-container-high rounded-full transition-colors"
                             >
                               <Plus className="w-3.5 h-3.5" />

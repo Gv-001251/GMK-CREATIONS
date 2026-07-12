@@ -39,6 +39,10 @@ function rowToProduct(row: Record<string, unknown>): Product {
     productionDays: (row.production_days as number) || 5,
     featured: (row.featured as boolean) || false,
     isNew: (row.is_new as boolean) || false,
+    isDualColor: (row.is_dual_color as boolean) || 
+      (row.name as string)?.toLowerCase().includes("keychain") || 
+      (row.name as string)?.toLowerCase().includes("nameplate") || 
+      (row.name as string)?.toLowerCase().includes("desk") || false,
   };
 }
 
@@ -123,6 +127,7 @@ export const useProductsStore = create<ProductsState>()(
       if (product.productionDays !== undefined) row.production_days = product.productionDays;
       if (product.featured !== undefined) row.featured = product.featured;
       if (product.isNew !== undefined) row.is_new = product.isNew;
+      if (product.isDualColor !== undefined) row.is_dual_color = product.isDualColor;
 
       const res = await fetch(`/api/products/${slug}`, {
         method: "PATCH",
@@ -161,6 +166,7 @@ export const useProductsStore = create<ProductsState>()(
         production_days: product.productionDays,
         featured: product.featured || false,
         is_new: product.isNew || false,
+        is_dual_color: product.isDualColor || false,
       };
 
       // Insert into DB first — only update local state on success

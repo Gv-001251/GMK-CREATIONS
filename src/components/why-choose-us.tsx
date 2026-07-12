@@ -61,17 +61,17 @@ export function WhyChooseUs() {
             {/* Trust Metrics Section */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-8 gap-x-0 pt-8 border-t border-outline-variant/35">
               {metrics.map((metric, i) => {
-                const paddingClass = 
+                const paddingClass =
                   i === 0 ? "pr-4 pl-0 sm:pr-6" :
-                  i === 1 ? "pl-4 pr-0 sm:px-6" :
-                  i === 2 ? "pr-4 pl-0 sm:px-6" :
-                  "pl-4 pr-0 sm:pl-6 sm:pr-0";
-                
-                const borderClass = 
+                    i === 1 ? "pl-4 pr-0 sm:px-6" :
+                      i === 2 ? "pr-4 pl-0 sm:px-6" :
+                        "pl-4 pr-0 sm:pl-6 sm:pr-0";
+
+                const borderClass =
                   i === 0 ? "border-r border-outline-variant/30" :
-                  i === 1 ? "border-r-0 sm:border-r border-outline-variant/30" :
-                  i === 2 ? "border-r border-outline-variant/30" :
-                  "border-r-0";
+                    i === 1 ? "border-r-0 sm:border-r border-outline-variant/30" :
+                      i === 2 ? "border-r border-outline-variant/30" :
+                        "border-r-0";
 
                 return (
                   <div key={i} className={`flex flex-col gap-1 ${paddingClass} ${borderClass}`}>
@@ -122,26 +122,34 @@ export function WhyChooseUs() {
         </div>
 
         {/* CTA Section */}
-        <div className="mt-24 text-center border-t border-outline-variant/35 pt-12 max-w-2xl mx-auto space-y-6">
-          <p className="text-sm sm:text-base text-on-surface-variant font-medium max-w-md mx-auto leading-relaxed">
-            Have an idea in mind? Let us transform it into a professionally crafted 3D printed product.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <Link
-              href="/products"
-              className="group inline-flex items-center gap-2 px-8 py-4 rounded-full gradient-primary text-white text-sm font-semibold tracking-wide hover:shadow-lg hover:shadow-primary/25 transition-all duration-300"
-              id="about-cta-explore"
-            >
-              Explore Our Products
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <Link
-              href="/upload"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white text-on-surface text-sm font-semibold hover:bg-surface-container-high transition-all duration-300 border border-outline-variant shadow-sm"
-              id="about-cta-quote"
-            >
-              Request a Custom Design
-            </Link>
+        <div
+          className="relative mt-20 max-w-5xl mx-auto rounded-3xl overflow-hidden shadow-2xl border border-outline-variant/10 bg-cover bg-center text-white py-16 px-8 sm:px-16 text-center"
+          style={{ backgroundImage: "url('/images/Let's%20connect.jpeg')" }}
+        >
+          {/* Overlay for legibility */}
+          <div className="absolute inset-0 bg-slate-900/45" />
+
+          <div className="relative z-10 space-y-7">
+            <p className="text-base sm:text-lg md:text-xl text-white/95 font-medium max-w-2xl mx-auto leading-relaxed drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
+              Looking for custom materials, metallic finishes, or unique textures? Let us transform your ideas into professionally crafted 3D printed products.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <Link
+                href="/products"
+                className="group inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white text-primary text-sm sm:text-base font-semibold hover:bg-surface-container-high transition-all duration-300 shadow-md"
+                id="about-cta-explore"
+              >
+                Explore Our Products
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link
+                href="/upload"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white/10 text-white text-sm sm:text-base font-semibold hover:bg-white/20 transition-all duration-300 border border-white/20 backdrop-blur-sm shadow-sm"
+                id="about-cta-quote"
+              >
+                Request a Custom Design
+              </Link>
+            </div>
           </div>
         </div>
       </div>

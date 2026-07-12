@@ -30,7 +30,7 @@ function toUser(su: SupabaseUser): User {
   return {
     id: su.id,
     email: su.email ?? "",
-    name: su.user_metadata?.name ?? su.email?.split("@")[0] ?? "User",
+    name: su.user_metadata?.name ?? su.user_metadata?.full_name ?? su.email?.split("@")[0] ?? "User",
     role: su.email?.toLowerCase() === ADMIN_EMAIL ? "admin" : "user",
   };
 }
@@ -47,15 +47,16 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     } = await supabase.auth.getUser();
 
     if (user) {
-      // Fetch the authoritative role from the DB — never trust the email alone
+      // Fetch the authoritative role and name from the DB — never trust the email alone
       const { data: profile } = await supabase
         .from("profiles")
-        .select("role")
+        .select("name, role")
         .eq("id", user.id)
         .single();
 
       const dbRole: UserRole = profile?.role === "admin" ? "admin" : "user";
-      set({ user: { ...toUser(user), role: dbRole }, isAuthenticated: true, isLoading: false });
+      const dbName = profile?.name || toUser(user).name;
+      set({ user: { ...toUser(user), name: dbName, role: dbRole }, isAuthenticated: true, isLoading: false });
     } else {
       set({ user: null, isAuthenticated: false, isLoading: false });
     }
@@ -63,15 +64,16 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     // Keep state in sync with Supabase auth changes (e.g. token refresh, sign-out in another tab)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        // Re-fetch role from DB on every auth state change
+        // Re-fetch role and name from DB on every auth state change
         const { data: profile } = await supabase
           .from("profiles")
-          .select("role")
+          .select("name, role")
           .eq("id", session.user.id)
           .single();
 
         const dbRole: UserRole = profile?.role === "admin" ? "admin" : "user";
-        set({ user: { ...toUser(session.user), role: dbRole }, isAuthenticated: true });
+        const dbName = profile?.name || toUser(session.user).name;
+        set({ user: { ...toUser(session.user), name: dbName, role: dbRole }, isAuthenticated: true });
       } else {
         set({ user: null, isAuthenticated: false });
       }

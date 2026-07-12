@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin, ArrowRight } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 // Custom SVG Instagram Icon
 const InstagramIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -46,6 +47,8 @@ const YoutubeIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 export function Footer() {
   const pathname = usePathname();
+  const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
 
   const handleScrollTo = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (href.startsWith("#") || (href.startsWith("/#") && pathname === "/")) {
@@ -58,246 +61,238 @@ export function Footer() {
     }
   };
 
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email.trim()) {
+      setSubscribed(true);
+      setEmail("");
+      setTimeout(() => setSubscribed(false), 4000);
+    }
+  };
+
   return (
     <footer
-      className="relative bg-neutral-950 text-white pt-20 pb-10 px-6 sm:px-12 md:px-16 overflow-hidden border-t border-white/5"
+      className="relative pt-24 pb-12 px-6 sm:px-12 md:px-16 bg-[#09090b] border-t border-slate-900 text-white"
       id="footer"
-      style={{ backgroundColor: "#0d0d0f" }}
     >
-      {/* Giant background text: GMK CREATIONS */}
-      <div
-        className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[12vw] font-bold uppercase tracking-tighter select-none pointer-events-none whitespace-nowrap font-heading leading-none z-0"
-        style={{ color: "rgba(255, 255, 255, 0.018)" }}
-      >
-        gmk.-creations
-      </div>
+      <div className="max-w-7xl mx-auto flex flex-col gap-16">
+        
+        {/* Main Footer Links Matrix */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10">
+          
+          {/* Column 1: Company */}
+          <div className="flex flex-col gap-4">
+            <h3 className="font-heading text-xs font-bold tracking-widest uppercase text-slate-400">
+              Company
+            </h3>
+            <ul className="flex flex-col gap-2.5 text-xs text-slate-400 font-medium">
+              <li>
+                <Link href="/#about" onClick={(e) => handleScrollTo(e, "/#about")} className="hover:text-primary transition-colors">
+                  About GMK
+                </Link>
+              </li>
+              <li>
+                <Link href="/#why-choose-gmk" onClick={(e) => handleScrollTo(e, "/#why-choose-gmk")} className="hover:text-primary transition-colors">
+                  Why Choose Us
+                </Link>
+              </li>
+              <li>
+                <Link href="/#portfolio" onClick={(e) => handleScrollTo(e, "/#portfolio")} className="hover:text-primary transition-colors">
+                  Client Work
+                </Link>
+              </li>
+            </ul>
+          </div>
 
-      <div className="max-w-7xl mx-auto relative z-10">
-        {/* Top Row: Info & Links */}
-        <div className="flex flex-col lg:flex-row justify-between gap-12 lg:gap-16 pb-12">
-          {/* Left Block: Contact / Socials */}
-          <div className="flex flex-col gap-6 max-w-sm" id="contact-info">
-            {/* Social Icons inside circles */}
-            <div className="flex items-center gap-3">
-              <a
-                href="https://www.instagram.com/gmk_3dcreations?igsh=bzVjemw2eGVwazNy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full border border-white/10 hover:border-white/40 bg-white/5 hover:bg-white/10 hover:scale-105 transition-all flex items-center justify-center text-white"
-                aria-label="Instagram"
-              >
-                <InstagramIcon className="w-5 h-5" />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 rounded-full border border-white/10 hover:border-white/40 bg-white/5 hover:bg-white/10 hover:scale-105 transition-all flex items-center justify-center text-white"
-                aria-label="X (formerly Twitter)"
-              >
-                <XLogoIcon className="w-4 h-4" />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 rounded-full border border-white/10 hover:border-white/40 bg-white/5 hover:bg-white/10 hover:scale-105 transition-all flex items-center justify-center text-white"
-                aria-label="YouTube"
-              >
-                <YoutubeIcon className="w-5 h-5" />
-              </a>
-            </div>
+          {/* Column 2: Products */}
+          <div className="flex flex-col gap-4">
+            <h3 className="font-heading text-xs font-bold tracking-widest uppercase text-slate-400">
+              Products
+            </h3>
+            <ul className="flex flex-col gap-2.5 text-xs text-slate-400 font-medium">
+              <li>
+                <Link href="/products?category=decor" className="hover:text-primary transition-colors">
+                  Home Decor
+                </Link>
+              </li>
+              <li>
+                <Link href="/products?category=miniatures" className="hover:text-primary transition-colors">
+                  Figurines
+                </Link>
+              </li>
+              <li>
+                <Link href="/products?category=prototypes" className="hover:text-primary transition-colors">
+                  Industrial Parts
+                </Link>
+              </li>
+              <li>
+                <Link href="/products?category=architecture" className="hover:text-primary transition-colors">
+                  Architecture
+                </Link>
+              </li>
+              <li>
+                <Link href="/products?category=edc-gear" className="hover:text-primary transition-colors">
+                  Accessories
+                </Link>
+              </li>
+            </ul>
+          </div>
 
-            {/* Address and details */}
-            <div className="space-y-4 font-body text-white/70 text-sm leading-relaxed">
-              <p className="font-heading text-lg font-bold tracking-tight text-white">GMK 3D Creations</p>
-              <p className="flex items-start gap-2.5">
-                <MapPin className="w-4.5 h-4.5 text-white/40 shrink-0 mt-0.5" />
-                <span>31/12, RAJAGOPAL LAYOUT, AVARAMPALAYAM ROAD, PEELAMEDU
-COIMBATORE -641 004</span>
-              </p>
-              <p className="flex items-center gap-2.5">
-                <Mail className="w-4.5 h-4.5 text-white/40 shrink-0" />
-                <a href="mailto:gmk3dcreations@gmail.com" className="hover:text-white hover:underline transition-all">
+          {/* Column 3: Services */}
+          <div className="flex flex-col gap-4">
+            <h3 className="font-heading text-xs font-bold tracking-widest uppercase text-slate-400">
+              Services
+            </h3>
+            <ul className="flex flex-col gap-2.5 text-xs text-slate-400 font-medium">
+              <li>
+                <Link href="/upload" className="hover:text-primary transition-colors">
+                  Custom 3D Printing
+                </Link>
+              </li>
+              <li>
+                <Link href="/upload" className="hover:text-primary transition-colors">
+                  Rapid Prototyping
+                </Link>
+              </li>
+              <li>
+                <Link href="/upload" className="hover:text-primary transition-colors">
+                  CAD File Review
+                </Link>
+              </li>
+              <li>
+                <Link href="/upload" className="hover:text-primary transition-colors">
+                  Direct Quote
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 4: Resources */}
+          <div className="flex flex-col gap-4">
+            <h3 className="font-heading text-xs font-bold tracking-widest uppercase text-slate-400">
+              Resources
+            </h3>
+            <ul className="flex flex-col gap-2.5 text-xs text-slate-400 font-medium">
+              <li>
+                <Link href="/#materials" onClick={(e) => handleScrollTo(e, "/#materials")} className="hover:text-primary transition-colors">
+                  Materials Guide
+                </Link>
+              </li>
+              <li>
+                <Link href="/products" className="hover:text-primary transition-colors">
+                  Printing FAQs
+                </Link>
+              </li>
+              <li>
+                <Link href="/orders" className="hover:text-primary transition-colors">
+                  Direct Support
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 5: Contact */}
+          <div className="flex flex-col gap-4 lg:col-span-2">
+            <h3 className="font-heading text-xs font-bold tracking-widest uppercase text-slate-400">
+              Contact
+            </h3>
+            <div className="flex flex-col gap-3.5 text-xs text-slate-400 leading-relaxed font-medium">
+              <div className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 shrink-0 mt-0.5 text-slate-500" />
+                <span>31/12, Rajagopal Layout, Avarampalayam Road, Peelamedu, Coimbatore - 641 004.</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 shrink-0 text-slate-500" />
+                <a href="mailto:gmk3dcreations@gmail.com" className="hover:text-primary transition-colors">
                   gmk3dcreations@gmail.com
                 </a>
-              </p>
-              <div className="flex flex-col gap-2">
-                <p className="flex items-center gap-2.5">
-                  <Phone className="w-4.5 h-4.5 text-white/40 shrink-0" />
-                  <a href="tel:+919344581320" className="hover:text-white hover:underline transition-all">
-                    (+91) 93445 81320
-                  </a>
-                </p>
-                <p className="flex items-center gap-2.5 pl-7">
-                  <a href="tel:+919944215100" className="hover:text-white hover:underline transition-all">
-                    (+91) 99442 15100
-                  </a>
-                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Phone className="w-4 h-4 shrink-0 text-slate-500" />
+                <div className="flex flex-col gap-0.5">
+                  <a href="tel:+919344581320" className="hover:text-primary transition-colors">(+91) 93445 81320</a>
+                  <a href="tel:+919944215100" className="hover:text-primary transition-colors">(+91) 99442 15100</a>
+                </div>
               </div>
             </div>
           </div>
-
-          {/* Right Block: Navigation Columns */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-8 sm:gap-12 lg:w-2/3">
-            {/* Column 1: MENU */}
-            <div>
-              <h3 className="font-heading text-xs font-semibold tracking-widest text-white uppercase mb-5">
-                Menu
-              </h3>
-              <ul className="space-y-3">
-                <li>
-                  <Link
-                    href="/#why-choose-us"
-                    onClick={(e) => handleScrollTo(e, "/#why-choose-us")}
-                    className="text-white/60 hover:text-white transition-colors text-sm font-body"
-                  >
-                    About
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/#categories"
-                    onClick={(e) => handleScrollTo(e, "/#categories")}
-                    className="text-white/60 hover:text-white transition-colors text-sm font-body"
-                  >
-                    Categories
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/products"
-                    className="text-white/60 hover:text-white transition-colors text-sm font-body"
-                  >
-                    Products
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/upload"
-                    className="text-white/60 hover:text-white transition-colors text-sm font-body"
-                  >
-                    Upload STL
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 2: SHOP */}
-            <div>
-              <h3 className="font-heading text-xs font-semibold tracking-widest text-white uppercase mb-5">
-                Shop
-              </h3>
-              <ul className="space-y-3">
-                <li>
-                  <Link
-                    href="/products?category=custom"
-                    className="text-white/60 hover:text-white transition-colors text-sm font-body"
-                  >
-                    Custom Prints
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/products?category=miniatures"
-                    className="text-white/60 hover:text-white transition-colors text-sm font-body"
-                  >
-                    Miniatures
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/products?category=art"
-                    className="text-white/60 hover:text-white transition-colors text-sm font-body"
-                  >
-                    Artistic Models
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/products?category=prototypes"
-                    className="text-white/60 hover:text-white transition-colors text-sm font-body"
-                  >
-                    Prototypes
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 3: CART/SUPPORT */}
-            <div className="col-span-2 md:col-span-1">
-              <h3 className="font-heading text-xs font-semibold tracking-widest text-white uppercase mb-5">
-                Cart & Help
-              </h3>
-              <ul className="space-y-3">
-                <li>
-                  <Link
-                    href="/cart"
-                    className="text-white/60 hover:text-white transition-colors text-sm font-body"
-                  >
-                    Shopping Cart
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/orders"
-                    className="text-white/60 hover:text-white transition-colors text-sm font-body"
-                  >
-                    My Orders
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="#contact-info"
-                    onClick={(e) => handleScrollTo(e, "#contact-info")}
-                    className="text-white/60 hover:text-white transition-colors text-sm font-body"
-                  >
-                    Contact Info
-                  </Link>
-                </li>
-                <li>
-                  <a
-                    href="mailto:gmk3dcreations@gmail.com"
-                    className="text-white/60 hover:text-white transition-colors text-sm font-body"
-                  >
-                    Direct Support
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
         </div>
 
-        {/* Divider Line with Overlapping Pill Button */}
-        <div className="relative flex items-center py-6">
-          <div className="flex-grow border-t border-white/10"></div>
-          <div className="absolute right-0 bg-[#0d0d0f] pl-4" style={{ backgroundColor: "#0d0d0f" }}>
-            <Link
-              href="/upload"
-              className="bg-white text-black hover:scale-105 active:scale-95 transition-all font-heading text-xs font-bold px-6 py-2.5 rounded-full shadow-md inline-block text-center tracking-wide"
-              style={{ backgroundColor: "#ffffff", color: "#000000" }}
+        {/* Social Links & Newsletter Sub-section */}
+        <div className="border-t border-slate-900 pt-12 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+          {/* Circular Social Links */}
+          <div className="flex items-center gap-3">
+            <a
+              href="https://www.instagram.com/gmk_3dcreations?igsh=bzVjemw2eGVwazNy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-10 h-10 rounded-full border border-slate-800 bg-white/5 flex items-center justify-center text-slate-300 hover:text-white hover:border-primary hover:bg-primary/5 transition-all duration-300"
+              aria-label="Instagram"
             >
-              Get Started
-            </Link>
+              <InstagramIcon className="w-5 h-5" />
+            </a>
+            <a
+              href="#"
+              className="w-10 h-10 rounded-full border border-slate-800 bg-white/5 flex items-center justify-center text-slate-300 hover:text-white hover:border-primary hover:bg-primary/5 transition-all duration-300"
+              aria-label="X"
+            >
+              <XLogoIcon className="w-4.5 h-4.5" />
+            </a>
+            <a
+              href="#"
+              className="w-10 h-10 rounded-full border border-slate-800 bg-white/5 flex items-center justify-center text-slate-300 hover:text-white hover:border-primary hover:bg-primary/5 transition-all duration-300"
+              aria-label="YouTube"
+            >
+              <YoutubeIcon className="w-5 h-5" />
+            </a>
+          </div>
+
+          {/* Newsletter Input Box */}
+          <div className="flex flex-col gap-3">
+            <h4 className="font-heading text-xs font-bold tracking-widest uppercase text-slate-400">
+              Join Our Newsletter
+            </h4>
+            <form onSubmit={handleSubscribe} className="flex max-w-md items-center gap-2">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="flex-1 px-4 py-2.5 rounded-full bg-white/5 border border-slate-800 text-xs font-medium placeholder-slate-500 focus:outline-none focus:border-primary focus:bg-white/10 transition-colors"
+              />
+              <button
+                type="submit"
+                className="px-5 py-2.5 rounded-full bg-white hover:bg-slate-100 text-slate-950 font-bold text-xs flex items-center gap-1 transition-all"
+              >
+                {subscribed ? "Subscribed" : "Subscribe"}
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </form>
           </div>
         </div>
 
-        {/* Bottom Row */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pt-4 text-white/50 text-xs font-body">
-          <div className="max-w-md">
-            <p className="leading-relaxed">
-              Precision materiality for your digital concepts. From prototyping to intricate art, we transform your ideas into custom 3D reality.
+        {/* Lower Sub-Footer Legal & Policy Links */}
+        <div className="border-t border-slate-900 pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="max-w-md text-center md:text-left">
+            <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+              Precision materiality for your digital concepts. From engineering prototypes to intricate architectural replicas, we transform ideas into custom 3D reality.
             </p>
           </div>
-          <div className="flex gap-6 font-semibold tracking-wider text-[10px]">
-            <Link href="/terms" className="hover:text-white transition-colors uppercase">
-              Terms & Conditions
+          
+          <div className="flex gap-6 text-[10px] font-bold tracking-wider text-slate-500">
+            <Link href="/terms" className="hover:text-primary transition-colors">
+              TERMS & CONDITIONS
             </Link>
-            <Link href="/privacy" className="hover:text-white transition-colors uppercase">
-              Privacy Policy
+            <Link href="/privacy" className="hover:text-primary transition-colors">
+              PRIVACY POLICY
             </Link>
           </div>
         </div>
 
-        {/* Copyright */}
-        <div className="mt-8 pt-4 border-t border-white/5 text-center text-[10px] text-white/20 tracking-widest font-heading uppercase">
-          GMK — 3D CREATIONS © {new Date().getFullYear()}. ALL RIGHTS RESERVED.
+        {/* Centered Copyright Line */}
+        <div className="text-center text-[10px] text-slate-600 tracking-wider font-semibold border-t border-slate-900/50 pt-8">
+          GMK – 3D CREATIONS © 2026. ALL RIGHTS RESERVED.
         </div>
       </div>
     </footer>

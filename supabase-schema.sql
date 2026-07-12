@@ -30,7 +30,7 @@ BEGIN
   INSERT INTO public.profiles (id, name, role)
   VALUES (
     NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1)),
+    COALESCE(NEW.raw_user_meta_data->>'name', NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
     CASE WHEN NEW.email = 'admin@gmk3d.com' THEN 'admin' ELSE 'user' END
   );
   RETURN NEW;

@@ -209,13 +209,22 @@ export async function POST(request: Request) {
       ? `${item.finish || ""} [File: ${item.storagePath}]`
       : item.finish || null;
 
+    let materialText = item.material || "";
+    if (item.primaryColor) {
+      if (item.secondaryColor) {
+        materialText += ` (Base: ${item.primaryColor}, Accent: ${item.secondaryColor})`;
+      } else {
+        materialText += ` (Color: ${item.primaryColor})`;
+      }
+    }
+
     return {
       order_id: orderId,
       product_id: item.productId,
       name: item.name || "",
       price: verifiedPrice,
       quantity: item.quantity,
-      material: item.material || null,
+      material: materialText || null,
       finish: finishText,
       image: item.image || null,
     };

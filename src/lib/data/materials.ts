@@ -11,7 +11,7 @@ export interface Material {
 export const materials: Material[] = [
   {
     id: "pla",
-    name: "PLA",
+    name: "PLA (Polylactic Acid)",
     shortName: "PLA",
     properties: ["Biodegradable", "Easy to print", "Wide color range"],
     priceMultiplier: 1.0,
@@ -20,8 +20,8 @@ export const materials: Material[] = [
   },
   {
     id: "tpu",
-    name: "TPU (Flexible)",
-    shortName: "TPU",
+    name: "TBU (Thermoplastic Polyurethane)",
+    shortName: "TBU",
     properties: ["Flexible", "Shock-absorbing", "Durable"],
     priceMultiplier: 1.6,
     density: 1.21,       // g/cm³

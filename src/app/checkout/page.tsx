@@ -640,7 +640,7 @@ function CheckoutContent() {
                       const estArrival = getDeliveryEstimate(productionDays);
                       return (
                         <div
-                          key={`${item.productId}-${item.material}-${item.finish}`}
+                          key={`${item.productId}-${item.material}-${item.finish}-${item.primaryColor || ""}-${item.secondaryColor || ""}`}
                           className="flex items-center gap-4 p-4 rounded-2xl bg-surface-container-low"
                         >
                           <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-surface-container-highest shrink-0">
@@ -660,6 +660,11 @@ function CheckoutContent() {
                             <p className="text-xs text-on-surface-variant">
                               {item.material} · {item.finish}
                             </p>
+                            {item.primaryColor && (
+                              <p className="text-[10px] text-on-surface-variant/80 mt-0.5">
+                                Color: {item.secondaryColor ? `${item.primaryColor} / ${item.secondaryColor}` : item.primaryColor}
+                              </p>
+                            )}
                             <p className="text-[10px] text-emerald-600 font-medium mt-0.5">
                               Estimated Arrival: {estArrival}
                             </p>
@@ -701,13 +706,17 @@ function CheckoutContent() {
                 <div className="space-y-3 mb-6">
                   {items.map((item) => (
                     <div
-                      key={`${item.productId}-${item.material}-${item.finish}`}
-                      className="flex justify-between text-sm"
+                      key={`${item.productId}-${item.material}-${item.finish}-${item.primaryColor || ""}-${item.secondaryColor || ""}`}
+                      className="flex justify-between text-sm items-start gap-4"
                     >
-                      <span className="text-on-surface-variant">
-                        {item.name}
-                      </span>
-                      <span className="font-medium">
+                      <div className="text-on-surface-variant">
+                        <span className="font-medium text-on-surface">{item.name}</span>
+                        <span className="block text-[11px] text-on-surface-variant/70 mt-0.5">
+                          {item.material} · {item.finish}
+                          {item.primaryColor && ` (${item.secondaryColor ? `${item.primaryColor}/${item.secondaryColor}` : item.primaryColor})`}
+                        </span>
+                      </div>
+                      <span className="font-medium shrink-0">
                         ₹{(item.price * item.quantity).toFixed(2)}
                       </span>
                     </div>

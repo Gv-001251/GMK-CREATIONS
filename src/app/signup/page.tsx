@@ -15,11 +15,17 @@ function SignupForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { register, signInWithGoogle } = useAuthStore();
+  const { register, signInWithGoogle, isAuthenticated, isLoading } = useAuthStore();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/";
+  const redirectTo = "/";
   const urlError = searchParams.get("error");
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated, router]);
 
   useEffect(() => {
     if (urlError) {
@@ -51,6 +57,17 @@ function SignupForm() {
 
     setLoading(false);
   };
+
+  if (isLoading) {
+    return (
+      <main>
+        <Navbar />
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main>

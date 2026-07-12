@@ -19,6 +19,7 @@ export interface Product {
   productionDays: number;
   featured?: boolean;
   isNew?: boolean;
+  isDualColor?: boolean;
 }
 
 export const products: Product[] = [
@@ -38,8 +39,8 @@ export const products: Product[] = [
       "https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781496976559-ufo-lamp-green-2.jpg"
     ],
     badge: "New",
-    materials: ["PLA", "PETG"],
-    finishes: ["Gloss", "Matte"],
+    materials: ["Standard PLA", "Carbon Fiber PETG", "Translucent Resin"],
+    finishes: ["Gloss", "Matte", "Satin"],
     dimensions: "140mm x 140mm x 180mm",
     layerHeight: "0.16mm (Detail)",
     infillDensity: "15% Gyroid",
@@ -59,8 +60,8 @@ export const products: Product[] = [
     image: "https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781495282936-dharani-keychain-top.jpg",
     images: ["https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781495282936-dharani-keychain-top.jpg", "https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781495283564-dharani-keychain-tilted.jpg"],
     badge: "Customizable",
-    materials: ["PLA"],
-    finishes: ["Matte"],
+    materials: ["Standard PLA", "Carbon Fiber PETG", "Nylon PA12"],
+    finishes: ["Matte", "Satin", "Gloss"],
     dimensions: "85mm x 25mm x 4mm",
     layerHeight: "0.2mm (Standard)",
     infillDensity: "100% Solid",
@@ -68,6 +69,7 @@ export const products: Product[] = [
     productionDays: 1,
     featured: true,
     isNew: true,
+    isDualColor: true,
   },
   {
     id: "prod-003",
@@ -80,8 +82,8 @@ export const products: Product[] = [
     image: "https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781495284181-mk-materials-nameplate.jpg",
     images: ["https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781495284181-mk-materials-nameplate.jpg", "https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781496310071-mk-nameplate-printbed.jpg", "https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781496308757-mk-nameplate-held.jpg"],
     badge: "Office",
-    materials: ["PLA"],
-    finishes: ["Matte"],
+    materials: ["Standard PLA", "Carbon Fiber PETG", "Nylon PA12"],
+    finishes: ["Matte", "Satin", "Gloss"],
     dimensions: "200mm x 50mm x 40mm",
     layerHeight: "0.2mm",
     infillDensity: "20% Grid",
@@ -89,6 +91,7 @@ export const products: Product[] = [
     productionDays: 2,
     featured: true,
     isNew: true,
+    isDualColor: true,
   },
   {
     id: "prod-004",
@@ -101,8 +104,8 @@ export const products: Product[] = [
     image: "https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781496311799-lithophane-front.jpg",
     images: ["https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781496311799-lithophane-front.jpg", "https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781496312464-lithophane-angle2.jpg", "https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781496314697-lithophane-angle3.jpg", "https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781496631006-lithophane-backlit-1.jpg", "https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781496632421-lithophane-backlit-2.jpg", "https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781496634059-lithophane-backlit-3.jpg"],
     badge: "Customizable",
-    materials: ["PLA"],
-    finishes: ["Raw"],
+    materials: ["Standard PLA", "Translucent Resin"],
+    finishes: ["Raw", "Matte"],
     dimensions: "100mm x 120mm x 30mm",
     layerHeight: "0.12mm (Ultra-Detail)",
     infillDensity: "100% Solid",
@@ -122,8 +125,8 @@ export const products: Product[] = [
     image: "https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781496641008-shiva-lingam-gold.jpg",
     images: ["https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781496641008-shiva-lingam-gold.jpg"],
     badge: "Devotional",
-    materials: ["PLA"],
-    finishes: ["Metallic"],
+    materials: ["Standard PLA", "Resin (8K)", "UV Resin"],
+    finishes: ["Metallic", "Matte", "Gloss"],
     dimensions: "50mm x 50mm x 100mm",
     layerHeight: "0.12mm (Ultra-Detail)",
     infillDensity: "30% Gyroid",
@@ -148,8 +151,8 @@ export const products: Product[] = [
       "https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781497350056-vr-developer-figurine-threequarter.jpg"
     ],
     badge: "New",
-    materials: ["PLA"],
-    finishes: ["Matte"],
+    materials: ["Standard PLA", "Resin (8K)", "UV Resin"],
+    finishes: ["Matte", "Satin", "Paint-Ready"],
     dimensions: "60mm x 60mm x 75mm",
     layerHeight: "0.12mm (Ultra-Detail)",
     infillDensity: "20% Gyroid",
@@ -171,8 +174,8 @@ export const products: Product[] = [
       "https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781496984839-miniature-robot-grey.jpg"
     ],
     badge: "Fidget Toy",
-    materials: ["PLA"],
-    finishes: ["Matte"],
+    materials: ["Standard PLA", "Carbon Fiber PETG"],
+    finishes: ["Matte", "Satin", "Gloss"],
     dimensions: "45mm x 20mm x 80mm",
     layerHeight: "0.16mm (Detail)",
     infillDensity: "15% Grid",
@@ -196,8 +199,8 @@ export const products: Product[] = [
       "https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781497197371-elephant-organizer-back.jpg"
     ],
     badge: "Desk Organizer",
-    materials: ["PLA"],
-    finishes: ["Metallic", "Matte"],
+    materials: ["Standard PLA", "Carbon Fiber PETG"],
+    finishes: ["Metallic", "Matte", "Satin"],
     dimensions: "120mm x 85mm x 150mm",
     layerHeight: "0.16mm (Detail)",
     infillDensity: "20% Gyroid",
@@ -219,8 +222,8 @@ export const products: Product[] = [
       "https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781497199773-sudarshana-chakra-display.jpg"
     ],
     badge: "Devotional",
-    materials: ["PLA"],
-    finishes: ["Matte"],
+    materials: ["Standard PLA", "Resin (8K)"],
+    finishes: ["Matte", "Satin", "Metallic"],
     dimensions: "170mm x 45mm x 200mm (8 inch height)",
     layerHeight: "0.16mm (Detail)",
     infillDensity: "15% Grid",
@@ -242,8 +245,8 @@ export const products: Product[] = [
       "https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781497200571-mandala-flower-tile.jpg"
     ],
     badge: "Wall Decor",
-    materials: ["PLA"],
-    finishes: ["Matte"],
+    materials: ["Standard PLA", "Carbon Fiber PETG"],
+    finishes: ["Matte", "Satin", "Gloss"],
     dimensions: "228mm x 228mm x 15mm (9 inch)",
     layerHeight: "0.2mm (Standard)",
     infillDensity: "15% Grid",
@@ -266,8 +269,8 @@ export const products: Product[] = [
       "https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781497348761-prabhavali-archway-held.jpg"
     ],
     badge: "Devotional",
-    materials: ["PLA"],
-    finishes: ["Gloss", "Matte"],
+    materials: ["Standard PLA", "Resin (8K)"],
+    finishes: ["Gloss", "Matte", "Satin"],
     dimensions: "200mm x 45mm x 228mm (9 inch height)",
     layerHeight: "0.12mm (Ultra-Detail)",
     infillDensity: "20% Grid",
@@ -289,8 +292,8 @@ export const products: Product[] = [
       "https://jqwyqactuygxezqizwic.supabase.co/storage/v1/object/public/product-images/1781496980110-vr-developer-desk-angle.jpg"
     ],
     badge: "Miniature",
-    materials: ["PLA"],
-    finishes: ["Matte"],
+    materials: ["Standard PLA", "Carbon Fiber PETG", "Nylon PA12"],
+    finishes: ["Matte", "Satin", "Gloss"],
     dimensions: "60mm x 60mm x 45mm",
     layerHeight: "0.16mm (Detail)",
     infillDensity: "15% Grid",
@@ -298,6 +301,7 @@ export const products: Product[] = [
     productionDays: 1,
     featured: true,
     isNew: true,
+    isDualColor: true,
   }
 ];
 

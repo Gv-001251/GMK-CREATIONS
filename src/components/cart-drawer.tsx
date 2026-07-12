@@ -50,7 +50,7 @@ export function CartDrawer() {
                 const estArrival = getDeliveryEstimate(productionDays);
                 return (
                   <div
-                    key={`${item.productId}-${item.material}-${item.finish}`}
+                    key={`${item.productId}-${item.material}-${item.finish}-${item.primaryColor || ""}-${item.secondaryColor || ""}`}
                     className="flex gap-4 p-4 rounded-2xl bg-surface-container-low"
                   >
                     <div className="relative w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-surface-container-highest">
@@ -70,13 +70,27 @@ export function CartDrawer() {
                       <p className="text-xs text-on-surface-variant mt-0.5">
                         {item.material} · {item.finish}
                       </p>
+                      {item.primaryColor && (
+                        <p className="text-[11px] text-on-surface-variant/80 mt-0.5 flex flex-wrap items-center gap-1">
+                          <span className="font-medium">Color:</span>
+                          {item.secondaryColor ? (
+                            <>
+                              <span>Base: {item.primaryColor}</span>
+                              <span className="text-outline-variant/60">•</span>
+                              <span>Accent: {item.secondaryColor}</span>
+                            </>
+                          ) : (
+                            <span>{item.primaryColor}</span>
+                          )}
+                        </p>
+                      )}
                       <p className="text-[10px] text-emerald-600 font-medium mt-0.5">
                         Est. Arrival: {estArrival}
                       </p>
                     <div className="flex items-center justify-between mt-3">
                       <div className="flex items-center gap-2 bg-surface-container rounded-full">
                         <button
-                          onClick={() => updateQuantity(item.productId, item.material, item.finish, item.quantity - 1)}
+                          onClick={() => updateQuantity(item.productId, item.material, item.finish, item.quantity - 1, item.primaryColor, item.secondaryColor)}
                           className="p-1.5 hover:bg-surface-container-high rounded-full transition-colors"
                           aria-label="Decrease quantity"
                         >
@@ -86,7 +100,7 @@ export function CartDrawer() {
                           {item.quantity}
                         </span>
                         <button
-                          onClick={() => updateQuantity(item.productId, item.material, item.finish, item.quantity + 1)}
+                          onClick={() => updateQuantity(item.productId, item.material, item.finish, item.quantity + 1, item.primaryColor, item.secondaryColor)}
                           className="p-1.5 hover:bg-surface-container-high rounded-full transition-colors"
                           aria-label="Increase quantity"
                         >
@@ -99,7 +113,7 @@ export function CartDrawer() {
                     </div>
                   </div>
                   <button
-                    onClick={() => removeItem(item.productId, item.material, item.finish)}
+                    onClick={() => removeItem(item.productId, item.material, item.finish, item.primaryColor, item.secondaryColor)}
                     className="self-start p-2 hover:bg-destructive/10 rounded-full transition-colors"
                     aria-label={`Remove ${item.name}`}
                   >

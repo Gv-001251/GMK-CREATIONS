@@ -9,6 +9,8 @@ export interface CartItem {
   quantity: number;
   material: string;
   finish: string;
+  primaryColor?: string;
+  secondaryColor?: string;
   storagePath?: string;
 }
 
@@ -16,8 +18,8 @@ interface CartState {
   items: CartItem[];
   isOpen: boolean;
   addItem: (item: Omit<CartItem, "quantity"> & { quantity?: number }) => void;
-  removeItem: (productId: string, material: string, finish: string) => void;
-  updateQuantity: (productId: string, material: string, finish: string, quantity: number) => void;
+  removeItem: (productId: string, material: string, finish: string, primaryColor?: string, secondaryColor?: string) => void;
+  updateQuantity: (productId: string, material: string, finish: string, quantity: number, primaryColor?: string, secondaryColor?: string) => void;
   clearCart: () => void;
   toggleCart: () => void;
   openCart: () => void;
@@ -36,12 +38,20 @@ export const useCartStore = create<CartState>()(
         const qty = item.quantity ?? 1;
         set((state) => {
           const existing = state.items.find(
-            (i) => i.productId === item.productId && i.material === item.material && i.finish === item.finish
+            (i) => i.productId === item.productId &&
+                   i.material === item.material &&
+                   i.finish === item.finish &&
+                   i.primaryColor === item.primaryColor &&
+                   i.secondaryColor === item.secondaryColor
           );
           if (existing) {
             return {
               items: state.items.map((i) =>
-                i.productId === item.productId && i.material === item.material && i.finish === item.finish
+                i.productId === item.productId &&
+                i.material === item.material &&
+                i.finish === item.finish &&
+                i.primaryColor === item.primaryColor &&
+                i.secondaryColor === item.secondaryColor
                   ? { ...i, quantity: i.quantity + qty }
                   : i
               ),
@@ -55,22 +65,30 @@ export const useCartStore = create<CartState>()(
         });
       },
 
-      removeItem: (productId, material, finish) => {
+      removeItem: (productId, material, finish, primaryColor, secondaryColor) => {
         set((state) => ({
           items: state.items.filter(
-            (i) => !(i.productId === productId && i.material === material && i.finish === finish)
+            (i) => !(i.productId === productId &&
+                     i.material === material &&
+                     i.finish === finish &&
+                     i.primaryColor === primaryColor &&
+                     i.secondaryColor === secondaryColor)
           ),
         }));
       },
 
-      updateQuantity: (productId, material, finish, quantity) => {
+      updateQuantity: (productId, material, finish, quantity, primaryColor, secondaryColor) => {
         if (quantity <= 0) {
-          get().removeItem(productId, material, finish);
+          get().removeItem(productId, material, finish, primaryColor, secondaryColor);
           return;
         }
         set((state) => ({
           items: state.items.map((i) =>
-            i.productId === productId && i.material === material && i.finish === finish
+            i.productId === productId &&
+            i.material === material &&
+            i.finish === finish &&
+            i.primaryColor === primaryColor &&
+            i.secondaryColor === secondaryColor
               ? { ...i, quantity }
               : i
           ),

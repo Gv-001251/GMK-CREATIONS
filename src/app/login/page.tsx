@@ -14,11 +14,17 @@ function LoginForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { login, signInWithGoogle } = useAuthStore();
+  const { login, signInWithGoogle, isAuthenticated, isLoading } = useAuthStore();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/";
+  const redirectTo = "/";
   const urlError = searchParams.get("error");
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated, router]);
 
   useEffect(() => {
     if (urlError) {
@@ -29,7 +35,7 @@ function LoginForm() {
   const handleGoogleSignIn = async () => {
     setError("");
     setLoading(true);
-    const result = await signInWithGoogle(redirectTo);
+    const result = await signInWithGoogle("/");
     if (!result.success) {
       setError(result.error || "Google Sign-In failed to initialize");
       setLoading(false);
@@ -43,18 +49,24 @@ function LoginForm() {
 
     const result = await login(email, password);
     if (result.success) {
-      const currentUser = useAuthStore.getState().user;
-      if (currentUser?.role === "admin") {
-        router.push(redirectTo === "/" ? "/admin" : redirectTo);
-      } else {
-        router.push(redirectTo.startsWith("/admin") ? "/" : redirectTo);
-      }
+      router.push("/");
     } else {
       setError(result.error || "Login failed");
     }
 
     setLoading(false);
   };
+
+  if (isLoading) {
+    return (
+      <main>
+        <Navbar />
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main>

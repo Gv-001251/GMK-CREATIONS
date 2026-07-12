@@ -22,6 +22,10 @@ const nextConfig: NextConfig & { allowedDevOrigins?: string[] } = {
         hostname: "lh3.googleusercontent.com",
       },
       {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+      {
         protocol: supabaseProtocol === "http" ? "http" : "https",
         hostname: supabaseHostname,
       },
@@ -60,10 +64,10 @@ const nextConfig: NextConfig & { allowedDevOrigins?: string[] } = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' https://checkout.razorpay.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: blob: https://lh3.googleusercontent.com https://*.supabase.co",
+              "img-src 'self' data: blob: https://lh3.googleusercontent.com https://*.supabase.co https://images.unsplash.com",
               `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.backblazeb2.com https://api.razorpay.com`,
               "frame-src https://api.razorpay.com",
               "object-src 'none'",

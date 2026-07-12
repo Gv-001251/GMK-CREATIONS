@@ -23,8 +23,8 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
       name: product.name,
       price: product.price,
       image: product.image,
-      material: product.materials[0],
-      finish: product.finishes[0],
+      material: "PLA (Polylactic Acid)",
+      finish: "Standard",
     });
   };
 

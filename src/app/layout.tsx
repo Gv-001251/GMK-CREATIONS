@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Manrope } from "next/font/google";
-import { AuthProvider } from "@/components/auth-provider";
-import { ToastContainer } from "@/components/toast";
-import { FloatingUploadWidget } from "@/components/floating-upload-widget";
+import { ClientProviders } from "@/components/client-providers";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -61,11 +59,7 @@ export default function RootLayout({
       <body
         className={`${spaceGrotesk.variable} ${manrope.variable} antialiased`}
       >
-        <AuthProvider>
-          <ToastContainer />
-          <FloatingUploadWidget />
-          {children}
-        </AuthProvider>
+        <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
   );

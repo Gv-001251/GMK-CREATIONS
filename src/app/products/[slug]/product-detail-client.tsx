@@ -10,8 +10,9 @@ import { Footer } from "@/components/footer";
 import { useProductsStore } from "@/lib/store/products-store";
 import { useCartStore } from "@/lib/store/cart-store";
 import { useAuthStore } from "@/lib/store/auth-store";
-import { ChevronRight, Minus, Plus, ShoppingCart, Cpu, Ruler, Layers, Maximize2, LogIn, ChevronLeft, X } from "lucide-react";
+import { ChevronRight, Minus, Plus, ShoppingCart, Cpu, Ruler, Layers, Maximize2, LogIn, ChevronLeft, X, Star, CheckCircle2, MessageSquare, HelpCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { getDeliveryEstimate } from "@/lib/utils/date-estimator";
+import { toast } from "@/components/toast";
 
 interface MaterialInfo {
   multiplier: number;
@@ -29,12 +30,8 @@ interface FinishInfo {
 }
 
 const MATERIAL_METADATA: Record<string, MaterialInfo> = {
-  "Standard PLA": { multiplier: 1.0, description: "Easy printing, biodegradable thermoplastic", colorClass: "bg-emerald-500", detail: 75, strength: 55, weight: 60 },
-  "Resin (8K)": { multiplier: 1.4, description: "Ultra-high resolution, razor-sharp details", colorClass: "bg-teal-500", detail: 98, strength: 45, weight: 70 },
-  "Carbon Fiber PETG": { multiplier: 1.25, description: "Extreme rigidity and impact resistance", colorClass: "bg-zinc-700", detail: 80, strength: 95, weight: 50 },
-  "Nylon PA12": { multiplier: 1.3, description: "High toughness and chemical resistance", colorClass: "bg-sky-500", detail: 82, strength: 90, weight: 80 },
-  "Translucent Resin": { multiplier: 1.4, description: "Clear transparent SLA, semi-gloss premium", colorClass: "bg-cyan-300/60", detail: 96, strength: 45, weight: 70 },
-  "UV Resin": { multiplier: 1.4, description: "Fast-curing precision UV photopolymer", colorClass: "bg-purple-500", detail: 98, strength: 40, weight: 70 }
+  "PLA (Polylactic Acid)": { multiplier: 1.0, description: "Easy printing, biodegradable thermoplastic (₹5/g)", colorClass: "bg-emerald-500", detail: 75, strength: 55, weight: 60 },
+  "TBU (Thermoplastic Polyurethane)": { multiplier: 1.6, description: "Flexible, shock-absorbing and durable (₹8/g)", colorClass: "bg-sky-500", detail: 80, strength: 85, weight: 75 }
 };
 
 const getMaterialInfo = (name: string): MaterialInfo => {
@@ -68,6 +65,71 @@ const getFinishInfo = (name: string): FinishInfo => {
   return FINISH_METADATA[name] || { surcharge: 0, description: "Standard finish", colorClass: "bg-neutral-500 border-neutral-400" };
 };
 
+const COLOR_PALETTE = [
+  { name: "Pure White", code: "#FFFFFF", colorClass: "bg-[#FFFFFF] border-zinc-200" },
+  { name: "Matte Black", code: "#111111", colorClass: "bg-[#111111] border-zinc-800" },
+  { name: "Slate Grey", code: "#6B7280", colorClass: "bg-[#6B7280] border-gray-400" },
+  { name: "Crimson Red", code: "#DC2626", colorClass: "bg-[#DC2626] border-red-500" },
+  { name: "Royal Blue", code: "#1D4ED8", colorClass: "bg-[#1D4ED8] border-blue-600" },
+  { name: "Emerald Green", code: "#047857", colorClass: "bg-[#047857] border-emerald-600" },
+  { name: "Cyber Orange", code: "#EA580C", colorClass: "bg-[#EA580C] border-orange-500" },
+  { name: "Lemon Yellow", code: "#CA8A04", colorClass: "bg-[#CA8A04] border-yellow-500" },
+  { name: "Deep Purple", code: "#6D28D9", colorClass: "bg-[#6D28D9] border-purple-600" },
+  { name: "Sakura Pink", code: "#DB2777", colorClass: "bg-[#DB2777] border-pink-500" },
+  { name: "Gold Metallic", code: "#D97706", colorClass: "bg-[#D97706] border-amber-500" },
+  { name: "Silver Metallic", code: "#94A3B8", colorClass: "bg-[#94A3B8] border-slate-300" },
+  { name: "Bronze Metallic", code: "#78350F", colorClass: "bg-[#78350F] border-amber-900" },
+  { name: "Copper Metallic", code: "#B45309", colorClass: "bg-[#B45309] border-amber-700" },
+  { name: "Mint Green", code: "#34D399", colorClass: "bg-[#34D399] border-emerald-300" },
+  { name: "Sky Blue", code: "#38BDF8", colorClass: "bg-[#38BDF8] border-sky-300" }
+];
+
+const MOCK_REVIEWS = [
+  {
+    id: 1,
+    author: "Gayathri K.",
+    rating: 5,
+    date: "July 2, 2026",
+    comment: "Absolutely stunning quality! The detail on the edges is extremely crisp, and the material feels very premium. Exceeded my expectations.",
+    verified: true,
+  },
+  {
+    id: 2,
+    author: "Rohan M.",
+    rating: 5,
+    date: "June 28, 2026",
+    comment: "Ordered a custom version and it came out perfectly. The packaging was very secure, ensuring no damage during shipping. Will definitely buy again!",
+    verified: true,
+  },
+  {
+    id: 3,
+    author: "Ananya S.",
+    rating: 4,
+    date: "May 15, 2026",
+    comment: "Very neat print and the color is gorgeous. It has a tiny layer line on the back but barely noticeable. Extremely happy with it overall.",
+    verified: true,
+  }
+];
+
+const MOCK_FAQS = [
+  {
+    question: "What is the difference between PLA and TBU?",
+    answer: "PLA (Polylactic Acid) is a rigid, biodegradable plastic that is ideal for detailed decorative items, models, and low-stress parts. TBU (Thermoplastic Polyurethane) is a flexible, rubber-like material with high shock-absorption, wear resistance, and elasticity—perfect for protective cases, functional parts, and flexible gears."
+  },
+  {
+    question: "How long does it take to print and ship my order?",
+    answer: "Production lead times are calculated dynamically per product based on volume and complexity (usually 1-3 days for PLA, and slightly longer for TBU). Delivery typically takes 2-4 days post-production depending on your location."
+  },
+  {
+    question: "How do I care for and clean my 3D printed items?",
+    answer: "To clean, simply wipe with a warm damp cloth. Avoid exposing PLA prints to high temperatures (above 55°C / 130°F), direct hot sunlight, or harsh chemical solvents, as they may deform. TBU is highly chemical and heat resistant, but mild soapy water is always recommended."
+  },
+  {
+    question: "Can I request custom sizing or a completely custom design?",
+    answer: "Yes! You can use our 'Upload Model' page to upload any custom STL/OBJ 3D file, configure dimensions, infill, and material, and get an instant quote. For fully custom design services, you can contact our support team."
+  }
+];
+
 export default function ProductDetailClient() {
   const params = useParams();
   const { fetchProducts, getProductBySlug, getRecommendedProducts, isLoading } = useProductsStore();
@@ -88,14 +150,46 @@ export default function ProductDetailClient() {
     fetchProducts();
   }, [fetchProducts]);
 
-  const [selectedMaterial, setSelectedMaterial] = useState("");
-  const [selectedFinish, setSelectedFinish] = useState("");
+  const [selectedMaterial, setSelectedMaterial] = useState("PLA (Polylactic Acid)");
+  const [selectedPrimaryColor, setSelectedPrimaryColor] = useState("");
+  const [selectedSecondaryColor, setSelectedSecondaryColor] = useState("");
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
+  const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(null);
+  const [reviews, setReviews] = useState(MOCK_REVIEWS);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewAuthor, setReviewAuthor] = useState("");
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+
+  const handleSubmitReview = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reviewAuthor.trim() || !reviewComment.trim()) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+    const newRev = {
+      id: Date.now(),
+      author: reviewAuthor,
+      rating: reviewRating,
+      date: new Date().toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' }),
+      comment: reviewComment,
+      verified: true,
+    };
+    setReviews([newRev, ...reviews]);
+    setReviewAuthor("");
+    setReviewComment("");
+    setReviewRating(5);
+    setShowReviewForm(false);
+    toast.success("Review submitted successfully! Thank you.");
+  };
+
   useEffect(() => {
     setActiveImageIndex(0);
+    setSelectedPrimaryColor("");
+    setSelectedSecondaryColor("");
   }, [params.slug]);
 
   useEffect(() => {
@@ -141,12 +235,23 @@ export default function ProductDetailClient() {
     );
   }
 
-  const activeMaterial = selectedMaterial || (product.materials[0] || "");
-  const activeFinish = selectedFinish || (product.finishes[0] || "");
+  const activeMaterial = selectedMaterial || "PLA (Polylactic Acid)";
+  const activeFinish = "Standard";
 
   const materialInfo = getMaterialInfo(activeMaterial);
   const finishInfo = getFinishInfo(activeFinish);
   const dynamicPrice = (product.price * materialInfo.multiplier) + finishInfo.surcharge;
+
+  const isDualColor = product ? (product.isDualColor || 
+    product.name.toLowerCase().includes("keychain") || 
+    product.name.toLowerCase().includes("nameplate") ||
+    product.name.toLowerCase().includes("desk")) : false;
+
+  const defaultPrimaryColor = COLOR_PALETTE[0].name;
+  const defaultSecondaryColor = COLOR_PALETTE[1]?.name || COLOR_PALETTE[0].name;
+
+  const activePrimaryColor = selectedPrimaryColor || defaultPrimaryColor;
+  const activeSecondaryColor = selectedSecondaryColor || defaultSecondaryColor;
 
   const handleAddToCart = () => {
     if (!isAuthenticated) {
@@ -160,6 +265,8 @@ export default function ProductDetailClient() {
       image: product.image,
       material: activeMaterial,
       finish: activeFinish,
+      primaryColor: activePrimaryColor,
+      secondaryColor: isDualColor ? activeSecondaryColor : undefined,
       quantity: 1,
     });
   };
@@ -239,141 +346,6 @@ export default function ProductDetailClient() {
                   );
                 })}
               </div>
-            </div>
-
-            {/* Product Info */}
-            <div>
-              <span className="text-xs font-medium text-primary uppercase tracking-widest">
-                {product.category.replace("-", " ")}
-              </span>
-              <h1 className="font-heading text-3xl md:text-4xl font-bold text-on-surface mt-2 tracking-tight">
-                {product.name}
-              </h1>
-              <p className="text-on-surface-variant mt-3 leading-relaxed">
-                {product.longDescription}
-              </p>
-
-              {/* Material Selection */}
-              <div className="mt-8">
-                <h3 className="font-heading text-sm font-semibold text-on-surface mb-3 flex items-center gap-2">
-                  <span>Select Material</span>
-                  <span className="text-xs text-on-surface-variant font-normal">(FDM / SLA Technologies)</span>
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {product.materials.map((material) => {
-                    const info = getMaterialInfo(material);
-                    const isSelected = activeMaterial === material;
-                    return (
-                      <button
-                        key={material}
-                        type="button"
-                        onClick={() => setSelectedMaterial(material)}
-                        className={`flex items-start gap-3 p-3.5 rounded-2xl border text-left transition-all relative overflow-hidden ${
-                          isSelected
-                            ? "bg-surface-container-high border-primary shadow-lg shadow-primary/5"
-                            : "bg-surface-container-low/40 border-outline-variant/30 hover:border-outline-variant hover:bg-surface-container-low/80"
-                        }`}
-                      >
-                        <span className={`w-4 h-4 rounded-full ${info.colorClass} shrink-0 mt-1 shadow-sm`} />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-baseline gap-2">
-                            <span className="font-semibold text-sm text-on-surface truncate">{material}</span>
-                            {info.multiplier > 1 && (
-                              <span className="text-[10px] font-bold text-primary shrink-0 bg-primary/10 px-1.5 py-0.5 rounded-md">
-                                +{Math.round((info.multiplier - 1) * 100)}%
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-on-surface-variant mt-0.5 line-clamp-2 leading-relaxed">
-                            {info.description}
-                          </p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Finish Selection */}
-              <div className="mt-6">
-                <h3 className="font-heading text-sm font-semibold text-on-surface mb-3 flex items-center gap-2">
-                  <span>Select Finish</span>
-                  <span className="text-xs text-on-surface-variant font-normal">(Post-Processing Treatment)</span>
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {product.finishes.map((finish) => {
-                    const info = getFinishInfo(finish);
-                    const isSelected = activeFinish === finish;
-                    return (
-                      <button
-                        key={finish}
-                        type="button"
-                        onClick={() => setSelectedFinish(finish)}
-                        className={`flex items-start gap-3 p-3.5 rounded-2xl border text-left transition-all relative overflow-hidden ${
-                          isSelected
-                            ? "bg-surface-container-high border-primary shadow-lg shadow-primary/5"
-                            : "bg-surface-container-low/40 border-outline-variant/30 hover:border-outline-variant hover:bg-surface-container-low/80"
-                        }`}
-                      >
-                        <span className={`w-4 h-4 rounded-full ${info.colorClass} shrink-0 mt-1 shadow-sm border border-white/10`} />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-baseline gap-2">
-                            <span className="font-semibold text-sm text-on-surface truncate">{finish}</span>
-                            {info.surcharge > 0 && (
-                              <span className="text-[10px] font-bold text-primary shrink-0 bg-primary/10 px-1.5 py-0.5 rounded-md">
-                                +₹{info.surcharge}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-on-surface-variant mt-0.5 line-clamp-2 leading-relaxed">
-                            {info.description}
-                          </p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Dynamic Price & Production Lead Time */}
-              <div className="mt-8 p-4 rounded-2xl bg-surface-container-low/60 border border-outline-variant/20 flex flex-wrap justify-between items-center gap-4">
-                <div>
-                  <span className="font-heading text-3xl font-bold text-on-surface block">
-                    ₹{dynamicPrice.toFixed(2)}
-                  </span>
-                  <span className="text-xs text-emerald-600 font-medium mt-0.5 block">
-                    Est. Delivery: {getDeliveryEstimate(product.productionDays)}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-xs text-on-surface-variant block">
-                    Production Lead Time
-                  </span>
-                  <span className="text-sm font-semibold text-on-surface block">
-                    {product.productionDays} Days
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <button
-                  onClick={handleAddToCart}
-                  className="w-full flex items-center justify-center gap-2 py-4 rounded-full gradient-primary text-white font-semibold hover:shadow-lg hover:shadow-primary/20 transition-all"
-                  id="add-to-cart"
-                >
-                  {isAuthenticated ? (
-                    <>
-                      <ShoppingCart className="w-4 h-4" />
-                      Add to Cart
-                    </>
-                  ) : (
-                    <>
-                      <LogIn className="w-4 h-4" />
-                      Login to Add to Cart
-                    </>
-                  )}
-                </button>
-              </div>
 
               {/* Mechanical Performance Diagnostics */}
               <div className="mt-8 p-6 rounded-2xl bg-surface-container-low border border-outline-variant/10">
@@ -423,6 +395,339 @@ export default function ProductDetailClient() {
                 </div>
               </div>
 
+              {/* Divider */}
+              <div className="border-t border-outline-variant/10 my-8" />
+
+              {/* Reviews Section */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-heading text-xl font-bold text-on-surface flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5 text-primary" />
+                    Customer Reviews
+                  </h2>
+                  <button
+                    onClick={() => setShowReviewForm(!showReviewForm)}
+                    className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+                  >
+                    Write a Review
+                  </button>
+                </div>
+
+                {/* Reviews Summary Card */}
+                <div className="p-5 rounded-2xl bg-surface-container-low/40 border border-outline-variant/10 flex flex-col sm:flex-row gap-6 items-center">
+                  <div className="text-center sm:border-r border-outline-variant/20 sm:pr-8">
+                    <span className="text-4xl font-extrabold text-on-surface">4.8</span>
+                    <div className="flex items-center justify-center gap-0.5 mt-1.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star key={star} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                    <span className="text-[11px] text-on-surface-variant mt-1.5 block">Based on {reviews.length} reviews</span>
+                  </div>
+
+                  <div className="flex-1 space-y-2 w-full">
+                    {/* Star Breakdown */}
+                    {[
+                      { stars: 5, pct: 85 },
+                      { stars: 4, pct: 12 },
+                      { stars: 3, pct: 3 },
+                      { stars: 2, pct: 0 },
+                      { stars: 1, pct: 0 },
+                    ].map((row) => (
+                      <div key={row.stars} className="flex items-center gap-3 text-xs">
+                        <span className="w-3 text-on-surface-variant font-medium text-right">{row.stars}</span>
+                        <Star className="w-3.5 h-3.5 fill-on-surface-variant/40 text-on-surface-variant/40 shrink-0" />
+                        <div className="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
+                          <div className="h-full bg-amber-400 rounded-full" style={{ width: `${row.pct}%` }} />
+                        </div>
+                        <span className="w-8 text-on-surface-variant text-right">{row.pct}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Write Review Form */}
+                {showReviewForm && (
+                  <form onSubmit={handleSubmitReview} className="p-5 rounded-2xl bg-surface-container-low border border-primary/20 space-y-4 animate-scale-in">
+                    <h3 className="font-heading text-sm font-bold text-on-surface">Write your review</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-semibold text-on-surface-variant block mb-1">Your Name</label>
+                        <input
+                          type="text"
+                          required
+                          value={reviewAuthor}
+                          onChange={(e) => setReviewAuthor(e.target.value)}
+                          className="w-full text-sm px-3.5 py-2 rounded-xl bg-surface-container border border-outline-variant/30 focus:border-primary focus:outline-none text-on-surface"
+                          placeholder="e.g. Rahul K."
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-on-surface-variant block mb-1">Rating</label>
+                        <div className="flex items-center gap-1.5 h-10">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => setReviewRating(star)}
+                              className="focus:outline-none"
+                            >
+                              <Star className={`w-6 h-6 ${star <= reviewRating ? "fill-amber-400 text-amber-400" : "text-outline-variant/60"}`} />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-on-surface-variant block mb-1">Review Details</label>
+                      <textarea
+                        required
+                        rows={3}
+                        value={reviewComment}
+                        onChange={(e) => setReviewComment(e.target.value)}
+                        className="w-full text-sm px-3.5 py-2 rounded-xl bg-surface-container border border-outline-variant/30 focus:border-primary focus:outline-none text-on-surface resize-none"
+                        placeholder="What did you think of this product?"
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setShowReviewForm(false)}
+                        className="px-4 py-2 rounded-full font-semibold border border-outline-variant/40 hover:bg-surface-container-high text-on-surface transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-5 py-2 rounded-full gradient-primary text-white font-semibold shadow-md hover:shadow-lg transition-all"
+                      >
+                        Submit
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* Review List */}
+                <div className="space-y-4">
+                  {reviews.map((rev) => (
+                    <div key={rev.id} className="p-5 rounded-2xl bg-surface-container-low/40 border border-outline-variant/10 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="font-semibold text-sm text-on-surface block">{rev.author}</span>
+                          <span className="text-[10px] text-on-surface-variant">{rev.date}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="flex gap-0.5">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star key={star} className={`w-3 h-3 ${star <= rev.rating ? "fill-amber-400 text-amber-400" : "text-outline-variant/30"}`} />
+                            ))}
+                          </div>
+                          {rev.verified && (
+                            <span className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                              <CheckCircle2 className="w-2.5 h-2.5" />
+                              Verified
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-xs text-on-surface-variant leading-relaxed">{rev.comment}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Product Info */}
+            <div>
+              <span className="text-xs font-medium text-primary uppercase tracking-widest">
+                {product.category.replace("-", " ")}
+              </span>
+              <h1 className="font-heading text-3xl md:text-4xl font-bold text-on-surface mt-2 tracking-tight">
+                {product.name}
+              </h1>
+              <p className="text-on-surface-variant mt-3 leading-relaxed">
+                {product.longDescription}
+              </p>
+
+              {/* Material Selection */}
+              <div className="mt-8">
+                <h3 className="font-heading text-sm font-semibold text-on-surface mb-3 flex items-center gap-2">
+                  <span>Select Material</span>
+                  <span className="text-xs text-on-surface-variant font-normal">(FDM / SLA Technologies)</span>
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {Object.keys(MATERIAL_METADATA).map((material) => {
+                    const info = getMaterialInfo(material);
+                    const isSelected = activeMaterial === material;
+                    return (
+                      <button
+                        key={material}
+                        type="button"
+                        onClick={() => setSelectedMaterial(material)}
+                        className={`flex items-start gap-3 p-3.5 rounded-2xl border text-left transition-all relative overflow-hidden ${
+                          isSelected
+                            ? "bg-surface-container-high border-primary shadow-lg shadow-primary/5"
+                            : "bg-surface-container-low/40 border-outline-variant/30 hover:border-outline-variant hover:bg-surface-container-low/80"
+                        }`}
+                      >
+                        <span className={`w-4 h-4 rounded-full ${info.colorClass} shrink-0 mt-1 shadow-sm`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-baseline gap-2">
+                            <span className="font-semibold text-sm text-on-surface truncate">{material}</span>
+                            {info.multiplier > 1 && (
+                              <span className="text-[10px] font-bold text-primary shrink-0 bg-primary/10 px-1.5 py-0.5 rounded-md">
+                                +{Math.round((info.multiplier - 1) * 100)}%
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-on-surface-variant mt-0.5 line-clamp-2 leading-relaxed">
+                            {info.description}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Color Selection */}
+              <div className="mt-6 border-t border-outline-variant/10 pt-6 space-y-6">
+                {isDualColor ? (
+                  <div className="space-y-6">
+                    {/* Primary Color */}
+                    <div>
+                      <div className="flex justify-between items-baseline mb-3">
+                        <span className="font-heading text-xs font-bold tracking-widest text-on-surface uppercase">
+                          Color Palette 1 (Base)
+                        </span>
+                        <span className="text-xs text-on-surface-variant font-medium">
+                          {activePrimaryColor} <span className="text-xs text-on-surface-variant/60 font-mono">({COLOR_PALETTE.find(c => c.name === activePrimaryColor)?.code || ""})</span>
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-3">
+                        {COLOR_PALETTE.map((color) => {
+                          const isSelected = activePrimaryColor === color.name;
+                          return (
+                            <button
+                              key={`primary-${color.name}`}
+                              type="button"
+                              onClick={() => setSelectedPrimaryColor(color.name)}
+                              className={`w-10 h-10 rounded-full ${color.colorClass} relative transition-all duration-200 border shadow-sm ${
+                                isSelected
+                                  ? "ring-2 ring-zinc-800 ring-offset-2 ring-offset-background scale-110 shadow-md"
+                                  : "hover:scale-105 opacity-85 hover:opacity-100"
+                              }`}
+                              title={`${color.name} (${color.code})`}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Secondary Color */}
+                    <div>
+                      <div className="flex justify-between items-baseline mb-3">
+                        <span className="font-heading text-xs font-bold tracking-widest text-on-surface uppercase">
+                          Color Palette 2 (Text / Accent)
+                        </span>
+                        <span className="text-xs text-on-surface-variant font-medium">
+                          {activeSecondaryColor} <span className="text-xs text-on-surface-variant/60 font-mono">({COLOR_PALETTE.find(c => c.name === activeSecondaryColor)?.code || ""})</span>
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-3">
+                        {COLOR_PALETTE.map((color) => {
+                          const isSelected = activeSecondaryColor === color.name;
+                          return (
+                            <button
+                              key={`secondary-${color.name}`}
+                              type="button"
+                              onClick={() => setSelectedSecondaryColor(color.name)}
+                              className={`w-10 h-10 rounded-full ${color.colorClass} relative transition-all duration-200 border shadow-sm ${
+                                isSelected
+                                  ? "ring-2 ring-zinc-800 ring-offset-2 ring-offset-background scale-110 shadow-md"
+                                  : "hover:scale-105 opacity-85 hover:opacity-100"
+                              }`}
+                              title={`${color.name} (${color.code})`}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex justify-between items-baseline mb-3">
+                      <span className="font-heading text-xs font-bold tracking-widest text-on-surface uppercase">
+                        Color Palette (Single Color)
+                      </span>
+                      <span className="text-xs text-on-surface-variant font-medium">
+                        {activePrimaryColor} <span className="text-xs text-on-surface-variant/60 font-mono">({COLOR_PALETTE.find(c => c.name === activePrimaryColor)?.code || ""})</span>
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      {COLOR_PALETTE.map((color) => {
+                        const isSelected = activePrimaryColor === color.name;
+                        return (
+                          <button
+                            key={`single-${color.name}`}
+                            type="button"
+                            onClick={() => setSelectedPrimaryColor(color.name)}
+                            className={`w-10 h-10 rounded-full ${color.colorClass} relative transition-all duration-200 border shadow-sm ${
+                              isSelected
+                                ? "ring-2 ring-zinc-800 ring-offset-2 ring-offset-background scale-110 shadow-md"
+                                : "hover:scale-105 opacity-85 hover:opacity-100"
+                            }`}
+                            title={`${color.name} (${color.code})`}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Dynamic Price & Production Lead Time */}
+              <div className="mt-8 p-4 rounded-2xl bg-surface-container-low/60 border border-outline-variant/20 flex flex-wrap justify-between items-center gap-4">
+                <div>
+                  <span className="font-heading text-3xl font-bold text-on-surface block">
+                    ₹{dynamicPrice.toFixed(2)}
+                  </span>
+                  <span className="text-xs text-emerald-600 font-medium mt-0.5 block">
+                    Est. Delivery: {getDeliveryEstimate(product.productionDays)}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs text-on-surface-variant block">
+                    Production Lead Time
+                  </span>
+                  <span className="text-sm font-semibold text-on-surface block">
+                    {product.productionDays} Days
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <button
+                  onClick={handleAddToCart}
+                  className="w-full flex items-center justify-center gap-2 py-4 rounded-full gradient-primary text-white font-semibold hover:shadow-lg hover:shadow-primary/20 transition-all"
+                  id="add-to-cart"
+                >
+                  {isAuthenticated ? (
+                    <>
+                      <ShoppingCart className="w-4 h-4" />
+                      Add to Cart
+                    </>
+                  ) : (
+                    <>
+                      <LogIn className="w-4 h-4" />
+                      Login to Add to Cart
+                    </>
+                  )}
+                </button>
+              </div>
+
+
+
               {/* Technical Specs */}
               <div className="mt-6 p-6 rounded-2xl bg-surface-container-low border border-outline-variant/10">
                 <h3 className="font-heading text-sm font-semibold text-on-surface flex items-center gap-2 mb-4">
@@ -441,8 +746,69 @@ export default function ProductDetailClient() {
                   ))}
                 </div>
               </div>
+
+              {/* FAQs Section */}
+              <div className="mt-6 p-6 rounded-2xl bg-surface-container-low border border-outline-variant/10 space-y-4">
+                <h3 className="font-heading text-sm font-semibold text-on-surface flex items-center gap-2">
+                  <HelpCircle className="w-4 h-4 text-primary" />
+                  Frequently Asked Questions
+                </h3>
+
+                <div className="space-y-3">
+                  {MOCK_FAQS.map((faq, idx) => {
+                    const isOpen = faqOpenIndex === idx;
+                    return (
+                      <div key={idx} className="border border-outline-variant/15 rounded-2xl overflow-hidden transition-colors">
+                        <button
+                          type="button"
+                          onClick={() => setFaqOpenIndex(isOpen ? null : idx)}
+                          className="w-full flex items-center justify-between p-3.5 bg-surface-container-low/50 hover:bg-surface-container-low text-left font-semibold text-xs text-on-surface transition-colors focus:outline-none focus:ring-0"
+                        >
+                          <span>{faq.question}</span>
+                          {isOpen ? (
+                            <ChevronUp className="w-3.5 h-3.5 text-on-surface-variant" />
+                          ) : (
+                            <ChevronDown className="w-3.5 h-3.5 text-on-surface-variant" />
+                          )}
+                        </button>
+                        {isOpen && (
+                          <div className="p-3.5 bg-surface-container-low/20 border-t border-outline-variant/10 animate-fade-in">
+                            <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                              {faq.answer}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Informative Shipping & Quality Guarantee Card */}
+              <div className="mt-6 p-6 rounded-2xl bg-surface-container-low border border-outline-variant/10 space-y-4">
+                <h3 className="font-heading text-sm font-semibold text-on-surface flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                  Quality & Service Guarantee
+                </h3>
+                <div className="text-xs text-on-surface-variant space-y-3 leading-relaxed">
+                  <p>
+                    <strong className="text-on-surface block mb-0.5">Precision Calibrated Prints</strong>
+                    All items are printed on industrial-grade 3D printers using premium filaments, ensuring accurate sizing and clean layer lines.
+                  </p>
+                  <p>
+                    <strong className="text-on-surface block mb-0.5">Eco-Friendly Materials</strong>
+                    Our PLA is 100% biodegradable and organic. TBU prints are highly durable, food-safe, and recyclable.
+                  </p>
+                  <p>
+                    <strong className="text-on-surface block mb-0.5">Secure Shockproof Shipping</strong>
+                    We pack all items carefully with multiple layers of bubble wrap and sturdy box packaging to prevent transit damage.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
+
+
 
           {/* Curated Sets / Related */}
           <section className="mt-24">
