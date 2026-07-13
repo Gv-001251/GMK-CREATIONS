@@ -23,6 +23,7 @@ import { motion, useInView } from "framer-motion";
 import { Navbar } from "@/components/navbar";
 import { HeroSection } from "@/components/hero-section";
 import { Footer } from "@/components/footer";
+import { MaterialCard } from "@/components/material-card";
 
 // Statistics Auto Countup helper
 function AnimatedNumber({ value, duration = 1.5 }: { value: number; duration?: number }) {
@@ -199,7 +200,7 @@ const featuredProducts = [
     desc: "Highly intricate replica showcasing precision lattice bridges.",
     price: 1400,
     rating: 5.0,
-    image: "/images/products/architectural-models.png"
+    image: "/images/products/mini-eiffel-tower.png"
   }
 ];
 
@@ -324,49 +325,46 @@ export default function HomeClient() {
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ delay: i * 0.05, type: "spring", stiffness: 100 }}
                 whileHover={{ y: -8 }}
-                className="bg-white rounded-3xl border border-slate-200/50 shadow-sm overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-md"
+                className="bg-white dark:bg-zinc-900 rounded-[40px] border border-slate-200/50 dark:border-zinc-800/50 p-[11px] flex flex-col group transition-all duration-300 hover:shadow-xl"
               >
-                {/* Image Container */}
-                <div className="relative aspect-square overflow-hidden bg-slate-50">
-                  <Image
-                    src={p.image}
-                    alt={p.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 25vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-white/95 text-[10px] font-bold text-slate-800 shadow-sm uppercase tracking-wider backdrop-blur-sm">
-                    {p.category}
-                  </span>
-                </div>
+                <Link href="/products" className="flex flex-col h-full w-full">
+                  {/* Image Container */}
+                  <div className="relative aspect-[71/78] overflow-hidden bg-slate-50 dark:bg-zinc-800 rounded-[32px] w-full">
+                    <Image
+                      src={p.image}
+                      alt={p.name}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 25vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <span className="absolute top-4 left-4 px-4 py-1.5 rounded-xl bg-white text-[11px] font-mono font-bold text-slate-900 shadow-sm uppercase tracking-wider backdrop-blur-sm">
+                      {p.category}
+                    </span>
+                  </div>
 
-                {/* Details */}
-                <div className="p-6 flex flex-col flex-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-heading text-base font-bold text-slate-950 group-hover:text-primary transition-colors">
+                  {/* Details */}
+                  <div className="flex flex-col flex-1 pl-[7.61%] pr-[6.88%] pb-[5.16%] mt-[21.82px]">
+                    <h3 className="font-mono text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-snug group-hover:text-primary transition-colors">
                       {p.name}
                     </h3>
-                    <div className="flex items-center gap-1 text-amber-500 text-xs font-semibold">
-                      <Star className="w-3.5 h-3.5 fill-amber-500 stroke-none" />
-                      <span>{p.rating.toFixed(1)}</span>
+                    <p className="font-mono text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-2 mb-6 leading-relaxed line-clamp-3 flex-1">
+                      {p.desc}
+                    </p>
+                    <div className="flex items-end justify-between mt-auto">
+                      <div className="flex flex-col">
+                        <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1 block">
+                          {p.name}
+                        </span>
+                        <span className="font-mono text-lg sm:text-xl font-bold text-slate-900 dark:text-white leading-none">
+                          ₹{p.price}
+                        </span>
+                      </div>
+                      <div className="text-slate-900 dark:text-white transition-transform duration-300 group-hover:translate-x-1 mb-0.5">
+                        <ChevronRight className="w-7 h-7 stroke-[2.5px]" />
+                      </div>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-4 flex-1">
-                    {p.desc}
-                  </p>
-                  <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-auto">
-                    <div>
-                      <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Starting Price</span>
-                      <span className="text-base font-extrabold text-slate-900">₹{p.price}</span>
-                    </div>
-                    <Link
-                      href="/products"
-                      className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 group-hover:bg-primary text-slate-500 group-hover:text-white transition-all duration-300 shadow-sm"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </Link>
-                  </div>
-                </div>
+                </Link>
               </motion.div>
             ))}
           </div>
@@ -376,11 +374,8 @@ export default function HomeClient() {
       {/* ── SECTION 3: ABOUT GMK ── */}
       <section className="py-24 px-4 sm:px-6 bg-background" id="about">
         <div 
-          className="max-w-7xl mx-auto relative overflow-hidden rounded-[32px] p-8 md:p-12 border border-slate-800 shadow-xl bg-cover bg-center"
-          style={{ backgroundImage: "url('/images/lets%20connect.jpeg')" }}
+          className="max-w-7xl mx-auto relative overflow-hidden rounded-[48px] p-12 md:py-26 md:px-16 border border-slate-800 shadow-xl bg-slate-950"
         >
-          {/* Somewhat visible dark overlay */}
-          <div className="absolute inset-0 bg-slate-950/20 z-0" />
 
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             {/* Left Layout Visual */}
@@ -478,51 +473,7 @@ export default function HomeClient() {
 
           <div className="flex flex-col gap-6">
             {materials.map((m, i) => (
-              <motion.div
-                key={m.name}
-                initial={{ opacity: 0, x: i % 2 === 0 ? -20 : 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                whileHover={{ scale: 1.008 }}
-                className="bg-white rounded-3xl border border-slate-200/60 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm hover:shadow-md transition-all duration-300"
-              >
-                {/* Left: Brand Identity */}
-                <div className="flex items-center gap-5">
-                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${m.color} flex items-center justify-center border font-heading text-xl font-black`}>
-                    {m.name}
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/5 px-2 py-0.5 rounded-full border border-primary/10">
-                      {m.tag}
-                    </span>
-                    <h3 className="font-heading text-lg font-extrabold text-slate-950 mt-1">
-                      {m.name} Filament
-                    </h3>
-                  </div>
-                </div>
-
-                {/* Center: Specs */}
-                <div className="flex-1 md:px-8">
-                  <p className="text-xs text-slate-500 leading-relaxed max-w-xl">
-                    {m.desc}
-                  </p>
-                  <div className="mt-2 text-[11px] text-slate-600 font-semibold">
-                    <span className="text-slate-400">Best for:</span> {m.uses}
-                  </div>
-                </div>
-
-                {/* Right: Key Stats */}
-                <div className="grid grid-cols-2 gap-4 text-left border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-8 flex-shrink-0 w-full md:w-auto">
-                  <div>
-                    <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Strength</span>
-                    <span className="text-sm font-extrabold text-slate-900">{m.strength}</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Finish</span>
-                    <span className="text-sm font-extrabold text-slate-900">{m.finish}</span>
-                  </div>
-                </div>
-              </motion.div>
+              <MaterialCard key={m.name} material={m} index={i} />
             ))}
           </div>
         </div>
@@ -660,7 +611,7 @@ export default function HomeClient() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900">
-              Latest Portfolio
+              Latest Custom Products
             </h2>
             <p className="mt-3 text-base text-slate-500 max-w-xl mx-auto">
               Explore prints engineered for our clients and makers.
@@ -713,7 +664,7 @@ export default function HomeClient() {
               href="/upload"
               className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-slate-900 text-white font-semibold text-sm hover:bg-slate-800 transition-colors shadow-md"
             >
-              View Full Portfolio
+              View Full Custom
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -784,7 +735,7 @@ export default function HomeClient() {
         <div className="max-w-7xl mx-auto">
           <div 
             className="relative overflow-hidden rounded-[36px] bg-cover bg-center p-10 md:p-20 shadow-2xl border border-slate-800 text-white"
-            style={{ backgroundImage: "url('/images/Let%27s%20connect.jpeg')" }}
+            style={{ backgroundImage: "url('/images/lets%20connect.jpeg')" }}
           >
             {/* Gradient overlay to keep text readable on the left while revealing the crinkly metallic background on the right */}
             <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 to-slate-950/60 md:bg-gradient-to-r md:from-slate-950/85 md:via-slate-950/45 md:to-transparent z-0 pointer-events-none" />

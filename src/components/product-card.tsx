@@ -2,9 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { ShoppingCart } from "lucide-react";
-import { useCartStore } from "@/lib/store/cart-store";
+import { ChevronRight } from "lucide-react";
 import type { Product } from "@/lib/data/products";
 
 interface ProductCardProps {
@@ -13,82 +11,68 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, variant = "default" }: ProductCardProps) {
-  const { addItem } = useCartStore();
-
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    addItem({
-      productId: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.image,
-      material: "PLA (Polylactic Acid)",
-      finish: "Standard",
-    });
-  };
-
   const isCompact = variant === "compact";
 
   return (
     <Link
       href={`/products/${product.slug}`}
-      className="group block"
+      className="group block transition-all duration-300 hover:-translate-y-1.5 h-full"
       id={`product-card-${product.id}`}
     >
-      <div className="relative overflow-hidden rounded-3xl bg-surface-container-highest/40 aspect-square mb-4 transition-all duration-500 group-hover:shadow-ambient-lg">
+      <div className="bg-white dark:bg-zinc-900 rounded-[32px] sm:rounded-[40px] border border-slate-200/50 dark:border-zinc-800/50 p-2 sm:p-[11px] flex flex-col h-full w-full shadow-sm hover:shadow-xl transition-all duration-300">
         {/* Product Image */}
-        <Image
-          src={product.image}
-          alt={product.name}
-          fill
-          className="object-contain transition-transform duration-700 group-hover:scale-[1.02]"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 20vw"
-          unoptimized={product.image.startsWith("http")}
-        />
+        <div className="relative aspect-[73/78] overflow-hidden bg-slate-50 dark:bg-zinc-800 rounded-[24px] sm:rounded-[32px] w-full">
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 20vw"
+            unoptimized={product.image.startsWith("http")}
+          />
 
-        {/* Badges */}
-        {(product.badge || product.isNew) && (
-          <div className="absolute top-4 left-4 flex flex-wrap gap-1.5 z-10">
-            {product.isNew && (
-              <Badge className="bg-emerald-500/90 text-white text-[10px] font-semibold px-3 py-1 rounded-full border-0 backdrop-blur-sm">
-                New
-              </Badge>
-            )}
-            {product.badge && (
-              <Badge className="bg-primary/90 text-white text-[10px] font-semibold px-3 py-1 rounded-full border-0 backdrop-blur-sm">
-                {product.badge}
-              </Badge>
-            )}
+          {/* Badges */}
+          {(product.badge || product.isNew) && (
+            <div className="absolute top-2.5 left-2.5 sm:top-4 sm:left-4 flex flex-wrap gap-1.5 z-10">
+              {product.isNew && (
+                <span className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-white text-[9px] sm:text-[10px] font-mono font-bold text-emerald-600 shadow-sm uppercase tracking-wider backdrop-blur-sm">
+                  New
+                </span>
+              )}
+              {product.badge && (
+                <span className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-white text-[9px] sm:text-[10px] font-mono font-bold text-slate-900 shadow-sm uppercase tracking-wider backdrop-blur-sm">
+                  {product.badge}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Info */}
+        {!isCompact && (
+          <div className="flex flex-col flex-1 pl-[4%] pr-[4%] pb-[3%] sm:pl-[7.61%] sm:pr-[6.88%] sm:pb-[5.16%] mt-4 sm:mt-[21.82px]">
+            <h3 className="font-mono text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight leading-snug group-hover:text-primary transition-colors truncate">
+              {product.name}
+            </h3>
+            <p className="font-mono text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-2 mb-4 sm:mb-6 leading-relaxed line-clamp-2 flex-1">
+              {product.description}
+            </p>
+            <div className="flex items-end justify-between mt-auto gap-2">
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className="font-mono text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1 block truncate">
+                  {product.name}
+                </span>
+                <span className="font-mono text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-none">
+                  {product.priceLabel || `₹${product.price.toFixed(2)}`}
+                </span>
+              </div>
+              <div className="text-slate-900 dark:text-white transition-transform duration-300 group-hover:translate-x-1 mb-0.5 flex-shrink-0">
+                <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5px]" />
+              </div>
+            </div>
           </div>
         )}
-
-        {/* Quick Add */}
-        {!isCompact && (
-          <button
-            onClick={handleAddToCart}
-            className="absolute bottom-4 right-4 p-3 rounded-full gradient-primary text-white opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 shadow-lg hover:shadow-primary/30"
-            aria-label={`Add ${product.name} to cart`}
-          >
-            <ShoppingCart className="w-4 h-4" />
-          </button>
-        )}
       </div>
-
-      {/* Info */}
-      {!isCompact && (
-        <div className="px-1">
-          <h3 className="font-heading text-base font-semibold text-on-surface tracking-tight group-hover:text-primary transition-colors">
-            {product.name}
-          </h3>
-          <p className="text-sm text-on-surface-variant mt-0.5 line-clamp-1">
-            {product.description}
-          </p>
-          <p className="text-sm font-semibold text-primary mt-2">
-            {product.priceLabel || `₹${product.price.toFixed(2)}`}
-          </p>
-        </div>
-      )}
     </Link>
   );
 }

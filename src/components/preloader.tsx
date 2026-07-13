@@ -4,10 +4,22 @@ import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function Preloader() {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return !localStorage.getItem("gmk_preloader_shown");
+      } catch (e) {
+        console.error("Failed to access localStorage", e);
+        return true;
+      }
+    }
+    return true;
+  });
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
+    if (!loading) return;
+
     // Prevent scrolling while preloading
     document.body.style.overflow = "hidden";
 
@@ -27,10 +39,15 @@ export function Preloader() {
       clearTimeout(timer);
       document.body.style.overflow = "unset";
     };
-  }, []);
+  }, [loading]);
 
   const handleComplete = () => {
     setLoading(false);
+    try {
+      localStorage.setItem("gmk_preloader_shown", "true");
+    } catch (e) {
+      console.error("Failed to set localStorage", e);
+    }
     document.body.style.overflow = "unset";
   };
 

@@ -29,8 +29,8 @@ const XLogoIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-// Custom SVG YouTube Icon
-const YoutubeIcon = (props: React.SVGProps<SVGSVGElement>) => (
+// Custom SVG LinkedIn Icon
+const LinkedinIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     viewBox="0 0 24 24"
     fill="none"
@@ -40,8 +40,24 @@ const YoutubeIcon = (props: React.SVGProps<SVGSVGElement>) => (
     strokeLinejoin="round"
     {...props}
   >
-    <path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17z" />
-    <polygon points="10 15 15 12 10 9" fill="currentColor" stroke="currentColor" strokeWidth="1" />
+    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+    <rect width="4" height="12" x="2" y="9" />
+    <circle cx="4" cy="4" r="2" />
+  </svg>
+);
+
+// Custom SVG Facebook Icon
+const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
   </svg>
 );
 
@@ -96,11 +112,11 @@ export function Footer() {
                   Why Choose Us
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link href="/#portfolio" onClick={(e) => handleScrollTo(e, "/#portfolio")} className="hover:text-primary transition-colors">
                   Client Work
                 </Link>
-              </li>
+              </li> */}
             </ul>
           </div>
 
@@ -149,7 +165,7 @@ export function Footer() {
                   Custom 3D Printing
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link href="/upload" className="hover:text-primary transition-colors">
                   Rapid Prototyping
                 </Link>
@@ -163,7 +179,7 @@ export function Footer() {
                 <Link href="/upload" className="hover:text-primary transition-colors">
                   Direct Quote
                 </Link>
-              </li>
+              </li> */}
             </ul>
           </div>
 
@@ -179,7 +195,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/products" className="hover:text-primary transition-colors">
+                <Link href="/#" className="hover:text-primary transition-colors">
                   Printing FAQs
                 </Link>
               </li>
@@ -232,43 +248,32 @@ export function Footer() {
               <InstagramIcon className="w-5 h-5" />
             </a>
             <a
-              href="#"
+              href="https://x.com/ManojKannan03"
+              target="_blank"
+              rel="noopener noreferrer"
               className="w-10 h-10 rounded-full border border-slate-800 bg-white/5 flex items-center justify-center text-slate-300 hover:text-white hover:border-primary hover:bg-primary/5 transition-all duration-300"
               aria-label="X"
             >
               <XLogoIcon className="w-4.5 h-4.5" />
             </a>
             <a
-              href="#"
+              href="https://www.linkedin.com/in/manoj-kannan-356985293?utm_source=share_via&utm_content=profile&utm_medium=member_android"
+              target="_blank"
+              rel="noopener noreferrer"
               className="w-10 h-10 rounded-full border border-slate-800 bg-white/5 flex items-center justify-center text-slate-300 hover:text-white hover:border-primary hover:bg-primary/5 transition-all duration-300"
-              aria-label="YouTube"
+              aria-label="LinkedIn"
             >
-              <YoutubeIcon className="w-5 h-5" />
+              <LinkedinIcon className="w-5 h-5" />
             </a>
-          </div>
-
-          {/* Newsletter Input Box */}
-          <div className="flex flex-col gap-3">
-            <h4 className="font-heading text-xs font-bold tracking-widest uppercase text-slate-400">
-              Join Our Newsletter
-            </h4>
-            <form onSubmit={handleSubscribe} className="flex max-w-md items-center gap-2">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="flex-1 px-4 py-2.5 rounded-full bg-white/5 border border-slate-800 text-xs font-medium placeholder-slate-500 focus:outline-none focus:border-primary focus:bg-white/10 transition-colors"
-              />
-              <button
-                type="submit"
-                className="px-5 py-2.5 rounded-full bg-white hover:bg-slate-100 text-slate-950 font-bold text-xs flex items-center gap-1 transition-all"
-              >
-                {subscribed ? "Subscribed" : "Subscribe"}
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </form>
+            <a
+              href="https://www.facebook.com/share/18nKn2GpTG/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-10 h-10 rounded-full border border-slate-800 bg-white/5 flex items-center justify-center text-slate-300 hover:text-white hover:border-primary hover:bg-primary/5 transition-all duration-300"
+              aria-label="Facebook"
+            >
+              <FacebookIcon className="w-5 h-5" />
+            </a>
           </div>
         </div>
 
@@ -293,6 +298,14 @@ export function Footer() {
         {/* Centered Copyright Line */}
         <div className="text-center text-[10px] text-slate-600 tracking-wider font-semibold border-t border-slate-900/50 pt-8">
           GMK – 3D CREATIONS © 2026. ALL RIGHTS RESERVED.
+          <br /><br />
+          MADE BY &nbsp;
+          <a
+            href="https://www.lumerlabs.in"
+            target="_blank"
+            className="hover:text-primary transition-colors">
+              LUMERLABS
+          </a>
         </div>
       </div>
     </footer>

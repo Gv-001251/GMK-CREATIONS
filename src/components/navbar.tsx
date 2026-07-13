@@ -42,7 +42,8 @@ export function Navbar() {
   const navLinks = [
     { label: "Home", href: "/" },
     { label: "Products", href: "/products", isMegaMenu: true },
-    { label: "Portfolio", href: "/#portfolio" },
+    { label: "Custom", href: "/upload" },
+    { label: "Portfolio", href: "/portfolio" },
     { label: "Contact", href: "/#footer" },
   ];
 
@@ -116,7 +117,8 @@ export function Navbar() {
                     onMouseEnter={() => setMegaMenuOpen(true)}
                     onMouseLeave={() => setMegaMenuOpen(false)}
                   >
-                    <button
+                    <Link
+                      href="/products"
                       className={`text-sm font-medium transition-colors flex items-center gap-1 pb-1 ${
                         pathname.startsWith("/products")
                           ? "text-primary font-semibold"
@@ -125,7 +127,7 @@ export function Navbar() {
                     >
                       {link.label}
                       <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${megaMenuOpen ? "rotate-180 text-primary" : "text-on-surface-variant"}`} />
-                    </button>
+                    </Link>
 
                     {/* Mega Menu Dropdown */}
                     {megaMenuOpen && (
@@ -283,13 +285,22 @@ export function Navbar() {
                 if (link.isMegaMenu) {
                   return (
                     <div key={link.label} className="flex flex-col gap-2">
-                      <button
-                        onClick={() => setMobileMegaOpen(!mobileMegaOpen)}
-                        className="text-base font-semibold text-on-surface flex items-center justify-between py-2 text-left w-full"
-                      >
-                        <span>{link.label}</span>
-                        <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${mobileMegaOpen ? "rotate-180 text-primary" : ""}`} />
-                      </button>
+                      <div className="flex items-center justify-between py-2 w-full">
+                        <Link
+                          href="/products"
+                          onClick={() => setMobileOpen(false)}
+                          className="text-base font-semibold text-on-surface hover:text-primary transition-colors flex-grow"
+                        >
+                          {link.label}
+                        </Link>
+                        <button
+                          onClick={() => setMobileMegaOpen(!mobileMegaOpen)}
+                          className="p-2 rounded-lg hover:bg-surface-container transition-colors"
+                          aria-label="Toggle products categories"
+                        >
+                          <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${mobileMegaOpen ? "rotate-180 text-primary" : ""}`} />
+                        </button>
+                      </div>
 
                       {mobileMegaOpen && (
                         <div className="pl-4 flex flex-col gap-3 border-l border-outline-variant/60 py-1">
