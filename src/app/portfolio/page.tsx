@@ -30,7 +30,7 @@ export default function PortfolioPage() {
               G. MANOJ
             </h1>
             <h1 className={`${ferron.className} text-5xl sm:text-7xl md:text-8xl lg:text-[9rem] xl:text-[10rem] text-white tracking-[0.06em] leading-[0.9] select-none uppercase font-normal`}>
-              KUMAR
+              KANNAN
             </h1>
             {/* Overlay stylish cursive text */}
             <span 
@@ -59,7 +59,7 @@ export default function PortfolioPage() {
           <div className="absolute bottom-0 h-[122%] w-[280px] sm:w-[480px] md:w-[580px] lg:w-[680px] z-10 overflow-visible flex items-end justify-center -translate-x-12">
             <Image
               src="/images/manojkumar.png"
-              alt="G. Manoj Kumar Profile"
+              alt="G. Manoj Kannan Profile"
               fill
               className="object-contain object-bottom pointer-events-none select-none"
               priority

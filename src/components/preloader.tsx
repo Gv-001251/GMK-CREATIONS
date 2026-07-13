@@ -62,10 +62,11 @@ export function Preloader() {
             filter: "blur(10px)"
           }}
           transition={{ duration: 0.8, ease: [0.85, 0, 0.15, 1] }}
-          className="fixed inset-0 z-[9999] bg-[#030712] overflow-hidden"
+          className="fixed inset-0 z-[9999] bg-[#000000] flex items-center justify-center overflow-hidden"
         >
-          {/* Full-screen container offset to crop the bottom watermark and top symmetrically */}
-          <div className="absolute top-[-2%] bottom-[-10%] left-0 right-0 overflow-hidden">
+          {/* Centered responsive video container with locked aspect ratio */}
+          <div className="relative w-full max-w-5xl aspect-video overflow-hidden mx-4">
+            {/* The video is scaled to 112% height and aligned to the top to crop the bottom watermark */}
             <video
               ref={videoRef}
               src="/images/loader/loader.mp4"
@@ -73,7 +74,7 @@ export function Preloader() {
               muted
               playsInline
               onEnded={handleComplete}
-              className="w-full h-full object-cover select-none pointer-events-none"
+              className="absolute inset-0 w-full h-[112%] object-cover object-top select-none pointer-events-none"
             />
           </div>
         </motion.div>

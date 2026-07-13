@@ -264,7 +264,6 @@ export function HeroSection() {
                 Custom 3D Prints,<br />
                 <span className="text-primary relative inline-block">
                   Made for You
-                  <span className="absolute bottom-1 left-0 w-full h-[6px] bg-primary/20 rounded-full" />
                 </span>
               </motion.h1>
 
