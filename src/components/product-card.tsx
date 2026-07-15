@@ -62,9 +62,20 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
                 <span className="font-mono text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1 block truncate">
                   {product.name}
                 </span>
-                <span className="font-mono text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-none">
-                  {product.priceLabel || `₹${product.price.toFixed(2)}`}
-                </span>
+                {product.priceLabel ? (
+                  <div className="flex flex-col leading-none">
+                    <span className="font-mono text-[10px] sm:text-xs font-medium text-slate-400 dark:text-slate-500 line-through">
+                      {product.priceLabel}
+                    </span>
+                    <span className="font-mono text-base sm:text-lg font-bold text-slate-900 dark:text-white mt-1">
+                      ₹{product.price.toFixed(2)}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="font-mono text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-none">
+                    ₹{product.price.toFixed(2)}
+                  </span>
+                )}
               </div>
               <div className="text-slate-900 dark:text-white transition-transform duration-300 group-hover:translate-x-1 mb-0.5 flex-shrink-0">
                 <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5px]" />

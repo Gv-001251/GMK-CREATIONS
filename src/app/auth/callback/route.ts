@@ -12,8 +12,16 @@ export async function GET(request: Request) {
     if (!error) {
       // Fetch user to check if they are the admin
       const { data: { user } } = await supabase.auth.getUser();
-      if (user && user.email === "admin@gmk3d.com") {
-        return NextResponse.redirect(`${origin}/admin`);
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+        const role = profile?.role || (user.email?.toLowerCase() === "admin@gmk3d.com" ? "admin" : "user");
+        if (role === "admin") {
+          return NextResponse.redirect(`${origin}/admin`);
+        }
       }
       return NextResponse.redirect(`${origin}${next}`);
     }

@@ -49,7 +49,7 @@ function ProductsContent() {
     if (["custom-parts", "edc-gear", "prototypes"].includes(categoryParam)) {
       return "industrial";
     }
-    if (["decor", "miniatures", "jewelry"].includes(categoryParam)) {
+    if (["decor", "miniatures", "jewelry", "art", "trophy"].includes(categoryParam)) {
       return "organic";
     }
     return "all";
@@ -69,7 +69,7 @@ function ProductsContent() {
         );
       } else if (activeFilter === "organic") {
         list = list.filter((p) =>
-          ["decor", "miniatures", "jewelry"].includes(p.category)
+          ["decor", "miniatures", "jewelry", "art", "trophy"].includes(p.category)
         );
       }
     }

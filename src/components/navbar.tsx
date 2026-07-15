@@ -6,7 +6,7 @@ import { ShoppingCart, Menu, X, User, LogOut, Shield, ChevronDown, ShoppingBag }
 import { useCartStore } from "@/lib/store/cart-store";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { CartDrawer } from "./cart-drawer";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -19,6 +19,7 @@ export function Navbar() {
   const itemCount = useCartStore((s) => s.items.reduce((c, i) => c + i.quantity, 0));
   const { user, isAuthenticated, logout } = useAuthStore();
   const pathname = usePathname();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -44,12 +45,13 @@ export function Navbar() {
     { label: "Products", href: "/products", isMegaMenu: true },
     { label: "Custom", href: "/upload" },
     { label: "Portfolio", href: "/portfolio" },
-    { label: "Contact", href: "/#footer" },
+    { label: "Contact", href: "/contact" },
   ];
 
   const handleLogout = async () => {
     await logout();
     setUserDropdownOpen(false);
+    router.push("/login");
   };
 
   const handleNavLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, label: string, href: string) => {
@@ -144,7 +146,7 @@ export function Navbar() {
                             key={cat.title}
                             href={cat.href}
                             onClick={() => setMegaMenuOpen(false)}
-                            className="flex flex-col gap-0.5 p-3 rounded-2xl hover:bg-primary/[0.04] border border-transparent hover:border-primary/10 transition-all duration-200 group/item"
+                            className="flex flex-col gap-0.5 p-3 rounded-2xl hover:bg-primary/4 border border-transparent hover:border-primary/10 transition-all duration-200 group/item"
                           >
                             <span className="text-sm font-bold text-on-surface group-hover/item:text-primary transition-colors">
                               {cat.title}
@@ -289,7 +291,7 @@ export function Navbar() {
                         <Link
                           href="/products"
                           onClick={() => setMobileOpen(false)}
-                          className="text-base font-semibold text-on-surface hover:text-primary transition-colors flex-grow"
+                          className="text-base font-semibold text-on-surface hover:text-primary transition-colors grow"
                         >
                           {link.label}
                         </Link>

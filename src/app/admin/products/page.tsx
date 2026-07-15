@@ -19,7 +19,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-const CATEGORIES = ["miniatures", "custom-parts", "edc-gear", "decor", "prototypes", "jewelry"];
+const CATEGORIES = ["miniatures", "custom-parts", "edc-gear", "decor", "prototypes", "art", "trophy", "jewelry"];
 
 const EMPTY_FORM = {
   name: "",

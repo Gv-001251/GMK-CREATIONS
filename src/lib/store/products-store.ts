@@ -18,18 +18,41 @@ interface ProductsState {
 
 // Convert snake_case DB row to camelCase Product interface
 function rowToProduct(row: Record<string, unknown>): Product {
+  const id = row.id as string;
+  const isGMK = id && id.startsWith("GMK-");
+
+  let price = Number(row.price) || 0;
+  let priceLabel = (row.price_label as string) || undefined;
+  let badge = (row.badge as string) || undefined;
+  let isNew = (row.is_new as boolean) || false;
+  let description = (row.description as string) || "";
+
+  if (isGMK) {
+    if (priceLabel) {
+      const cleanPrice = Number(priceLabel.replace(/[^0-9.]/g, ""));
+      if (!isNaN(cleanPrice) && cleanPrice > 0) {
+        price = cleanPrice;
+      }
+    }
+    priceLabel = undefined;
+    badge = undefined;
+    isNew = false;
+    const cleanDesc = description.replace(/^Premium\s+/i, "");
+    description = cleanDesc ? cleanDesc.charAt(0).toUpperCase() + cleanDesc.slice(1) : "";
+  }
+
   return {
-    id: row.id as string,
+    id,
     name: row.name as string,
     slug: row.slug as string,
-    description: (row.description as string) || "",
+    description,
     longDescription: (row.long_description as string) || "",
-    price: Number(row.price) || 0,
-    priceLabel: (row.price_label as string) || undefined,
+    price,
+    priceLabel,
     category: (row.category as string) || "general",
     image: (row.image as string) || "",
     images: (row.images as string[]) || [],
-    badge: (row.badge as string) || undefined,
+    badge,
     materials: (row.materials as string[]) || [],
     finishes: (row.finishes as string[]) || [],
     dimensions: (row.dimensions as string) || "",
@@ -38,12 +61,26 @@ function rowToProduct(row: Record<string, unknown>): Product {
     recommendedApplication: (row.recommended_application as string) || "",
     productionDays: (row.production_days as number) || 5,
     featured: (row.featured as boolean) || false,
-    isNew: (row.is_new as boolean) || false,
+    isNew,
     isDualColor: (row.is_dual_color as boolean) || 
       (row.name as string)?.toLowerCase().includes("keychain") || 
       (row.name as string)?.toLowerCase().includes("nameplate") || 
       (row.name as string)?.toLowerCase().includes("desk") || false,
   };
+}
+
+function mergeProducts(baseProducts: Product[], incomingProducts: Product[]): Product[] {
+  const productMap = new Map<string, Product>();
+
+  for (const product of baseProducts) {
+    productMap.set(product.id, product);
+  }
+
+  for (const product of incomingProducts) {
+    productMap.set(product.id, product);
+  }
+
+  return Array.from(productMap.values());
 }
 
 export const useProductsStore = create<ProductsState>()(
@@ -60,19 +97,18 @@ export const useProductsStore = create<ProductsState>()(
         const items = Array.isArray(responseData) ? responseData : (responseData.data || []);
         if (items.length > 0) {
           set((state) => {
-            // Simple infinite loading: append if offset > 0, else replace
             const newProducts = items.map(rowToProduct);
             return {
-              products: offset === 0 ? newProducts : [...state.products, ...newProducts],
-              isLoading: false
+              products: offset === 0 ? mergeProducts(defaultProducts, newProducts) : mergeProducts(state.products, newProducts),
+              isLoading: false,
             };
           });
         } else {
-          if (offset === 0) set({ products: [], isLoading: false });
+          if (offset === 0) set({ products: defaultProducts, isLoading: false });
           else set({ isLoading: false });
         }
       } catch {
-        if (offset === 0) set({ products: [], isLoading: false });
+        if (offset === 0) set({ products: defaultProducts, isLoading: false });
         else set({ isLoading: false });
       }
     },

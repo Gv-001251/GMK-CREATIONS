@@ -14,17 +14,21 @@ function LoginForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { login, signInWithGoogle, isAuthenticated, isLoading } = useAuthStore();
+  const { login, signInWithGoogle, isAuthenticated, isLoading, user } = useAuthStore();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = "/";
   const urlError = searchParams.get("error");
 
   useEffect(() => {
-    if (isAuthenticated) {
-      router.push("/");
+    if (isAuthenticated && user) {
+      if (user.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/");
+      }
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, user, router]);
 
   useEffect(() => {
     if (urlError) {
@@ -48,13 +52,10 @@ function LoginForm() {
     setLoading(true);
 
     const result = await login(email, password);
-    if (result.success) {
-      router.push("/");
-    } else {
+    if (!result.success) {
       setError(result.error || "Login failed");
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   if (isLoading) {

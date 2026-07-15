@@ -15,17 +15,21 @@ function SignupForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { register, signInWithGoogle, isAuthenticated, isLoading } = useAuthStore();
+  const { register, signInWithGoogle, isAuthenticated, isLoading, user } = useAuthStore();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = "/";
   const urlError = searchParams.get("error");
 
   useEffect(() => {
-    if (isAuthenticated) {
-      router.push("/");
+    if (isAuthenticated && user) {
+      if (user.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/");
+      }
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, user, router]);
 
   useEffect(() => {
     if (urlError) {
@@ -49,13 +53,10 @@ function SignupForm() {
     setLoading(true);
 
     const result = await register(email, password, name);
-    if (result.success) {
-      router.push(redirectTo.startsWith("/admin") ? "/" : redirectTo);
-    } else {
+    if (!result.success) {
       setError(result.error || "Registration failed");
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   if (isLoading) {

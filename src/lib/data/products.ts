@@ -22,6 +22,8 @@ export interface Product {
   isDualColor?: boolean;
 }
 
+import { csvProducts } from "./csv-products";
+
 export const products: Product[] = [
   {
     id: "prod-001",
@@ -303,6 +305,8 @@ export const products: Product[] = [
     isNew: true,
     isDualColor: true,
   }
+  ,
+  ...csvProducts,
 ];
 
 export function getProductBySlug(slug: string): Product | undefined {
