@@ -42,9 +42,27 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
   initialize: async () => {
     const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    let user = null;
+    let authError = null;
+
+    try {
+      const { data, error } = await supabase.auth.getUser();
+      user = data?.user;
+      authError = error;
+    } catch (e) {
+      // Ignore potential crashes during retrieval
+    }
+
+    if (authError) {
+      // If the error indicates an invalid/expired/missing refresh token, clear cookies/storage
+      if (
+        authError.message?.includes("Refresh Token") ||
+        authError.status === 400 ||
+        authError.status === 401
+      ) {
+        await supabase.auth.signOut().catch(() => {});
+      }
+    }
 
     if (user) {
       // Fetch the authoritative role and name from the DB — never trust the email alone

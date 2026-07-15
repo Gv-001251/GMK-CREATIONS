@@ -17,6 +17,16 @@ export function Preloader() {
   });
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  const handleComplete = () => {
+    setLoading(false);
+    try {
+      localStorage.setItem("gmk_preloader_shown", "true");
+    } catch (e) {
+      console.error("Failed to set localStorage", e);
+    }
+    document.body.style.overflow = "unset";
+  };
+
   useEffect(() => {
     if (!loading) return;
 
@@ -41,16 +51,6 @@ export function Preloader() {
     };
   }, [loading]);
 
-  const handleComplete = () => {
-    setLoading(false);
-    try {
-      localStorage.setItem("gmk_preloader_shown", "true");
-    } catch (e) {
-      console.error("Failed to set localStorage", e);
-    }
-    document.body.style.overflow = "unset";
-  };
-
   return (
     <AnimatePresence>
       {loading && (
@@ -65,7 +65,14 @@ export function Preloader() {
           className="fixed inset-0 z-[9999] bg-[#000000] flex items-center justify-center overflow-hidden"
         >
           {/* Centered responsive video container with locked aspect ratio */}
-          <div className="relative w-full max-w-5xl aspect-video overflow-hidden mx-4">
+          <div 
+            className="relative w-full aspect-video overflow-hidden mx-4"
+            style={{
+              width: "calc(100vw - 2rem)",
+              maxWidth: "min(1024px, calc((100vh - 2rem) * 16 / 9))",
+              height: "auto",
+            }}
+          >
             {/* The video is scaled to 112% height and aligned to the top to crop the bottom watermark */}
             <video
               ref={videoRef}

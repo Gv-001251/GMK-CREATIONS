@@ -93,7 +93,7 @@ export const useUploadStore = create<UploadState>((set, get) => ({
           const xhr = new XMLHttpRequest();
           set((state) => ({ activeXHRs: [xhr] }));
 
-          let startTime = Date.now();
+          const startTime = Date.now();
 
           xhr.upload.onprogress = (e) => {
             if (e.lengthComputable) {
@@ -172,7 +172,7 @@ export const useUploadStore = create<UploadState>((set, get) => ({
         const partProgress = new Array(numParts).fill(0);
         let completedPartsCount = 0;
 
-        let startTime = Date.now();
+        const startTime = Date.now();
 
         // Helper to run part uploads with concurrency throttling
         const uploadPart = async (partIndex: number): Promise<void> => {
@@ -219,7 +219,7 @@ export const useUploadStore = create<UploadState>((set, get) => ({
 
             xhr.onload = () => {
               if (xhr.status >= 200 && xhr.status < 300) {
-                let etag = xhr.getResponseHeader("ETag");
+                const etag = xhr.getResponseHeader("ETag");
                 // Backblaze returns ETag enclosed in quotes, which is standard S3
                 if (!etag) {
                   reject(new Error(`No ETag returned for part ${partNumber}`));

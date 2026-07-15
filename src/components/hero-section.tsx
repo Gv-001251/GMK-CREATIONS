@@ -58,7 +58,7 @@ const bentoCards = [
   {
     id: "architectural",
     title: "Architectural\nModels",
-    image: "/images/products/architectural-models.png",
+    image: "/images/Architectural%20design.jpg",
     href: "/products?category=architecture",
     bg: "bg-[#1c1c1e]",
     textColor: "text-white",

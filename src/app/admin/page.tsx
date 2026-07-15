@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useAdminStore } from "@/lib/store/admin-store";
 import { useProductsStore } from "@/lib/store/products-store";
 import {
@@ -195,26 +196,26 @@ export default function AdminOverviewPage() {
             Quick Actions
           </h3>
           <div className="flex flex-col gap-4 flex-1">
-            <a href="/admin/products" className="flex items-center justify-between p-4 rounded-xl border border-outline-variant hover:border-primary/50 hover:bg-primary/5 transition-all group">
+            <Link href="/admin/products" className="flex items-center justify-between p-4 rounded-xl border border-outline-variant hover:border-primary/50 hover:bg-primary/5 transition-all group">
               <div className="flex items-center gap-3 text-on-surface">
                 <Package className="w-5 h-5 text-primary" />
                 <span className="font-medium">Manage Products</span>
               </div>
               <span className="text-primary opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1">→</span>
-            </a>
-            <a href="/admin/orders" className="flex items-center justify-between p-4 rounded-xl border border-outline-variant hover:border-primary/50 hover:bg-primary/5 transition-all group">
+            </Link>
+            <Link href="/admin/orders" className="flex items-center justify-between p-4 rounded-xl border border-outline-variant hover:border-primary/50 hover:bg-primary/5 transition-all group">
               <div className="flex items-center gap-3 text-on-surface">
                 <ShoppingBag className="w-5 h-5 text-primary" />
                 <span className="font-medium">Manage Orders</span>
               </div>
               <span className="text-primary opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1">→</span>
-            </a>
-            <a href="/" className="flex items-center justify-between p-4 rounded-xl border border-outline-variant hover:border-primary/50 hover:bg-primary/5 transition-all group mt-auto">
+            </Link>
+            <Link href="/" className="flex items-center justify-between p-4 rounded-xl border border-outline-variant hover:border-primary/50 hover:bg-primary/5 transition-all group mt-auto">
               <div className="flex items-center gap-3 text-on-surface">
                 <span className="font-medium">View Storefront</span>
               </div>
               <span className="text-primary opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1">→</span>
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -225,9 +226,9 @@ export default function AdminOverviewPage() {
           <h3 className="font-heading text-lg font-bold text-on-surface">
             Recent Orders
           </h3>
-          <a href="/admin/orders" className="text-sm font-medium text-primary hover:underline">
+          <Link href="/admin/orders" className="text-sm font-medium text-primary hover:underline">
             View All
-          </a>
+          </Link>
         </div>
         
         {getRecentOrders(5).length === 0 ? (

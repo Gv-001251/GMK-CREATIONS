@@ -29,7 +29,7 @@ export async function GET() {
     // Resolve profile names in-memory to prevent schema/relationship query resolution issues
     const userIds = Array.from(new Set(uploads.map((u: any) => u.user_id).filter(Boolean)));
     
-    let profileMap: Record<string, string> = {};
+    const profileMap: Record<string, string> = {};
     if (userIds.length > 0) {
       const { data: profiles, error: profilesError } = await admin
         .from("profiles")

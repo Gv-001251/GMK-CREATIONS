@@ -223,24 +223,7 @@ const materials = [
     finish: "Semi-gloss",
     color: "from-emerald-500/10 to-teal-500/10 text-emerald-600 border-emerald-500/10"
   },
-  {
-    name: "ABS",
-    tag: "Structural Engineering",
-    desc: "Tough engineering thermoplastic with high thermal and chemical resistance.",
-    uses: "Automotive parts, LEGO-like assemblies, structural cases.",
-    strength: "4.5/5",
-    finish: "Matte",
-    color: "from-amber-500/10 to-orange-500/10 text-amber-600 border-amber-500/10"
-  },
-  {
-    name: "Resin",
-    tag: "Micron Precision",
-    desc: "Liquid photopolymer cured by UV light for outstanding micron-level detail.",
-    uses: "D&D miniatures, dental prototypes, jewelry molds.",
-    strength: "3.5/5",
-    finish: "Glass-smooth",
-    color: "from-purple-500/10 to-fuchsia-500/10 text-purple-600 border-purple-500/10"
-  },
+
   {
     name: "TPU",
     tag: "Flexible & Elastic",
@@ -550,7 +533,7 @@ export default function HomeClient() {
               },
               {
                 title: "Premium Materials",
-                desc: "PLA, PETG, ABS, Resin, and TPU sourced from trusted chemical hubs ensure durability and beautiful aesthetic finishes.",
+                desc: "PLA, PETG, and TPU sourced from trusted chemical hubs ensure durability and beautiful aesthetic finishes.",
                 icon: Sparkles,
                 color: "from-emerald-500/10 to-teal-500/10"
               },

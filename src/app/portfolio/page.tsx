@@ -58,7 +58,7 @@ export default function PortfolioPage() {
           {/* Profile image container bleeding out */}
           <div className="absolute bottom-0 h-[122%] w-[280px] sm:w-[480px] md:w-[580px] lg:w-[680px] z-10 overflow-visible flex items-end justify-center -translate-x-12">
             <Image
-              src="/images/manojkumar.png"
+              src="/images/manojkannan.png"
               alt="G. Manoj Kannan Profile"
               fill
               className="object-contain object-bottom pointer-events-none select-none"

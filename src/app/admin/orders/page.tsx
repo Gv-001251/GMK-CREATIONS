@@ -26,7 +26,7 @@ export default function AdminOrdersPage() {
   const [downloadingPath, setDownloadingPath] = useState<string | null>(null);
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
@@ -39,7 +39,7 @@ export default function AdminOrdersPage() {
   const ordersPerPage = 10;
 
   const totalPages = Math.ceil(allOrders.length / ordersPerPage);
-  
+
   const currentOrders = useMemo(() => {
     const start = (currentPage - 1) * ordersPerPage;
     return allOrders.slice(start, start + ordersPerPage);
@@ -260,9 +260,8 @@ export default function AdminOrdersPage() {
                   return (
                     <Fragment key={order.id}>
                       <tr
-                        className={`border-b border-outline-variant last:border-0 hover:bg-surface-container-low/30 transition-colors cursor-pointer ${isExpanded ? 'bg-surface-container-low/20' : ''} ${
-                          selectedOrderIds.includes(order.id) ? "bg-primary/5" : ""
-                        }`}
+                        className={`border-b border-outline-variant last:border-0 hover:bg-surface-container-low/30 transition-colors cursor-pointer ${isExpanded ? 'bg-surface-container-low/20' : ''} ${selectedOrderIds.includes(order.id) ? "bg-primary/5" : ""
+                          }`}
                         onClick={() => toggleExpand(order.id)}
                       >
                         <td className="py-4 px-6" onClick={(e) => e.stopPropagation()}>
@@ -325,9 +324,8 @@ export default function AdminOrdersPage() {
                           <select
                             value={order.status}
                             onChange={(e) => updateOrderStatus(order.id, e.target.value as typeof statuses[number])}
-                            className={`px-3 py-1 rounded-full text-xs font-bold border outline-none cursor-pointer transition-all ${
-                              statusColors[order.status] || "bg-surface-container text-on-surface-variant"
-                            }`}
+                            className={`px-3 py-1 rounded-full text-xs font-bold border outline-none cursor-pointer transition-all ${statusColors[order.status] || "bg-surface-container text-on-surface-variant"
+                              }`}
                           >
                             {statuses.map((status) => (
                               <option key={status} value={status} className="bg-background text-foreground">
@@ -384,7 +382,7 @@ export default function AdminOrdersPage() {
                                 <div className="space-y-3">
                                   {order.items.map((item, idx) => {
                                     const { cleanFinish, storagePath } = extractStoragePath(item.finish);
-                                    
+
                                     return (
                                       <div
                                         key={idx}
