@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRealtimeAdmin } from "@/lib/hooks/use-realtime-admin";
-import { Download, FileDown, Loader2, Search, Trash2 } from "lucide-react";
+import { Download, FileDown, Loader2, Lock, Search, Trash2 } from "lucide-react";
 import { toast } from "@/components/toast";
 
 interface UploadedFile {
@@ -14,6 +14,10 @@ interface UploadedFile {
   file_format: string;
   storage_path: string;
   created_at: string;
+  // Set when the file belongs to an order still being fulfilled — such files
+  // can only be deleted once the order is delivered or cancelled.
+  locked?: boolean;
+  order_status?: string | null;
 }
 
 export default function AdminUploadsPage() {
@@ -96,8 +100,10 @@ export default function AdminUploadsPage() {
         body: JSON.stringify({ ids: [id], keys: [key] }),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to delete file");
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || data.success === false) {
+        throw new Error(data.error || "Failed to delete file");
       }
 
       toast.success("File deleted successfully from B2 storage and database.");
@@ -130,11 +136,22 @@ export default function AdminUploadsPage() {
         body: JSON.stringify({ ids: selectedIds, keys }),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to delete selected files");
+      const data = await res.json().catch(() => ({}));
+
+      // 207 = partial (some kept/failed), 409 = all blocked by active orders.
+      if (!res.ok && res.status !== 207 && res.status !== 409) {
+        throw new Error(data.error || "Failed to delete selected files");
       }
 
-      toast.success("Selected files deleted successfully.");
+      if (data.success === false) {
+        // Some or all files were blocked (active order) or failed to delete
+        toast.error(
+          data.error ||
+            `${data.failedCount || 0} file(s) could not be deleted. ${data.deletedCount || 0} removed.`
+        );
+      } else {
+        toast.success("Selected files deleted successfully.");
+      }
       fetchUploads();
     } catch (err: any) {
       console.error("Bulk delete error:", err);
@@ -145,21 +162,26 @@ export default function AdminUploadsPage() {
   };
 
   const handleSelectUpload = (id: number) => {
+    // Locked files (tied to active orders) can't be selected for deletion.
+    const upload = uploads.find((u) => u.id === id);
+    if (upload?.locked) return;
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   };
 
   const handleSelectAll = (filteredUploads: UploadedFile[]) => {
-    const filteredIds = filteredUploads.map((u) => u.id);
-    const allFilteredSelected = filteredIds.every((id) => selectedIds.includes(id));
+    // Only unlocked files are selectable.
+    const selectableIds = filteredUploads.filter((u) => !u.locked).map((u) => u.id);
+    const allSelectableSelected =
+      selectableIds.length > 0 && selectableIds.every((id) => selectedIds.includes(id));
 
-    if (allFilteredSelected) {
-      // Unselect all filtered items
-      setSelectedIds((prev) => prev.filter((id) => !filteredIds.includes(id)));
+    if (allSelectableSelected) {
+      // Unselect all selectable filtered items
+      setSelectedIds((prev) => prev.filter((id) => !selectableIds.includes(id)));
     } else {
-      // Select all filtered items (merge with existing selection)
-      setSelectedIds((prev) => Array.from(new Set([...prev, ...filteredIds])));
+      // Select all selectable filtered items (merge with existing selection)
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...selectableIds])));
     }
   };
 
@@ -181,7 +203,9 @@ export default function AdminUploadsPage() {
     );
   });
 
-  const allFilteredSelected = filteredUploads.length > 0 && filteredUploads.every((u) => selectedIds.includes(u.id));
+  const selectableFiltered = filteredUploads.filter((u) => !u.locked);
+  const allFilteredSelected =
+    selectableFiltered.length > 0 && selectableFiltered.every((u) => selectedIds.includes(u.id));
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
@@ -281,7 +305,8 @@ export default function AdminUploadsPage() {
                         type="checkbox"
                         checked={selectedIds.includes(upload.id)}
                         onChange={() => handleSelectUpload(upload.id)}
-                        className="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer"
+                        disabled={upload.locked}
+                        className="rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                       />
                     </td>
                     <td className="py-4 px-6 font-medium max-w-xs truncate" title={upload.file_name}>
@@ -330,15 +355,25 @@ export default function AdminUploadsPage() {
                             </>
                           )}
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteSingle(upload.id, upload.storage_path)}
-                          disabled={isDeleting}
-                          className="p-2 rounded-xl border border-destructive/20 hover:bg-destructive/10 text-destructive transition-colors disabled:opacity-50"
-                          title="Delete File"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {upload.locked ? (
+                          <span
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-surface-container text-on-surface-variant text-[11px] font-semibold"
+                            title={`Locked: this file belongs to an active order${upload.order_status ? ` (${upload.order_status})` : ""}. It can be deleted once the order is delivered or cancelled.`}
+                          >
+                            <Lock className="w-3.5 h-3.5" />
+                            {upload.order_status || "In order"}
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteSingle(upload.id, upload.storage_path)}
+                            disabled={isDeleting}
+                            className="p-2 rounded-xl border border-destructive/20 hover:bg-destructive/10 text-destructive transition-colors disabled:opacity-50"
+                            title="Delete File"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

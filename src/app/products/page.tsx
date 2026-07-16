@@ -25,7 +25,16 @@ function ProductsContent() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [mounted, setMounted] = useState(false);
-  const productsPerPage = 10;
+  const productsPerPage = 12;
+
+  // Change page and bring the catalog back into view at the top
+  const goToPage = (page: number) => {
+    const clamped = Math.min(Math.max(1, page), totalPages);
+    setCurrentPage(clamped);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -154,7 +163,7 @@ function ProductsContent() {
 
           {/* Product Grid */}
           {filteredProducts.length > 0 ? (
-            <ProductGrid products={paginatedProducts} columns={5} />
+            <ProductGrid products={paginatedProducts} columns={4} />
           ) : (
             <div className="text-center py-20 bg-surface-container-low rounded-3xl border border-outline-variant/30">
               <p className="text-on-surface-variant font-medium">No products found in this category.</p>
@@ -171,7 +180,7 @@ function ProductsContent() {
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2 mt-16">
               <button
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                onClick={() => goToPage(currentPage - 1)}
                 disabled={currentPage === 1}
                 className="px-3 py-2 rounded-full text-sm text-on-surface-variant hover:text-on-surface disabled:opacity-30 transition-colors"
               >
@@ -180,7 +189,7 @@ function ProductsContent() {
               {Array.from({ length: totalPages }).map((_, i) => (
                 <button
                   key={i}
-                  onClick={() => setCurrentPage(i + 1)}
+                  onClick={() => goToPage(i + 1)}
                   className={`w-9 h-9 rounded-full text-sm font-medium transition-all ${
                     currentPage === i + 1
                       ? "gradient-primary text-white"
@@ -191,7 +200,7 @@ function ProductsContent() {
                 </button>
               ))}
               <button
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                onClick={() => goToPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
                 className="px-3 py-2 rounded-full text-sm text-on-surface-variant hover:text-on-surface disabled:opacity-30 transition-colors"
               >

@@ -3,7 +3,7 @@
 import { useEffect, useState, Fragment, useMemo } from "react";
 import { useAdminStore } from "@/lib/store/admin-store";
 import { useRealtimeAdmin } from "@/lib/hooks/use-realtime-admin";
-import { ClipboardList, ChevronDown, ChevronUp, Download, Loader2, Trash2 } from "lucide-react";
+import { ClipboardList, ChevronDown, ChevronUp, FileText, Loader2, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { toast } from "@/components/toast";
 
@@ -20,10 +20,16 @@ function extractStoragePath(finishText: string | null | undefined): { cleanFinis
   return { cleanFinish: finishText, storagePath: null };
 }
 
+// Derive the original uploaded file name from a storage key by stripping the
+// 8-char hex uniqueness prefix (e.g. "3a4b5c6d-model.stl" -> "model.stl").
+function uploadedFileName(storagePath: string): string {
+  const basename = storagePath.split("/").pop() || storagePath;
+  return basename.replace(/^[0-9a-f]{8}-/i, "") || basename;
+}
+
 export default function AdminOrdersPage() {
   const { fetchOrders, getRecentOrders, updateOrderStatus, isLoading } = useAdminStore();
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
-  const [downloadingPath, setDownloadingPath] = useState<string | null>(null);
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -61,40 +67,6 @@ export default function AdminOrdersPage() {
 
   const toggleExpand = (orderId: string) => {
     setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
-  };
-
-  const handleDownloadModel = async (path: string, fileName: string) => {
-    setDownloadingPath(path);
-    try {
-      const res = await fetch("/api/admin/models/sign", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ path }),
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to sign download link");
-      }
-
-      const { signedUrl } = await res.json();
-
-      // Trigger download
-      const a = document.createElement("a");
-      a.href = signedUrl;
-      // Strip the leading 8-char hex hash (e.g. "3a4b5c6d-") from the key to get the original filename
-      const basename = path.split("/").pop() || fileName || "model.stl";
-      const cleanName = basename.replace(/^[0-9a-f]{8}-/i, "") || basename;
-      a.download = cleanName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      toast.success("Download started successfully.");
-    } catch (err) {
-      console.error("Download error:", err);
-      toast.error("Failed to download file. Please check connection.");
-    } finally {
-      setDownloadingPath(null);
-    }
   };
 
   // Delete single order
@@ -184,7 +156,7 @@ export default function AdminOrdersPage() {
         <div>
           <h1 className="font-heading text-3xl font-bold text-on-surface tracking-tight">Orders</h1>
           <p className="text-on-surface-variant mt-2">
-            Manage customer orders, update tracking status, and download custom 3D models.
+            Manage customer orders and update tracking status. Download custom 3D model files from the Uploads page.
           </p>
         </div>
       </div>
@@ -293,23 +265,16 @@ export default function AdminOrdersPage() {
                           {orderStlFiles.length > 0 ? (
                             <div className="flex flex-col gap-1 max-w-[180px]">
                               {orderStlFiles.map((file, idx) => {
-                                const cleanName = file.name.replace("Custom Print: ", "");
+                                const fileName = uploadedFileName(file.storagePath);
                                 return (
-                                  <button
+                                  <span
                                     key={idx}
-                                    type="button"
-                                    onClick={() => handleDownloadModel(file.storagePath, file.name)}
-                                    disabled={downloadingPath === file.storagePath}
-                                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold transition-all disabled:opacity-50 text-left truncate w-full"
-                                    title={`Download ${file.name}`}
+                                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container text-on-surface text-xs font-medium truncate w-full"
+                                    title={fileName}
                                   >
-                                    {downloadingPath === file.storagePath ? (
-                                      <Loader2 className="w-3 h-3 animate-spin shrink-0" />
-                                    ) : (
-                                      <Download className="w-3 h-3 shrink-0" />
-                                    )}
-                                    <span className="truncate">{cleanName}</span>
-                                  </button>
+                                    <FileText className="w-3 h-3 shrink-0 text-on-surface-variant" />
+                                    <span className="truncate">{fileName}</span>
+                                  </span>
                                 );
                               })}
                             </div>
@@ -425,24 +390,13 @@ export default function AdminOrdersPage() {
                                           </div>
 
                                           {storagePath && (
-                                            <button
-                                              type="button"
-                                              onClick={() => handleDownloadModel(storagePath, item.name)}
-                                              disabled={downloadingPath === storagePath}
-                                              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full gradient-primary text-white text-xs font-semibold hover:shadow-md transition-all disabled:opacity-50"
+                                            <div
+                                              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-surface-container text-on-surface text-xs font-semibold max-w-[220px]"
+                                              title={uploadedFileName(storagePath)}
                                             >
-                                              {downloadingPath === storagePath ? (
-                                                <>
-                                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                  Signing...
-                                                </>
-                                              ) : (
-                                                <>
-                                                  <Download className="w-3.5 h-3.5" />
-                                                  Download STL
-                                                </>
-                                              )}
-                                            </button>
+                                              <FileText className="w-3.5 h-3.5 shrink-0 text-on-surface-variant" />
+                                              <span className="truncate">{uploadedFileName(storagePath)}</span>
+                                            </div>
                                           )}
                                         </div>
                                       </div>

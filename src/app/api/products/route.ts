@@ -10,6 +10,10 @@ export async function GET(request: Request) {
   let query = supabase.from("products").select("*", { count: "exact" });
   if (category && category !== "all") query = query.eq("category", category);
 
+  // Stable ordering so pagination is deterministic (otherwise the DB may return
+  // rows in an arbitrary order and pages can overlap or skip rows).
+  query = query.order("created_at", { ascending: true }).order("id", { ascending: true });
+
   // Apply pagination
   query = query.range(offset, offset + limit - 1);
 

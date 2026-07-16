@@ -21,22 +21,16 @@ function rowToProduct(row: Record<string, unknown>): Product {
   const id = row.id as string;
   const isGMK = id && id.startsWith("GMK-");
 
-  let price = Number(row.price) || 0;
-  let priceLabel = (row.price_label as string) || undefined;
-  let badge = (row.badge as string) || undefined;
-  let isNew = (row.is_new as boolean) || false;
+  const price = Number(row.price) || 0;
+  const priceLabel = (row.price_label as string) || undefined;
+  const badge = (row.badge as string) || undefined;
+  const isNew = (row.is_new as boolean) || false;
   let description = (row.description as string) || "";
 
   if (isGMK) {
-    if (priceLabel) {
-      const cleanPrice = Number(priceLabel.replace(/[^0-9.]/g, ""));
-      if (!isNaN(cleanPrice) && cleanPrice > 0) {
-        price = cleanPrice;
-      }
-    }
-    priceLabel = undefined;
-    badge = undefined;
-    isNew = false;
+    // Keep the DB pricing intact: `price` is what the customer pays (the
+    // discounted price) and `priceLabel` is the struck-through original price,
+    // so any discount is displayed. Only normalize the marketing copy.
     const cleanDesc = description.replace(/^Premium\s+/i, "");
     description = cleanDesc ? cleanDesc.charAt(0).toUpperCase() + cleanDesc.slice(1) : "";
   }
@@ -88,22 +82,47 @@ export const useProductsStore = create<ProductsState>()(
     products: defaultProducts,
     isLoading: false,
 
-    fetchProducts: async (limit = 50, offset = 0) => {
+    fetchProducts: async (limit = 1000, offset = 0) => {
       set({ isLoading: true });
       try {
-        const res = await fetch(`/api/products?limit=${limit}&offset=${offset}`);
-        if (!res.ok) throw new Error("API error");
-        const responseData = await res.json();
-        const items = Array.isArray(responseData) ? responseData : (responseData.data || []);
-        if (items.length > 0) {
-          set((state) => {
-            const newProducts = items.map(rowToProduct);
-            return {
-              products: offset === 0 ? mergeProducts(defaultProducts, newProducts) : mergeProducts(state.products, newProducts),
-              isLoading: false,
-            };
-          });
+        // Page through the whole catalog. PostgREST caps each response (default
+        // 1000 rows), so a single request would silently drop products once the
+        // catalog grows. We keep requesting pages until every row — per the
+        // reported `count` — has been collected.
+        const pageSize = Math.min(Math.max(limit, 1), 1000);
+        let from = offset;
+        let total: number | undefined;
+        const collected: Record<string, unknown>[] = [];
+
+        for (;;) {
+          const res = await fetch(`/api/products?limit=${pageSize}&offset=${from}`);
+          if (!res.ok) throw new Error("API error");
+          const responseData = await res.json();
+          const items: Record<string, unknown>[] = Array.isArray(responseData)
+            ? responseData
+            : responseData.data || [];
+          if (typeof responseData?.count === "number") total = responseData.count;
+
+          collected.push(...items);
+          from += items.length;
+
+          const reachedEnd =
+            items.length < pageSize ||
+            (typeof total === "number" && collected.length >= total);
+          if (reachedEnd || items.length === 0) break;
+        }
+
+        if (collected.length > 0) {
+          const newProducts = collected.map(rowToProduct);
+          set((state) => ({
+            // The database is the source of truth for the catalog. When loading
+            // from the start we replace the list entirely (so products deleted in
+            // the DB no longer appear and can't be ordered); otherwise append.
+            products: offset === 0 ? newProducts : mergeProducts(state.products, newProducts),
+            isLoading: false,
+          }));
         } else {
+          // DB returned nothing — fall back to bundled defaults so the store isn't empty
           if (offset === 0) set({ products: defaultProducts, isLoading: false });
           else set({ isLoading: false });
         }

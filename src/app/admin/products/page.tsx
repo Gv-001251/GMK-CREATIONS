@@ -67,7 +67,12 @@ export default function AdminProductsPage() {
           }
           
           const data = await res.json();
-          alert(`Successfully imported ${data.count} products!`);
+          const received = data.received ?? data.count;
+          const skipped = received - data.count;
+          alert(
+            `Successfully imported ${data.count} of ${received} rows` +
+              (skipped > 0 ? ` (${skipped} duplicate row(s) merged/skipped).` : ".")
+          );
           fetchProducts();
         } catch (err: any) {
           console.error(err);
@@ -297,7 +302,7 @@ export default function AdminProductsPage() {
         const slug = formData.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 
         await addProduct({
-          id: `custom-${Date.now()}`,
+          id: `prod-${Date.now()}`,
           name: formData.name,
           slug,
           description: formData.description || "Custom 3D printed product",

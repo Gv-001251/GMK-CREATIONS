@@ -1,7 +1,9 @@
 import { Resend } from "resend";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const FROM = process.env.EMAIL_FROM || "GMK 3D Creations <noreply@gmk3d.com>";
+// Falls back to Resend's shared testing sender (works without domain setup).
+// Set EMAIL_FROM to a verified-domain address for production.
+const FROM = process.env.EMAIL_FROM || "GMK 3D Creations <onboarding@resend.dev>";
 
 export interface OrderEmailData {
   orderId: string;

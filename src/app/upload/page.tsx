@@ -130,8 +130,23 @@ export default function UploadPage() {
     const scaleMultiplier = scalePercent / 100;
     const volumeMultiplier = Math.pow(scaleMultiplier, 3);
 
-    // Volume is in mm³, convert to cm³ and apply scale multiplier
-    volumeCm3 = (analysis.volume / 1000) * volumeMultiplier;
+    // Base solid volume in mm³. Prefer the true mesh volume, but many uploaded
+    // models aren't watertight (or are flat/plate-like), which makes the signed
+    // mesh volume collapse toward 0 — that would freeze the quote at the print
+    // minimum regardless of material/infill/scale. In that case fall back to a
+    // fraction of the bounding-box volume so the estimate stays sensible and
+    // responsive.
+    const bboxVolumeMm3 =
+      analysis.dimensions.x * analysis.dimensions.y * analysis.dimensions.z;
+    const baseVolumeMm3 =
+      analysis.volume > bboxVolumeMm3 * 0.02
+        ? analysis.volume
+        : bboxVolumeMm3 > 0
+        ? bboxVolumeMm3 * 0.35 // assume ~35% solidity for non-watertight models
+        : 18200; // last-resort default so the quote is never stuck at the minimum
+
+    // Convert to cm³ and apply the scale multiplier
+    volumeCm3 = (baseVolumeMm3 / 1000) * volumeMultiplier;
     
     // Account for infill (outer shell is always ~100%, inner uses infill %)
     // Rough model: ~20% shell volume + (infill% × 80% inner volume)
@@ -183,7 +198,7 @@ export default function UploadPage() {
       const scaleString = scalePercent !== 100 ? ` [Scaled to ${scalePercent}%]` : "";
 
       const options = {
-        productId: `custom-${Date.now()}`,
+        productId: `upload-${Date.now()}`,
         name: `Custom Print: ${uploadedFile.name}${scaleString}`,
         price: calculatedUnitPrice,
         image: analysis?.thumbnail || "/images/hero-sphere.png",

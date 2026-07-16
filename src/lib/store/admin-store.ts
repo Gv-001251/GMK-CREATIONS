@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { Order, OrderItem } from "@/lib/types";
+import { toast } from "@/components/toast";
 
 export type { Order, OrderItem };
 
@@ -37,6 +38,9 @@ export const useAdminStore = create<AdminState>()((set, get) => ({
   },
 
   updateOrderStatus: async (orderId, status) => {
+    // Snapshot for rollback if the request fails
+    const previousOrders = get().orders;
+
     // Optimistic update
     set((state) => ({
       orders: state.orders.map((o) =>
@@ -46,14 +50,21 @@ export const useAdminStore = create<AdminState>()((set, get) => ({
 
     // Persist to server
     try {
-      await fetch(`/api/orders/${orderId}/status`, {
+      const res = await fetch(`/api/orders/${orderId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
-    } catch {
-      // Revert on failure — refetch
-      get().fetchOrders();
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to update order status");
+      }
+    } catch (err) {
+      // Revert optimistic update on failure and surface the error
+      set({ orders: previousOrders });
+      toast.error(
+        err instanceof Error ? err.message : "Failed to update order status"
+      );
     }
   },
 

@@ -62,6 +62,21 @@ export const verifyPaymentSchema = z.object({
   orderId: z.string().min(1),
 });
 
+// ─── Review Schema ───
+export const createReviewSchema = z.object({
+  productId: z.string().min(1, "Product is required"),
+  rating: z
+    .number()
+    .int()
+    .min(1, "Rating must be between 1 and 5")
+    .max(5, "Rating must be between 1 and 5"),
+  comment: z
+    .string()
+    .trim()
+    .min(3, "Please write a short comment")
+    .max(1000, "Comment is too long (max 1000 characters)"),
+});
+
 // ─── Helper ───
 export function parseBody<T>(
   schema: z.ZodSchema<T>,

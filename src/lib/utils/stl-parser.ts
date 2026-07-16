@@ -140,6 +140,87 @@ function parseBinarySTL(view: DataView, buffer: ArrayBuffer): STLAnalysis {
 }
 
 /**
+ * Parses an OBJ file (as an ArrayBuffer) and extracts dimensions, triangle
+ * count, and volume. Faces are triangulated with a simple fan; polygonal faces
+ * and negative (relative) vertex indices are supported.
+ */
+export function parseOBJ(buffer: ArrayBuffer): STLAnalysis {
+  const text = new TextDecoder("utf-8").decode(buffer);
+  const lines = text.split(/\r?\n/);
+
+  const vertices: Point3D[] = [];
+  let minX = Infinity, maxX = -Infinity;
+  let minY = Infinity, maxY = -Infinity;
+  let minZ = Infinity, maxZ = -Infinity;
+  let totalVolume = 0;
+  let triangleCount = 0;
+
+  for (const raw of lines) {
+    const line = raw.trim();
+
+    if (line.startsWith("v ")) {
+      const p = line.split(/\s+/);
+      const x = parseFloat(p[1]);
+      const y = parseFloat(p[2]);
+      const z = parseFloat(p[3]);
+      if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
+        vertices.push({ x, y, z });
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+        if (z < minZ) minZ = z;
+        if (z > maxZ) maxZ = z;
+      }
+    } else if (line.startsWith("f ")) {
+      const tokens = line.split(/\s+/).slice(1);
+      // OBJ indices are 1-based; negative values are relative to the end.
+      const idxs = tokens.map((t) => {
+        const i = parseInt(t.split("/")[0], 10);
+        if (isNaN(i)) return -1;
+        return i > 0 ? i - 1 : vertices.length + i;
+      });
+      // Fan-triangulate the (possibly polygonal) face.
+      for (let i = 1; i < idxs.length - 1; i++) {
+        const a = vertices[idxs[0]];
+        const b = vertices[idxs[i]];
+        const c = vertices[idxs[i + 1]];
+        if (a && b && c) {
+          totalVolume += signedVolumeOfTetrahedron(a, b, c);
+          triangleCount++;
+        }
+      }
+    }
+  }
+
+  if (vertices.length === 0) {
+    throw new Error("OBJ file contains no vertices.");
+  }
+
+  const sizeX = minX === Infinity ? 0 : maxX - minX;
+  const sizeY = minY === Infinity ? 0 : maxY - minY;
+  const sizeZ = minZ === Infinity ? 0 : maxZ - minZ;
+
+  return {
+    volume: Math.abs(totalVolume),
+    dimensions: {
+      x: Math.round(sizeX * 10) / 10,
+      y: Math.round(sizeY * 10) / 10,
+      z: Math.round(sizeZ * 10) / 10,
+    },
+    triangleCount,
+  };
+}
+
+/**
+ * Parses a 3D model file by format, returning geometry analysis.
+ * Falls back to the STL parser for unknown formats.
+ */
+export function parseModel(buffer: ArrayBuffer, format: string): STLAnalysis {
+  return (format || "").toLowerCase() === "obj" ? parseOBJ(buffer) : parseSTL(buffer);
+}
+
+/**
  * Fallback parser for ASCII STL files. Handles line-by-line reading.
  */
 function parseAsciiSTL(initialText: string, buffer: ArrayBuffer): STLAnalysis {

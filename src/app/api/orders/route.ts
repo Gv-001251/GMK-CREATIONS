@@ -68,9 +68,17 @@ export async function POST(request: Request) {
   if (!parsed.success) return parsed.response;
   const { items, shipping, shippingInfo, paymentMethod } = parsed.data;
 
+  // A "custom print" is a user-uploaded model (has a storagePath, or an
+  // "upload-" / legacy "custom-<ts>" id WITH an attached file). These are
+  // priced from the client value with a server-enforced floor. Everything
+  // else — including admin-created catalog products — must be price-verified
+  // against the database to prevent tampering.
+  const isCustomPrint = (item: (typeof items)[number]) =>
+    !!item.storagePath || item.productId.startsWith("upload-");
+
   // --- Server-side price lookup (prevent price tampering) ---
   const adminDb = createAdminClient();
-  const catalogItems = items.filter((item) => !item.productId.startsWith("custom-"));
+  const catalogItems = items.filter((item) => !isCustomPrint(item));
   const catalogProductIds = catalogItems.map((item) => item.productId);
   let priceMap = new Map<string, number>();
 
@@ -100,7 +108,7 @@ export async function POST(request: Request) {
 
   // SECURITY: enforce a minimum price floor on custom prints to prevent price tampering
   const subtotal = items.reduce((sum, item) => {
-    const isCustom = item.productId.startsWith("custom-");
+    const isCustom = isCustomPrint(item);
     let unitPrice: number;
     if (isCustom) {
       const clientPrice = item.price || 0;
@@ -200,7 +208,7 @@ export async function POST(request: Request) {
 
   // Store order items using DB-verified prices for catalog and client-passed prices for custom items
   const orderItems = items.map((item) => {
-    const isCustom = item.productId.startsWith("custom-");
+    const isCustom = isCustomPrint(item);
     const rawPrice = isCustom ? (item.price || 0) : (priceMap.get(item.productId) || 0);
     const verifiedPrice = isCustom ? Math.max(rawPrice, CUSTOM_PRINT_MIN_PRICE) : rawPrice;
 
@@ -233,7 +241,14 @@ export async function POST(request: Request) {
   const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
   if (itemsError) {
     console.error("Failed to insert order items:", itemsError.message);
-    // Order was created but items failed — log for manual fix
+    // Roll back the order so we never leave an orphan order with no line items.
+    // Use the admin client (bypasses RLS) to guarantee the cleanup succeeds.
+    await adminDb.from("order_items").delete().eq("order_id", orderId);
+    await adminDb.from("orders").delete().eq("id", orderId);
+    return Response.json(
+      { error: "Failed to create order. Please try again." },
+      { status: 500 }
+    );
   }
 
   // For COD orders, send confirmation email immediately (online orders are emailed after payment verify)

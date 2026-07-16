@@ -43,6 +43,8 @@ function buildProduct(row: string[]): Product {
   const printHours = Number(baselinePrintTime) || 0;
   const weight = parseNumber(baselineWeight);
   const originalPrice = parseNumber(sellingPrice);
+  const finalPrice = parseNumber(discountedPrice) || originalPrice;
+  const hasDiscount = originalPrice > 0 && finalPrice > 0 && originalPrice > finalPrice;
   const sizeVariant = weight >= 250 ? "120mm x 120mm x 200mm" : weight >= 100 ? "110mm x 110mm x 160mm" : "90mm x 90mm x 120mm";
 
   const cleanDescription = shortDescription.replace(/^Premium\s+/i, "");
@@ -54,8 +56,8 @@ function buildProduct(row: string[]): Product {
     slug: slugify(name),
     description: formattedDescription,
     longDescription,
-    price: originalPrice,
-    priceLabel: undefined,
+    price: finalPrice,
+    priceLabel: hasDiscount ? sellingPrice : undefined,
     category: normalizedCategory,
     image,
     images: [image],

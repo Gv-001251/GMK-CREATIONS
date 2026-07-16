@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function DELETE(
   request: Request,
@@ -33,11 +34,17 @@ export async function DELETE(
     );
   }
 
-  // Delete the order items
-  await supabase.from("order_items").delete().eq("order_id", orderId);
-  
+  // Perform the deletion with the admin client. Ownership has already been
+  // verified above, and the orders table has no DELETE RLS policy — so a
+  // user-scoped delete would silently affect zero rows and leave the
+  // abandoned order lingering as 'pending'.
+  const admin = createAdminClient();
+
+  // Delete the order items first (respect the FK constraint)
+  await admin.from("order_items").delete().eq("order_id", orderId);
+
   // Delete the order
-  const { error } = await supabase.from("orders").delete().eq("id", orderId);
+  const { error } = await admin.from("orders").delete().eq("id", orderId);
 
   if (error) {
     return Response.json({ error: error.message }, { status: 500 });

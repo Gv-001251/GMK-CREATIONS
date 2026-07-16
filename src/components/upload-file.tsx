@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Upload, FileText, X, CheckCircle, Loader2 } from "lucide-react";
-import { STLAnalysis } from "@/lib/utils/stl-parser";
+import { STLAnalysis, parseModel } from "@/lib/utils/stl-parser";
 import { generateStlThumbnail } from "@/lib/utils/stl-thumbnailer";
 
 interface UploadedFile {
@@ -62,63 +62,36 @@ export function UploadFile({
         if (arrayBuffer instanceof ArrayBuffer) {
           // Add a minor micro-timeout to show the premium analysis animation
           setTimeout(() => {
-            const fallback = () => {
-              const fallbackAnalysis: STLAnalysis = {
+            const fmt = format.toLowerCase();
+
+            // Thumbnail preview is only available for STL geometry.
+            let thumbnail: string | undefined;
+            if (fmt === "stl") {
+              try {
+                thumbnail = generateStlThumbnail(arrayBuffer);
+              } catch (thumbnailError) {
+                console.error("Failed to generate thumbnail:", thumbnailError);
+              }
+            }
+
+            setIsAnalyzing(false);
+            setAnalyzed(true);
+
+            try {
+              // Parse synchronously on the main thread. This is reliable across
+              // bundlers/environments (a web worker can silently fail to load,
+              // leaving analysis null and the quote frozen), and fast for the
+              // STL/OBJ sizes used here. The quote then reflects the ACTUAL
+              // model geometry so material/scale/infill changes update the price.
+              const result = parseModel(arrayBuffer, fmt);
+              onAnalysisComplete?.({ ...result, thumbnail });
+            } catch (parseErr) {
+              console.error("3D model parse failed, using fallback estimate:", parseErr);
+              onAnalysisComplete?.({
                 volume: 18200,
                 dimensions: { x: 50.0, y: 50.0, z: 50.0 },
                 triangleCount: 8500,
-              };
-              setIsAnalyzing(false);
-              setAnalyzed(true);
-              onAnalysisComplete?.(fallbackAnalysis);
-            };
-
-            try {
-              if (format === "STL") {
-                // Generate thumbnail on the main thread before transferring the buffer to the worker
-                let thumbnail: string | undefined;
-                try {
-                  thumbnail = generateStlThumbnail(arrayBuffer);
-                } catch (thumbnailError) {
-                  console.error("Failed to generate thumbnail:", thumbnailError);
-                }
-
-                const worker = new Worker(new URL('../lib/utils/stl.worker', import.meta.url));
-                worker.onmessage = (event) => {
-                  if (event.data.success) {
-                    setIsAnalyzing(false);
-                    setAnalyzed(true);
-                    onAnalysisComplete?.({
-                      ...event.data.result,
-                      thumbnail,
-                    });
-                  } else {
-                    console.error("Error analyzing 3D model in worker:", event.data.error);
-                    fallback();
-                  }
-                  worker.terminate();
-                };
-                worker.onerror = (error) => {
-                  console.error("Worker error:", error);
-                  fallback();
-                  worker.terminate();
-                };
-                // Transfer array buffer for zero-copy
-                worker.postMessage({ buffer: arrayBuffer }, [arrayBuffer]);
-              } else {
-                // Fallback realistic metrics for non-STL models (.obj)
-                const analysis: STLAnalysis = {
-                  volume: 15400, // 15.4 cm3
-                  dimensions: { x: 45.2, y: 32.1, z: 65.0 },
-                  triangleCount: 12450,
-                };
-                setIsAnalyzing(false);
-                setAnalyzed(true);
-                onAnalysisComplete?.(analysis);
-              }
-            } catch (error) {
-              console.error("Error starting 3D model analysis:", error);
-              fallback();
+              });
             }
           }, 800);
         }

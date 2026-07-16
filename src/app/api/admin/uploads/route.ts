@@ -1,6 +1,10 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/server";
 
+// Orders in these statuses are still being fulfilled, so their uploaded model
+// files are "locked" (cannot be deleted until the order is delivered/cancelled).
+const ACTIVE_ORDER_STATUSES = ["pending", "confirmed", "processing", "shipped"];
+
 export async function GET() {
   // Only admin users can list all uploads
   const adminUser = await requireAdmin();
@@ -45,10 +49,57 @@ export async function GET() {
       }
     }
 
-    // Combine uploads with user profile names
+    // Determine which uploaded files are tied to orders and each order's status,
+    // so the UI can lock deletion for files still being fulfilled.
+    const pathToOrderIds = new Map<string, Set<string>>();
+    try {
+      const { data: fileItems } = await admin
+        .from("order_items")
+        .select("finish, order_id")
+        .ilike("finish", "%[File:%");
+
+      (fileItems || []).forEach((it: { finish: string | null; order_id: string | null }) => {
+        const m = (it.finish || "").match(/\[File:\s*(.*?)\]/);
+        if (m && it.order_id) {
+          const p = m[1].trim();
+          if (!pathToOrderIds.has(p)) pathToOrderIds.set(p, new Set());
+          pathToOrderIds.get(p)!.add(it.order_id);
+        }
+      });
+    } catch (e) {
+      console.error("Failed to map order files:", e);
+    }
+
+    const statusById = new Map<string, string>();
+    const allOrderIds = Array.from(
+      new Set([...pathToOrderIds.values()].flatMap((s) => [...s]))
+    );
+    if (allOrderIds.length > 0) {
+      const { data: ords } = await admin.from("orders").select("id, status").in("id", allOrderIds);
+      (ords || []).forEach((o: { id: string; status: string }) => statusById.set(o.id, o.status));
+    }
+
+    const lockInfo = (storagePath: string): { locked: boolean; order_status: string | null } => {
+      const orderIds = pathToOrderIds.get(storagePath);
+      if (!orderIds || orderIds.size === 0) return { locked: false, order_status: null };
+      let blockingStatus: string | null = null;
+      let anyStatus: string | null = null;
+      for (const oid of orderIds) {
+        const status = statusById.get(oid) || null;
+        if (status && !anyStatus) anyStatus = status;
+        if (status && ACTIVE_ORDER_STATUSES.includes(status)) {
+          blockingStatus = status;
+          break;
+        }
+      }
+      return { locked: !!blockingStatus, order_status: blockingStatus || anyStatus };
+    };
+
+    // Combine uploads with user profile names and lock status
     const uploadsWithUser = uploads.map((upload: any) => ({
       ...upload,
       user_name: profileMap[upload.user_id] || "Unknown User",
+      ...lockInfo(upload.storage_path),
     }));
 
     return Response.json(uploadsWithUser);
