@@ -22,6 +22,7 @@ import {
 const CATEGORIES = ["miniatures", "custom-parts", "edc-gear", "decor", "prototypes", "art", "trophy", "jewelry"];
 
 const EMPTY_FORM = {
+  id: "",
   name: "",
   price: "",
   category: "miniatures",
@@ -29,7 +30,6 @@ const EMPTY_FORM = {
   longDescription: "",
   materials: "Standard PLA, Resin (8K), Carbon Fiber PETG",
   finishes: "Matte, Satin, Gloss",
-  dimensions: "100mm x 100mm x 100mm",
   layerHeight: "0.05mm (50 Microns)",
   infillDensity: "20% Gyroid",
   recommendedApplication: "Display / Prototyping",
@@ -124,6 +124,7 @@ export default function AdminProductsPage() {
   const openEditForm = (product: Product) => {
     setEditingProduct(product);
     setFormData({
+      id: product.id,
       name: product.name,
       price: product.price.toString(),
       category: product.category,
@@ -131,7 +132,6 @@ export default function AdminProductsPage() {
       longDescription: product.longDescription,
       materials: product.materials.join(", "),
       finishes: product.finishes.join(", "),
-      dimensions: product.dimensions,
       layerHeight: product.layerHeight,
       infillDensity: product.infillDensity,
       recommendedApplication: product.recommendedApplication,
@@ -142,6 +142,10 @@ export default function AdminProductsPage() {
     setImageUrls(product.images && product.images.length > 0 ? [...product.images] : product.image ? [product.image] : []);
     setUploadError("");
     setShowForm(true);
+    // Scroll to the top so the edit form is in view
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   // ── Close Form ──
@@ -267,6 +271,7 @@ export default function AdminProductsPage() {
   // ── Save (Add or Update) ──
   const handleSave = async () => {
     if (!formData.name || !formData.price) return;
+    if (!isEditMode && !formData.id.trim()) return;
 
     const materialsArray = formData.materials.split(",").map(s => s.trim()).filter(Boolean);
     const finishesArray = formData.finishes.split(",").map(s => s.trim()).filter(Boolean);
@@ -287,7 +292,6 @@ export default function AdminProductsPage() {
           images: imageUrls.length > 0 ? imageUrls : [editingProduct.image || "/images/products/organic-sculptures.png"],
           materials: materialsArray.length > 0 ? materialsArray : editingProduct.materials,
           finishes: finishesArray.length > 0 ? finishesArray : editingProduct.finishes,
-          dimensions: formData.dimensions || editingProduct.dimensions,
           layerHeight: formData.layerHeight || editingProduct.layerHeight,
           infillDensity: formData.infillDensity || editingProduct.infillDensity,
           recommendedApplication: formData.recommendedApplication || editingProduct.recommendedApplication,
@@ -302,7 +306,7 @@ export default function AdminProductsPage() {
         const slug = formData.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 
         await addProduct({
-          id: `prod-${Date.now()}`,
+          id: formData.id.trim() || `prod-${Date.now()}`,
           name: formData.name,
           slug,
           description: formData.description || "Custom 3D printed product",
@@ -313,7 +317,6 @@ export default function AdminProductsPage() {
           images: imageUrls.length > 0 ? imageUrls : ["/images/products/organic-sculptures.png"],
           materials: materialsArray.length > 0 ? materialsArray : ["Standard PLA", "Resin (8K)"],
           finishes: finishesArray.length > 0 ? finishesArray : ["Matte", "Gloss"],
-          dimensions: formData.dimensions || "Custom",
           layerHeight: formData.layerHeight || "0.1mm (100 Microns)",
           infillDensity: formData.infillDensity || "20% Gyroid",
           recommendedApplication: formData.recommendedApplication || "General",
@@ -344,7 +347,7 @@ export default function AdminProductsPage() {
       product.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedFilterCategory === "all" || product.category === selectedFilterCategory;
     return matchesSearch && matchesCategory;
-  });
+  }).sort((a, b) => a.id.localeCompare(b.id));
 
   // ── Helper: update a form field ──
   const setField = (field: string, value: string | boolean) => setFormData(prev => ({ ...prev, [field]: value }));
@@ -414,6 +417,19 @@ export default function AdminProductsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Product ID */}
+            {!isEditMode && (
+              <div>
+                <label className="block text-sm font-medium text-on-surface-variant mb-2">Product ID</label>
+                <input
+                  type="text"
+                  value={formData.id}
+                  onChange={(e) => setField("id", e.target.value)}
+                  className={inputClass}
+                  placeholder="e.g., GMK-00039"
+                />
+              </div>
+            )}
             {/* Product Name */}
             <div>
               <label className="block text-sm font-medium text-on-surface-variant mb-2">Product Name</label>
@@ -494,17 +510,6 @@ export default function AdminProductsPage() {
                 onChange={(e) => setField("finishes", e.target.value)}
                 className={inputClass}
                 placeholder="e.g. Matte, Gloss"
-              />
-            </div>
-            {/* Dimensions */}
-            <div>
-              <label className="block text-sm font-medium text-on-surface-variant mb-2">Dimensions</label>
-              <input
-                type="text"
-                value={formData.dimensions}
-                onChange={(e) => setField("dimensions", e.target.value)}
-                className={inputClass}
-                placeholder="e.g. 100mm x 100mm x 100mm"
               />
             </div>
             {/* Layer Height */}
@@ -758,6 +763,8 @@ export default function AdminProductsPage() {
             <table className="w-full text-sm text-left">
               <thead>
                 <tr className="border-b border-outline-variant bg-surface-container">
+                  <th className="py-4 px-6 font-semibold text-on-surface-variant">#</th>
+                  <th className="py-4 px-6 font-semibold text-on-surface-variant">ID</th>
                   <th className="py-4 px-6 font-semibold text-on-surface-variant">Product</th>
                   <th className="py-4 px-6 font-semibold text-on-surface-variant">Category</th>
                   <th className="py-4 px-6 font-semibold text-right text-on-surface-variant">Price</th>
@@ -765,13 +772,21 @@ export default function AdminProductsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredProducts.map((product) => (
+                {filteredProducts.map((product, index) => (
                   <tr
                     key={product.id}
                     className={`border-b border-outline-variant last:border-0 hover:bg-surface-container/50 transition-colors ${
                       editingProduct?.id === product.id ? "bg-primary/5 ring-1 ring-inset ring-primary/20" : ""
                     }`}
                   >
+                    <td className="py-4 px-6">
+                      <span className="text-xs font-medium text-on-surface-variant">{index + 1}</span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className="text-xs font-mono text-on-surface-variant bg-surface-container px-2 py-1 rounded-md border border-outline-variant/50">
+                        {product.id}
+                      </span>
+                    </td>
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl overflow-hidden bg-surface-container border border-outline-variant shrink-0">

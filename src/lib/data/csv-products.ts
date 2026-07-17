@@ -41,11 +41,9 @@ function buildProduct(row: string[]): Product {
   const normalizedCategory = category.toLowerCase();
   const image = DEFAULT_IMAGE_BY_CATEGORY[normalizedCategory] || "/images/products/organic-sculptures.png";
   const printHours = Number(baselinePrintTime) || 0;
-  const weight = parseNumber(baselineWeight);
   const originalPrice = parseNumber(sellingPrice);
   const finalPrice = parseNumber(discountedPrice) || originalPrice;
   const hasDiscount = originalPrice > 0 && finalPrice > 0 && originalPrice > finalPrice;
-  const sizeVariant = weight >= 250 ? "120mm x 120mm x 200mm" : weight >= 100 ? "110mm x 110mm x 160mm" : "90mm x 90mm x 120mm";
 
   const cleanDescription = shortDescription.replace(/^Premium\s+/i, "");
   const formattedDescription = cleanDescription ? cleanDescription.charAt(0).toUpperCase() + cleanDescription.slice(1) : "";
@@ -64,7 +62,6 @@ function buildProduct(row: string[]): Product {
     badge: undefined,
     materials: ["Standard PLA", "Resin (8K)", "Carbon Fiber PETG"],
     finishes: ["Matte", "Satin", "Gloss", "Metallic"],
-    dimensions: normalizedCategory === "trophy" ? "100mm x 100mm x 180mm" : sizeVariant,
     layerHeight: "0.12mm (Detail)",
     infillDensity: normalizedCategory === "trophy" ? "25% Gyroid" : "20% Gyroid",
     recommendedApplication: normalizedCategory === "trophy" ? "Award / Recognition / Display" : "Devotional / Display / Collectible",

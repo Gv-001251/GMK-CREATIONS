@@ -49,7 +49,6 @@ function rowToProduct(row: Record<string, unknown>): Product {
     badge,
     materials: (row.materials as string[]) || [],
     finishes: (row.finishes as string[]) || [],
-    dimensions: (row.dimensions as string) || "",
     layerHeight: (row.layer_height as string) || "",
     infillDensity: (row.infill_density as string) || "",
     recommendedApplication: (row.recommended_application as string) || "",
@@ -175,14 +174,12 @@ export const useProductsStore = create<ProductsState>()(
       if (product.badge !== undefined) row.badge = product.badge || null;
       if (product.materials !== undefined) row.materials = product.materials;
       if (product.finishes !== undefined) row.finishes = product.finishes;
-      if (product.dimensions !== undefined) row.dimensions = product.dimensions;
       if (product.layerHeight !== undefined) row.layer_height = product.layerHeight;
       if (product.infillDensity !== undefined) row.infill_density = product.infillDensity;
       if (product.recommendedApplication !== undefined) row.recommended_application = product.recommendedApplication;
       if (product.productionDays !== undefined) row.production_days = product.productionDays;
       if (product.featured !== undefined) row.featured = product.featured;
       if (product.isNew !== undefined) row.is_new = product.isNew;
-      if (product.isDualColor !== undefined) row.is_dual_color = product.isDualColor;
 
       const res = await fetch(`/api/products/${slug}`, {
         method: "PATCH",
@@ -214,14 +211,12 @@ export const useProductsStore = create<ProductsState>()(
         badge: product.badge || null,
         materials: product.materials,
         finishes: product.finishes,
-        dimensions: product.dimensions,
         layer_height: product.layerHeight,
         infill_density: product.infillDensity,
         recommended_application: product.recommendedApplication,
         production_days: product.productionDays,
         featured: product.featured || false,
         is_new: product.isNew || false,
-        is_dual_color: product.isDualColor || false,
       };
 
       // Insert into DB first — only update local state on success

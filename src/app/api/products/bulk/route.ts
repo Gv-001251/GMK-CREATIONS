@@ -89,7 +89,6 @@ export async function POST(request: Request) {
     const providedId = pick(row, ["Product ID", "id", "productId"]);
     const category = (pick(row, ["Category", "category"]) || "uncategorized").toLowerCase();
 
-    const weight = parseNumber(pick(row, ["Baseline Weight (g)", "baselineWeight", "weight"]));
     const printHours =
       Number(pick(row, ["Baseline Print Time (hrs)", "baselinePrintTime", "printTime"])) || 0;
 
@@ -117,13 +116,6 @@ export async function POST(request: Request) {
       DEFAULT_IMAGE_BY_CATEGORY[category] ||
       "/images/products/organic-sculptures.png";
 
-    const sizeVariant =
-      weight >= 250
-        ? "120mm x 120mm x 200mm"
-        : weight >= 100
-        ? "110mm x 110mm x 160mm"
-        : "90mm x 90mm x 120mm";
-
     const pdColumn = Number(pick(row, ["productionDays", "production_days"])) || 0;
     const productionDays =
       printHours > 0 ? Math.max(1, Math.ceil(printHours / 8)) : pdColumn || 5;
@@ -147,9 +139,6 @@ export async function POST(request: Request) {
         "Carbon Fiber PETG",
       ]),
       finishes: toArray(row.finishes ?? row.Finishes, ["Matte", "Satin", "Gloss", "Metallic"]),
-      dimensions:
-        pick(row, ["dimensions", "Dimensions"]) ||
-        (category === "trophy" ? "100mm x 100mm x 180mm" : sizeVariant),
       layer_height: pick(row, ["layerHeight", "layer_height"]) || "0.12mm (Detail)",
       infill_density:
         pick(row, ["infillDensity", "infill_density"]) ||

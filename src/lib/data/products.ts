@@ -12,7 +12,6 @@ export interface Product {
   badge?: string;
   materials: string[];
   finishes: string[];
-  dimensions: string;
   layerHeight: string;
   infillDensity: string;
   recommendedApplication: string;
@@ -43,7 +42,6 @@ export const products: Product[] = [
     badge: "New",
     materials: ["Standard PLA", "Carbon Fiber PETG", "Translucent Resin"],
     finishes: ["Gloss", "Matte", "Satin"],
-    dimensions: "140mm x 140mm x 180mm",
     layerHeight: "0.16mm (Detail)",
     infillDensity: "15% Gyroid",
     recommendedApplication: "Ambient Lighting / Desk decor",
@@ -64,7 +62,6 @@ export const products: Product[] = [
     badge: "Customizable",
     materials: ["Standard PLA", "Carbon Fiber PETG", "Nylon PA12"],
     finishes: ["Matte", "Satin", "Gloss"],
-    dimensions: "85mm x 25mm x 4mm",
     layerHeight: "0.2mm (Standard)",
     infillDensity: "100% Solid",
     recommendedApplication: "Personal Accessories",
@@ -86,7 +83,6 @@ export const products: Product[] = [
     badge: "Office",
     materials: ["Standard PLA", "Carbon Fiber PETG", "Nylon PA12"],
     finishes: ["Matte", "Satin", "Gloss"],
-    dimensions: "200mm x 50mm x 40mm",
     layerHeight: "0.2mm",
     infillDensity: "20% Grid",
     recommendedApplication: "Office / Corporate Desk Display",
@@ -108,7 +104,6 @@ export const products: Product[] = [
     badge: "Customizable",
     materials: ["Standard PLA", "Translucent Resin"],
     finishes: ["Raw", "Matte"],
-    dimensions: "100mm x 120mm x 30mm",
     layerHeight: "0.12mm (Ultra-Detail)",
     infillDensity: "100% Solid",
     recommendedApplication: "Gifts / Home Décor / Memorials",
@@ -129,7 +124,6 @@ export const products: Product[] = [
     badge: "Devotional",
     materials: ["Standard PLA", "Resin (8K)", "UV Resin"],
     finishes: ["Metallic", "Matte", "Gloss"],
-    dimensions: "50mm x 50mm x 100mm",
     layerHeight: "0.12mm (Ultra-Detail)",
     infillDensity: "30% Gyroid",
     recommendedApplication: "Puja / Home Décor / Devotional Gifts",
@@ -155,7 +149,6 @@ export const products: Product[] = [
     badge: "New",
     materials: ["Standard PLA", "Resin (8K)", "UV Resin"],
     finishes: ["Matte", "Satin", "Paint-Ready"],
-    dimensions: "60mm x 60mm x 75mm",
     layerHeight: "0.12mm (Ultra-Detail)",
     infillDensity: "20% Gyroid",
     recommendedApplication: "Desk accessory / Geeky collectible / Miniature diorama",
@@ -178,7 +171,6 @@ export const products: Product[] = [
     badge: "Fidget Toy",
     materials: ["Standard PLA", "Carbon Fiber PETG"],
     finishes: ["Matte", "Satin", "Gloss"],
-    dimensions: "45mm x 20mm x 80mm",
     layerHeight: "0.16mm (Detail)",
     infillDensity: "15% Grid",
     recommendedApplication: "Fidget toy / Desk decoration / Gift",
@@ -203,7 +195,6 @@ export const products: Product[] = [
     badge: "Desk Organizer",
     materials: ["Standard PLA", "Carbon Fiber PETG"],
     finishes: ["Metallic", "Matte", "Satin"],
-    dimensions: "120mm x 85mm x 150mm",
     layerHeight: "0.16mm (Detail)",
     infillDensity: "20% Gyroid",
     recommendedApplication: "Office desks / Kids rooms / Art studio organizer",
@@ -226,7 +217,6 @@ export const products: Product[] = [
     badge: "Devotional",
     materials: ["Standard PLA", "Resin (8K)"],
     finishes: ["Matte", "Satin", "Metallic"],
-    dimensions: "170mm x 45mm x 200mm (8 inch height)",
     layerHeight: "0.16mm (Detail)",
     infillDensity: "15% Grid",
     recommendedApplication: "Puja Room / Spiritual Home Decor / Sacred Gift",
@@ -249,7 +239,6 @@ export const products: Product[] = [
     badge: "Wall Decor",
     materials: ["Standard PLA", "Carbon Fiber PETG"],
     finishes: ["Matte", "Satin", "Gloss"],
-    dimensions: "228mm x 228mm x 15mm (9 inch)",
     layerHeight: "0.2mm (Standard)",
     infillDensity: "15% Grid",
     recommendedApplication: "Wall Art / Display Stand Decor / Shelf Accent",
@@ -273,7 +262,6 @@ export const products: Product[] = [
     badge: "Devotional",
     materials: ["Standard PLA", "Resin (8K)"],
     finishes: ["Gloss", "Matte", "Satin"],
-    dimensions: "200mm x 45mm x 228mm (9 inch height)",
     layerHeight: "0.12mm (Ultra-Detail)",
     infillDensity: "20% Grid",
     recommendedApplication: "Home Altar / Puja Mandir Backdrop / Spiritual Decor",
@@ -296,7 +284,6 @@ export const products: Product[] = [
     badge: "Miniature",
     materials: ["Standard PLA", "Carbon Fiber PETG", "Nylon PA12"],
     finishes: ["Matte", "Satin", "Gloss"],
-    dimensions: "60mm x 60mm x 45mm",
     layerHeight: "0.16mm (Detail)",
     infillDensity: "15% Grid",
     recommendedApplication: "Miniature scenes / Diorama accessories",

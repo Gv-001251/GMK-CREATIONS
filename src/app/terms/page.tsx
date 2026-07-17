@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     "The terms and conditions governing purchases, custom 3D printing orders, and use of the GMK 3D Creations website.",
 };
 
-const LAST_UPDATED = "July 16, 2026";
+const LAST_UPDATED = "July 17, 2026";
 
 export default function TermsPage() {
   return (
@@ -34,145 +34,231 @@ export default function TermsPage() {
           <div className="mt-10 space-y-10">
             <section className="space-y-3">
               <p className="text-on-surface-variant leading-relaxed">
-                These Terms &amp; Conditions (&quot;Terms&quot;) govern your access to and use of the
-                GMK 3D Creations website, and any purchase or custom 3D printing order placed
-                through it. By using our website or placing an order, you agree to these Terms.
-                If you do not agree, please do not use the website.
+                Welcome to <span className="text-on-surface font-medium">GMK 3D CREATIONS</span>.
+                By accessing our website or placing an order, you agree to comply with these
+                Terms &amp; Conditions. Please read them carefully before using our website or
+                purchasing our products.
               </p>
             </section>
 
             <section className="space-y-3">
               <h2 className="font-heading text-xl font-bold text-on-surface">1. About Us</h2>
               <p className="text-on-surface-variant leading-relaxed">
-                &quot;GMK 3D Creations&quot; (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is a custom 3D printing and
-                product studio based in Coimbatore, Tamil Nadu, India. References to &quot;you&quot; or
-                &quot;the customer&quot; mean any person who accesses the website or places an order.
+                GMK 3D CREATIONS specializes in designing and manufacturing premium 3D printed
+                miniatures, idols, figurines, collectibles, home d&eacute;cor items, personalized
+                gifts, and custom-made products.
               </p>
             </section>
 
             <section className="space-y-3">
               <h2 className="font-heading text-xl font-bold text-on-surface">
-                2. Products &amp; Custom Orders
+                2. Acceptance of Terms
               </h2>
               <p className="text-on-surface-variant leading-relaxed">
-                We offer both catalog products and custom 3D prints produced from files you
-                upload. Because items are printed to order, colours, finishes, dimensions, and
-                surface texture may vary slightly from images or on-screen previews. Estimated
-                weights, print times, and prices shown for uploaded models are approximate and
-                may be adjusted before production if a model requires it; we will confirm any
-                material change with you first.
+                By using this website, creating an account, or placing an order, you agree to
+                be legally bound by these Terms &amp; Conditions.
               </p>
             </section>
 
             <section className="space-y-3">
               <h2 className="font-heading text-xl font-bold text-on-surface">
-                3. Pricing &amp; Payment
+                3. Product Information
               </h2>
               <p className="text-on-surface-variant leading-relaxed">
-                All prices are listed in Indian Rupees (₹) and are inclusive of applicable
-                taxes unless stated otherwise. Online payments are processed securely through
-                our payment partner, Razorpay. We do not store your card, UPI, or banking
-                details on our servers. An order is confirmed only after payment is
-                successfully verified, or, for cash-on-delivery orders, when the order is
-                placed.
+                We strive to ensure all product descriptions, specifications, dimensions, and
+                images are accurate. However, due to the nature of 3D printing:
+              </p>
+              <ul className="list-disc pl-5 text-on-surface-variant leading-relaxed space-y-2">
+                <li>Slight color variations may occur.</li>
+                <li>Surface texture may vary depending on the printing process.</li>
+                <li>Minor dimensional differences (&plusmn;2&ndash;5 mm) are considered acceptable.</li>
+                <li>Images are for representation purposes only.</li>
+              </ul>
+              <p className="text-on-surface-variant leading-relaxed">
+                These variations shall not be considered manufacturing defects.
               </p>
             </section>
 
             <section className="space-y-3">
               <h2 className="font-heading text-xl font-bold text-on-surface">
-                4. Order Confirmation &amp; Cancellation
+                4. Customized &amp; Personalized Products
+              </h2>
+              <ul className="list-disc pl-5 text-on-surface-variant leading-relaxed space-y-2">
+                <li>
+                  Many of our products are manufactured only after an order is placed.
+                </li>
+                <li>
+                  Customized or personalized products cannot be cancelled, exchanged, or
+                  returned once production has started.
+                </li>
+                <li>
+                  Customers are responsible for providing accurate customization details before
+                  confirming the order.
+                </li>
+              </ul>
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="font-heading text-xl font-bold text-on-surface">5. Pricing</h2>
+              <ul className="list-disc pl-5 text-on-surface-variant leading-relaxed space-y-2">
+                <li>All prices are displayed in Indian Rupees (INR).</li>
+                <li>Prices are inclusive of applicable taxes unless otherwise stated.</li>
+                <li>Prices may change without prior notice.</li>
+              </ul>
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="font-heading text-xl font-bold text-on-surface">6. Orders</h2>
+              <p className="text-on-surface-variant leading-relaxed">
+                Orders are confirmed only after successful payment. GMK 3D CREATIONS reserves
+                the right to reject or cancel any order in cases including but not limited to:
+              </p>
+              <ul className="list-disc pl-5 text-on-surface-variant leading-relaxed space-y-2">
+                <li>Pricing errors</li>
+                <li>Product unavailability</li>
+                <li>Fraudulent transactions</li>
+                <li>Technical errors</li>
+                <li>Violation of these Terms</li>
+              </ul>
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="font-heading text-xl font-bold text-on-surface">7. Payment</h2>
+              <p className="text-on-surface-variant leading-relaxed">
+                Payments are securely processed through trusted payment gateways including
+                Razorpay. GMK 3D CREATIONS never stores your:
+              </p>
+              <ul className="list-disc pl-5 text-on-surface-variant leading-relaxed space-y-2">
+                <li>Credit Card Details</li>
+                <li>Debit Card Details</li>
+                <li>CVV</li>
+                <li>UPI PIN</li>
+                <li>Internet Banking Credentials</li>
+              </ul>
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="font-heading text-xl font-bold text-on-surface">
+                8. Manufacturing Time
+              </h2>
+              <ul className="list-disc pl-5 text-on-surface-variant leading-relaxed space-y-2">
+                <li>Production begins only after payment confirmation.</li>
+                <li>
+                  Production time varies depending on the product and customization
+                  requirements.
+                </li>
+                <li>
+                  Estimated manufacturing time may range from{" "}
+                  <span className="text-on-surface font-medium">2&ndash;7 business days</span>,
+                  excluding shipping time.
+                </li>
+                <li>Large or bulk orders may require additional production time.</li>
+              </ul>
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="font-heading text-xl font-bold text-on-surface">
+                9. Shipping &amp; Delivery
               </h2>
               <p className="text-on-surface-variant leading-relaxed">
-                Once an order is confirmed you will receive an email confirmation. You may
-                request cancellation while an order is still &quot;pending&quot; or &quot;confirmed&quot; and
-                before production begins. Once a custom print has entered production it cannot
-                usually be cancelled, as the item is made specifically for you. We reserve the
-                right to decline or cancel any order — for example, where a file cannot be
-                printed safely, is fraudulent, or infringes the rights of others — and to
-                refund any amount paid in such cases.
+                Orders are shipped through trusted courier partners. Delivery timelines are
+                estimates only. GMK 3D CREATIONS shall not be responsible for delays caused by:
+              </p>
+              <ul className="list-disc pl-5 text-on-surface-variant leading-relaxed space-y-2">
+                <li>Courier companies</li>
+                <li>Weather conditions</li>
+                <li>Natural disasters</li>
+                <li>Government restrictions</li>
+                <li>Public holidays</li>
+              </ul>
+              <p className="text-on-surface-variant leading-relaxed">
+                Risk of damage or loss transfers to the customer upon successful delivery.
               </p>
             </section>
 
             <section className="space-y-3">
               <h2 className="font-heading text-xl font-bold text-on-surface">
-                5. Uploaded Files &amp; Intellectual Property
+                10. Cancellation
+              </h2>
+              <ul className="list-disc pl-5 text-on-surface-variant leading-relaxed space-y-2">
+                <li>Orders may be cancelled only before production begins.</li>
+                <li>
+                  Customized and made-to-order products cannot be cancelled once manufacturing
+                  has started.
+                </li>
+              </ul>
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="font-heading text-xl font-bold text-on-surface">
+                11. Returns &amp; Replacement
               </h2>
               <p className="text-on-surface-variant leading-relaxed">
-                By uploading a model, you confirm that you own the design or have all rights
-                and permissions necessary to have it printed. You remain the owner of your
-                uploaded files, and we use them solely to fulfil your order. We will not
-                reproduce, share, or sell your files without your permission. All website
-                content — including our catalog designs, images, logos, and text — remains the
-                property of GMK 3D Creations and may not be copied or reused without written
-                consent.
+                Products may be eligible for replacement only if:
+              </p>
+              <ul className="list-disc pl-5 text-on-surface-variant leading-relaxed space-y-2">
+                <li>Wrong product delivered</li>
+                <li>Product received damaged</li>
+                <li>Manufacturing defect</li>
+              </ul>
+              <p className="text-on-surface-variant leading-relaxed">
+                Customers must report such issues within{" "}
+                <span className="text-on-surface font-medium">48 hours</span> of delivery with
+                clear photos or videos. Customized products are not eligible for return unless
+                damaged or incorrectly manufactured.
               </p>
             </section>
 
             <section className="space-y-3">
               <h2 className="font-heading text-xl font-bold text-on-surface">
-                6. Shipping &amp; Delivery
+                12. Intellectual Property
               </h2>
               <p className="text-on-surface-variant leading-relaxed">
-                Production timelines are estimates and begin after order confirmation. Delivery
-                times depend on the shipping destination and courier. We are not responsible
-                for delays caused by couriers, incorrect shipping details provided by the
-                customer, or events beyond our reasonable control.
+                All designs, logos, photographs, graphics, website content, product models,
+                branding materials, and digital assets are the intellectual property of GMK 3D
+                CREATIONS. Unauthorized copying, resale, reproduction, or commercial use is
+                strictly prohibited.
               </p>
             </section>
 
             <section className="space-y-3">
               <h2 className="font-heading text-xl font-bold text-on-surface">
-                7. Returns, Refunds &amp; Replacements
+                13. Limitation of Liability
               </h2>
               <p className="text-on-surface-variant leading-relaxed">
-                As custom prints are made to order, they are generally non-returnable. However,
-                if your item arrives damaged, defective, or materially different from what was
-                ordered, contact us within 48 hours of delivery with photographs and we will
-                arrange a replacement or refund where appropriate. Refunds for eligible orders
-                are processed to the original payment method through Razorpay and may take a
-                few business days to reflect.
+                GMK 3D CREATIONS shall not be liable for any indirect, incidental,
+                consequential, or special damages arising from the use of our products or
+                website. Our maximum liability shall not exceed the purchase amount of the
+                product involved.
               </p>
             </section>
 
             <section className="space-y-3">
               <h2 className="font-heading text-xl font-bold text-on-surface">
-                8. Limitation of Liability
+                14. Changes to Terms
               </h2>
               <p className="text-on-surface-variant leading-relaxed">
-                To the maximum extent permitted by law, our total liability for any claim
-                relating to an order is limited to the amount you paid for that order. We are
-                not liable for indirect or consequential losses. Nothing in these Terms limits
-                any rights you have under applicable consumer protection law.
+                We reserve the right to modify these Terms &amp; Conditions at any time. Updated
+                versions will be published on this page with the revised Effective Date.
               </p>
             </section>
 
             <section className="space-y-3">
               <h2 className="font-heading text-xl font-bold text-on-surface">
-                9. Governing Law &amp; Jurisdiction
+                15. Governing Law
               </h2>
               <p className="text-on-surface-variant leading-relaxed">
-                These Terms are governed by the laws of India. Any disputes shall be subject to
-                the exclusive jurisdiction of the courts of Coimbatore, Tamil Nadu.
+                These Terms shall be governed by the laws of India. Any disputes shall be
+                subject to the jurisdiction of the courts in{" "}
+                <span className="text-on-surface font-medium">Coimbatore, Tamil Nadu</span>.
               </p>
             </section>
 
             <section className="space-y-3">
-              <h2 className="font-heading text-xl font-bold text-on-surface">
-                10. Changes to These Terms
-              </h2>
-              <p className="text-on-surface-variant leading-relaxed">
-                We may update these Terms from time to time. The &quot;Last updated&quot; date above
-                reflects the most recent revision. Continued use of the website after changes
-                are posted constitutes acceptance of the updated Terms.
-              </p>
-            </section>
-
-            <section className="space-y-3">
-              <h2 className="font-heading text-xl font-bold text-on-surface">11. Contact Us</h2>
-              <p className="text-on-surface-variant leading-relaxed">
-                For any questions about these Terms, please reach out:
-              </p>
+              <h2 className="font-heading text-xl font-bold text-on-surface">16. Contact</h2>
               <ul className="text-on-surface-variant leading-relaxed space-y-1">
+                <li className="text-on-surface font-medium">GMK 3D CREATIONS</li>
+                <li>Peelamedu, Coimbatore, Tamil Nadu</li>
                 <li>
                   Email:{" "}
                   <a
@@ -184,27 +270,31 @@ export default function TermsPage() {
                 </li>
                 <li>
                   Phone:{" "}
-                  <a href="tel:+919344581320" className="text-primary hover:underline">
-                    (+91) 93445 81320
-                  </a>{" "}
-                  ·{" "}
                   <a href="tel:+919944215100" className="text-primary hover:underline">
-                    (+91) 99442 15100
+                    +91 99442 15100
                   </a>
-                </li>
-                <li>
-                  Address: 31/12, Rajagopal Layout, Avarampalayam Road, Peelamedu,
-                  Coimbatore - 641 004.
                 </li>
               </ul>
             </section>
 
-            <div className="pt-4">
+            <div className="pt-4 flex flex-wrap gap-4">
               <Link
                 href="/privacy"
                 className="text-sm font-semibold text-primary hover:underline"
               >
-                Read our Privacy Policy →
+                Privacy Policy &rarr;
+              </Link>
+              <Link
+                href="/refund"
+                className="text-sm font-semibold text-primary hover:underline"
+              >
+                Refund &amp; Cancellation Policy &rarr;
+              </Link>
+              <Link
+                href="/returns"
+                className="text-sm font-semibold text-primary hover:underline"
+              >
+                Return &amp; Replacement Policy &rarr;
               </Link>
             </div>
           </div>

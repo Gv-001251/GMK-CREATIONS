@@ -10,7 +10,7 @@ import { Footer } from "@/components/footer";
 import { useProductsStore } from "@/lib/store/products-store";
 import { useCartStore } from "@/lib/store/cart-store";
 import { useAuthStore } from "@/lib/store/auth-store";
-import { ChevronRight, Minus, Plus, ShoppingCart, Cpu, Ruler, Layers, Maximize2, LogIn, ChevronLeft, X, Star, CheckCircle2, MessageSquare, HelpCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronRight, Minus, Plus, ShoppingCart, Maximize2, LogIn, ChevronLeft, X, Star, CheckCircle2, MessageSquare, HelpCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { getDeliveryEstimate } from "@/lib/utils/date-estimator";
 import { toast } from "@/components/toast";
 
@@ -313,12 +313,7 @@ export default function ProductDetailClient() {
     });
   };
 
-  const specs = [
-    { icon: Maximize2, label: "Dimensions", value: product.dimensions },
-    { icon: Layers, label: "Layer Height", value: product.layerHeight },
-    { icon: Cpu, label: "Infill Density", value: product.infillDensity },
-    { icon: Ruler, label: "Application", value: product.recommendedApplication },
-  ];
+
 
   // Review statistics computed from the real, persisted reviews
   const reviewCount = reviews.length;
@@ -411,53 +406,7 @@ export default function ProductDetailClient() {
                 })}
               </div>
 
-              {/* Mechanical Performance Diagnostics */}
-              <div className="mt-8 p-6 rounded-2xl bg-surface-container-low border border-outline-variant/10">
-                <h3 className="font-heading text-sm font-semibold text-on-surface flex items-center gap-2 mb-5">
-                  <Cpu className="w-4 h-4 text-primary" />
-                  Material Performance Diagnostics
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-xs font-medium mb-1.5">
-                      <span className="text-on-surface-variant">Detail Fidelity</span>
-                      <span className="text-primary font-bold">{materialInfo.detail}%</span>
-                    </div>
-                    <div className="h-2 w-full bg-surface-container rounded-full overflow-hidden relative">
-                      <div
-                        className="h-full gradient-primary rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(109,92,255,0.4)]"
-                        style={{ width: `${materialInfo.detail}%` }}
-                      />
-                    </div>
-                  </div>
 
-                  <div>
-                    <div className="flex justify-between text-xs font-medium mb-1.5">
-                      <span className="text-on-surface-variant">Tensile / Impact Strength</span>
-                      <span className="text-primary font-bold">{materialInfo.strength}%</span>
-                    </div>
-                    <div className="h-2 w-full bg-surface-container rounded-full overflow-hidden relative">
-                      <div
-                        className="h-full bg-emerald-500 rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
-                        style={{ width: `${materialInfo.strength}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-xs font-medium mb-1.5">
-                      <span className="text-on-surface-variant">Strength-to-Weight Efficiency</span>
-                      <span className="text-primary font-bold">{materialInfo.weight}%</span>
-                    </div>
-                    <div className="h-2 w-full bg-surface-container rounded-full overflow-hidden relative">
-                      <div
-                        className="h-full bg-sky-500 rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(14,165,233,0.4)]"
-                        style={{ width: `${materialInfo.weight}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
 
               {/* Divider */}
               <div className="border-t border-outline-variant/10 my-8" />
@@ -816,24 +765,7 @@ export default function ProductDetailClient() {
 
 
 
-              {/* Technical Specs */}
-              <div className="mt-6 p-6 rounded-2xl bg-surface-container-low border border-outline-variant/10">
-                <h3 className="font-heading text-sm font-semibold text-on-surface flex items-center gap-2 mb-4">
-                  <Ruler className="w-4 h-4 text-primary" />
-                  Dimensional Specifications
-                </h3>
-                <div className="space-y-4">
-                  {specs.map((spec) => (
-                    <div key={spec.label} className="flex justify-between items-center">
-                      <span className="text-sm text-on-surface-variant flex items-center gap-2">
-                        <spec.icon className="w-3.5 h-3.5 text-on-surface-variant/70" />
-                        {spec.label}
-                      </span>
-                      <span className="text-sm font-medium text-on-surface">{spec.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+
 
               {/* FAQs Section */}
               <div className="mt-6 p-6 rounded-2xl bg-surface-container-low border border-outline-variant/10 space-y-4">

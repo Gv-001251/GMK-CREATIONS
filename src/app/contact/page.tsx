@@ -18,12 +18,6 @@ const contactMethods = [
   },
   {
     label: "Phone",
-    value: "+91 93445 81320",
-    href: "tel:+919344581320",
-    icon: Phone,
-  },
-  {
-    label: "Phone",
     value: "+91 99442 15100",
     href: "tel:+919944215100",
     icon: Phone,
@@ -88,7 +82,7 @@ export default function ContactPage() {
               <div className="flex gap-3">
                 <MapPin className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                 <p>
-                  31/12, Rajagopal Layout, Avarampalayam Road, Peelamedu, Coimbatore - 641 004.
+                  Peelamedu, Coimbatore, Tamil Nadu, India
                 </p>
               </div>
               <div className="flex gap-3">
@@ -97,8 +91,19 @@ export default function ContactPage() {
               </div>
               <div className="flex gap-3">
                 <Phone className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                <p>(+91) 93445 81320 · (+91) 99442 15100</p>
+                <p>+91 99442 15100</p>
               </div>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-outline-variant/20">
+              <h3 className="text-sm font-semibold text-on-surface mb-3">Business Hours</h3>
+              <div className="space-y-1 text-sm text-on-surface-variant">
+                <p><span className="text-on-surface font-medium">Monday &ndash; Saturday:</span> 9:30 AM &ndash; 7:00 PM (IST)</p>
+                <p><span className="text-on-surface font-medium">Sunday:</span> Closed</p>
+              </div>
+              <p className="mt-3 text-xs text-on-surface-variant">
+                We aim to respond to all customer queries within 24&ndash;48 business hours.
+              </p>
             </div>
 
             <div className="mt-10 flex flex-col sm:flex-row gap-3">

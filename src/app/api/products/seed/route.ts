@@ -24,7 +24,6 @@ export async function POST() {
     badge: p.badge || null,
     materials: p.materials,
     finishes: p.finishes,
-    dimensions: p.dimensions,
     layer_height: p.layerHeight,
     infill_density: p.infillDensity,
     recommended_application: p.recommendedApplication,
