@@ -24,6 +24,7 @@ import { Navbar } from "@/components/navbar";
 import { HeroSection } from "@/components/hero-section";
 import { Footer } from "@/components/footer";
 import { MaterialCard } from "@/components/material-card";
+import { useProductsStore } from "@/lib/store/products-store";
 
 // Statistics Auto Countup helper
 function AnimatedNumber({ value, duration = 1.5 }: { value: number; duration?: number }) {
@@ -137,73 +138,6 @@ const reviews = [
   },
 ];
 
-const featuredProducts = [
-  {
-    name: "Dragon Bust",
-    category: "Figurines",
-    desc: "Articulated dragon head sculpture with fine scale definition.",
-    price: 1200,
-    rating: 4.9,
-    image: "/images/products/space_marine_bust.png"
-  },
-  {
-    name: "Geometric Planter",
-    category: "Home Decor",
-    desc: "Sleek multifaceted container for indoor succulents.",
-    price: 450,
-    rating: 4.8,
-    image: "/images/3D%20Flowers.webp"
-  },
-  {
-    name: "Mechanical Gearbox",
-    category: "Functional Parts",
-    desc: "Fully functional planetary gearbox assembly prototype.",
-    price: 2500,
-    rating: 5.0,
-    image: "/images/products/industrial-gears.png"
-  },
-  {
-    name: "Lithophane Lamp",
-    category: "Home Decor",
-    desc: "Custom photo projection lamp utilizing translucent details.",
-    price: 1800,
-    rating: 4.9,
-    image: "/images/products/fractal-lamp.png"
-  },
-  {
-    name: "Desk Organizer",
-    category: "Accessories",
-    desc: "Modular tray with phone dock and cable management channels.",
-    price: 850,
-    rating: 4.7,
-    image: "/images/products/custom_keychain.png"
-  },
-  {
-    name: "Custom Name Plate",
-    category: "Accessories",
-    desc: "Dual-color embossed office desk identification plates.",
-    price: 350,
-    rating: 4.9,
-    image: "/images/products/organic-sculptures.png"
-  },
-  {
-    name: "Articulated Robot",
-    category: "Figurines",
-    desc: "Poseable multi-jointed robot figure printed in one piece.",
-    price: 650,
-    rating: 4.8,
-    image: "/images/3D%20Fig.jpg"
-  },
-  {
-    name: "Mini Eiffel Tower",
-    category: "Architecture",
-    desc: "Highly intricate replica showcasing precision lattice bridges.",
-    price: 1400,
-    rating: 5.0,
-    image: "/images/products/mini-eiffel-tower.png"
-  }
-];
-
 const materials = [
   {
     name: "PLA",
@@ -246,6 +180,18 @@ const portfolioItems = [
 
 export default function HomeClient() {
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Pull real products from the store for the Featured Creations section.
+  const { products, fetchProducts } = useProductsStore();
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  // Prefer products explicitly flagged as featured; fall back to the first
+  // products in the catalog so the section is never empty. Cap at 8 cards.
+  const featured = products.filter((p) => p.featured);
+  const displayedProducts = (featured.length > 0 ? featured : products).slice(0, 8);
 
   // Indefinite carousel scroller loop
   useEffect(() => {
@@ -300,9 +246,9 @@ export default function HomeClient() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {featuredProducts.map((p, i) => (
+            {displayedProducts.map((p, i) => (
               <motion.div
-                key={p.name}
+                key={p.id}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
@@ -310,36 +256,39 @@ export default function HomeClient() {
                 whileHover={{ y: -8 }}
                 className="bg-white dark:bg-zinc-900 rounded-[40px] border border-slate-200/50 dark:border-zinc-800/50 p-[11px] flex flex-col group transition-all duration-300 hover:shadow-xl"
               >
-                <Link href="/products" className="flex flex-col h-full w-full">
+                <Link href={`/products/${p.slug}`} className="flex flex-col h-full w-full">
                   {/* Image Container */}
                   <div className="relative aspect-[71/78] overflow-hidden bg-slate-50 dark:bg-zinc-800 rounded-[32px] w-full">
                     <Image
-                      src={p.image}
+                      src={p.image || "/images/products/organic-sculptures.png"}
                       alt={p.name}
                       fill
                       sizes="(max-width: 768px) 100vw, 25vw"
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      unoptimized={(p.image || "").startsWith("http") || (p.image || "").includes("supabase")}
                     />
                     <span className="absolute top-4 left-4 px-4 py-1.5 rounded-xl bg-white text-[11px] font-mono font-bold text-slate-900 shadow-sm uppercase tracking-wider backdrop-blur-sm">
-                      {p.category}
+                      {p.category.replace("-", " ")}
                     </span>
                   </div>
 
                   {/* Details */}
                   <div className="flex flex-col flex-1 pl-[7.61%] pr-[6.88%] pb-[5.16%] mt-[21.82px]">
-                    <h3 className="font-mono text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-snug group-hover:text-primary transition-colors">
+                    <h3 className="font-mono text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-snug group-hover:text-primary transition-colors line-clamp-2">
                       {p.name}
                     </h3>
                     <p className="font-mono text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-2 mb-6 leading-relaxed line-clamp-3 flex-1">
-                      {p.desc}
+                      {p.description}
                     </p>
                     <div className="flex items-end justify-between mt-auto">
                       <div className="flex flex-col">
-                        <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1 block">
-                          {p.name}
-                        </span>
+                        {p.priceLabel && (
+                          <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500 line-through mb-1 block">
+                            {p.priceLabel}
+                          </span>
+                        )}
                         <span className="font-mono text-lg sm:text-xl font-bold text-slate-900 dark:text-white leading-none">
-                          ₹{p.price}
+                          ₹{p.price.toLocaleString("en-IN")}
                         </span>
                       </div>
                       <div className="text-slate-900 dark:text-white transition-transform duration-300 group-hover:translate-x-1 mb-0.5">

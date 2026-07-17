@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function Preloader() {
-  const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
+  // Only show the preloader when the landing page ("/") is loaded/reloaded.
+  const [loading, setLoading] = useState(() => pathname === "/");
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const handleComplete = () => {
