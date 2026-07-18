@@ -16,6 +16,8 @@ export async function GET(request: Request) {
   const { data: orders, error, count } = await admin
     .from("orders")
     .select("*", { count: "exact" })
+    // Hide soft-deleted orders (they remain in the DB, just not shown here)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 

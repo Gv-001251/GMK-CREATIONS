@@ -16,6 +16,34 @@ export function RouteLoader() {
     setIsNavigating(false);
   }, [pathname, searchParams]);
 
+  // Safety net: some clicks flip the loader on without ever changing the route
+  // (same-URL navigation, cancelled/aborted navigation, a link resolved as a
+  // no-op, or a failed load). In those cases the pathname/searchParams effect
+  // above never fires, leaving the loader stuck on screen until a manual
+  // reload. This timeout guarantees the loader always clears itself.
+  useEffect(() => {
+    if (!isNavigating) return;
+    const timer = setTimeout(() => setIsNavigating(false), 8000);
+    return () => clearTimeout(timer);
+  }, [isNavigating]);
+
+  // Clear the loader when the page is restored from the browser's back/forward
+  // cache (bfcache) or regains visibility — navigation is already complete by
+  // then, so a lingering loader would just be stuck.
+  useEffect(() => {
+    const clear = () => setIsNavigating(false);
+    const handlePageShow = () => clear();
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") clear();
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      window.removeEventListener("pageshow", handlePageShow);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, []);
+
   useEffect(() => {
     const handleAnchorClick = (e: MouseEvent) => {
       // Ignore clicks with modifier keys
@@ -27,11 +55,23 @@ export function RouteLoader() {
       const anchor = target.closest("a");
       if (!anchor) return;
 
+      // Ignore download links and anchors explicitly opting out of the loader
+      if (anchor.hasAttribute("download") || anchor.dataset.noLoader !== undefined) {
+        return;
+      }
+
+      // Ignore anchors that were already default-prevented by other handlers
+      if (e.defaultPrevented) return;
+
       const href = anchor.getAttribute("href");
       if (!href) return;
 
       // Ignore external links, mailto, tel, javascript anchors
-      const isExternal = anchor.target === "_blank" || href.startsWith("http://") || href.startsWith("https://");
+      const isExternal =
+        anchor.target === "_blank" ||
+        href.startsWith("http://") ||
+        href.startsWith("https://") ||
+        (anchor as HTMLAnchorElement).origin !== window.location.origin;
       if (isExternal) return;
 
       if (href.startsWith("mailto:") || href.startsWith("tel:") || href.startsWith("javascript:")) {

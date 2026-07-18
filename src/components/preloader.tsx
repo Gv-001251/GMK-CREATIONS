@@ -9,6 +9,11 @@ export function Preloader() {
   // Only show the preloader when the landing page ("/") is loaded/reloaded.
   const [loading, setLoading] = useState(() => pathname === "/");
   const videoRef = useRef<HTMLVideoElement>(null);
+  // "Never started" failsafe — fires only if the video fails to begin playing
+  // (autoplay blocked, load error, offline). Cancelled once playback starts.
+  const startFailsafeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Absolute cap so a stalled video can never trap the user on the intro.
+  const maxFailsafeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleComplete = () => {
     setLoading(false);
@@ -21,23 +26,46 @@ export function Preloader() {
     // Prevent scrolling while preloading
     document.body.style.overflow = "hidden";
 
-    // Try to auto-play video
-    if (videoRef.current) {
-      videoRef.current.play().catch((err) => {
-        console.log("Autoplay was blocked or video failed to load", err);
-      });
-    }
+    // Try to auto-play the video. Autoplay may be blocked; the failsafe below
+    // handles that case.
+    videoRef.current?.play().catch(() => {});
 
-    // Fallback timer of 4.5 seconds to fade out automatically in case video is blocked/fails
-    const timer = setTimeout(() => {
+    // Failsafe: if the video never starts within a reasonable window (blocked
+    // autoplay / load error / offline), dismiss so the user isn't stuck.
+    startFailsafeRef.current = setTimeout(() => {
       handleComplete();
-    }, 4500);
+    }, 6000);
+
+    // Absolute upper bound in case neither `onEnded` nor a duration-based timer
+    // ever fires. Generous enough to let the clip download and play on a slow
+    // first-load (before it is cached).
+    maxFailsafeRef.current = setTimeout(() => {
+      handleComplete();
+    }, 20000);
 
     return () => {
-      clearTimeout(timer);
+      if (startFailsafeRef.current) clearTimeout(startFailsafeRef.current);
+      if (maxFailsafeRef.current) clearTimeout(maxFailsafeRef.current);
       document.body.style.overflow = "unset";
     };
   }, [loading]);
+
+  // When the video actually begins playing, cancel the "never started"
+  // failsafe and re-arm the upper bound to exactly the remaining clip length.
+  // This guarantees the clip plays fully on the first (uncached) load instead
+  // of being cut off by a fixed timer, while still never hanging.
+  const handlePlaying = () => {
+    if (startFailsafeRef.current) {
+      clearTimeout(startFailsafeRef.current);
+      startFailsafeRef.current = null;
+    }
+    const video = videoRef.current;
+    if (video && Number.isFinite(video.duration) && video.duration > 0) {
+      const remainingMs = (video.duration - video.currentTime) * 1000 + 1500;
+      if (maxFailsafeRef.current) clearTimeout(maxFailsafeRef.current);
+      maxFailsafeRef.current = setTimeout(handleComplete, remainingMs);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -68,7 +96,10 @@ export function Preloader() {
               autoPlay
               muted
               playsInline
+              preload="auto"
+              onPlaying={handlePlaying}
               onEnded={handleComplete}
+              onError={handleComplete}
               className="absolute inset-0 w-full h-[112%] object-cover object-top select-none pointer-events-none"
             />
           </div>

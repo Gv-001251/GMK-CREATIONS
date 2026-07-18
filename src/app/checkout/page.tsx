@@ -24,6 +24,10 @@ import {
 
 type Step = "shipping" | "payment" | "review";
 
+// localStorage key used to remember the customer's shipping details between
+// visits so they don't have to re-enter them for every order.
+const SHIPPING_STORAGE_KEY = "gmk_shipping_info";
+
 declare global {
   interface Window {
     Razorpay: new (options: RazorpayOptions) => RazorpayInstance;
@@ -103,16 +107,49 @@ function CheckoutContent() {
     }
   }, [fetchProducts]);
 
-  const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
-    firstName: "",
-    lastName: "",
-    email: user?.email || "",
-    phone: "",
-    address: "",
-    city: "",
-    state: "",
-    zip: "",
+  const [shippingInfo, setShippingInfo] = useState<ShippingInfo>(() => {
+    const empty: ShippingInfo = {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      address: "",
+      city: "",
+      state: "",
+      zip: "",
+    };
+    // Restore previously entered details so the customer doesn't have to type
+    // them again on their next purchase.
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem(SHIPPING_STORAGE_KEY);
+        if (saved) return { ...empty, ...JSON.parse(saved) };
+      } catch {
+        // Ignore malformed saved data
+      }
+    }
+    return empty;
   });
+
+  // Persist the shipping details locally as they change so they survive page
+  // reloads and are ready to reuse on the next order.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      localStorage.setItem(SHIPPING_STORAGE_KEY, JSON.stringify(shippingInfo));
+    } catch {
+      // Storage may be unavailable (private mode / quota) — non-fatal
+    }
+  }, [shippingInfo]);
+
+  // Fill the email from the signed-in account if it hasn't been captured yet.
+  useEffect(() => {
+    if (user?.email) {
+      setShippingInfo((prev) =>
+        prev.email ? prev : { ...prev, email: user.email || "" }
+      );
+    }
+  }, [user]);
 
   useEffect(() => {
     async function loadLastShippingInfo() {
@@ -142,7 +179,12 @@ function CheckoutContent() {
       }
     }
 
-    if (user) {
+    // Only pull from the last order when we don't already have details saved
+    // locally, so we never overwrite what the customer just entered.
+    const hasSavedInfo =
+      typeof window !== "undefined" && !!localStorage.getItem(SHIPPING_STORAGE_KEY);
+
+    if (user && !hasSavedInfo) {
       loadLastShippingInfo();
     }
   }, [user]);
@@ -160,24 +202,55 @@ function CheckoutContent() {
     { id: "review" as Step, label: "Review", icon: Shield },
   ];
 
+  // Field format rules: phone must be a valid 10-digit Indian mobile number,
+  // ZIP must be a 6-digit Indian PIN code. Both accept digits only.
+  const isValidPhone = (value: string) => /^[6-9]\d{9}$/.test(value.trim());
+  const isValidZip = (value: string) => /^\d{6}$/.test(value.trim());
+  const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+
   const isShippingValid =
     shippingInfo.firstName.trim() &&
     shippingInfo.lastName.trim() &&
-    shippingInfo.email.trim() &&
-    shippingInfo.phone.trim() &&
+    isEmail(shippingInfo.email) &&
+    isValidPhone(shippingInfo.phone) &&
     shippingInfo.address.trim() &&
     shippingInfo.city.trim() &&
     shippingInfo.state.trim() &&
-    shippingInfo.zip.trim();
+    isValidZip(shippingInfo.zip);
 
   const updateShipping = (field: keyof ShippingInfo, value: string) => {
-    setShippingInfo((prev) => ({ ...prev, [field]: value }));
+    // Restrict phone and ZIP to digits only, capped at their expected lengths.
+    let nextValue = value;
+    if (field === "phone") nextValue = value.replace(/\D/g, "").slice(0, 10);
+    if (field === "zip") nextValue = value.replace(/\D/g, "").slice(0, 6);
+    setShippingInfo((prev) => ({ ...prev, [field]: nextValue }));
     setError("");
   };
 
   const handleContinueToPayment = () => {
-    if (!isShippingValid) {
+    if (
+      !shippingInfo.firstName.trim() ||
+      !shippingInfo.lastName.trim() ||
+      !shippingInfo.email.trim() ||
+      !shippingInfo.phone.trim() ||
+      !shippingInfo.address.trim() ||
+      !shippingInfo.city.trim() ||
+      !shippingInfo.state.trim() ||
+      !shippingInfo.zip.trim()
+    ) {
       setError("Please fill in all shipping fields");
+      return;
+    }
+    if (!isEmail(shippingInfo.email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+    if (!isValidPhone(shippingInfo.phone)) {
+      setError("Please enter a valid 10-digit mobile number");
+      return;
+    }
+    if (!isValidZip(shippingInfo.zip)) {
+      setError("Please enter a valid 6-digit PIN code");
       return;
     }
     setError("");
@@ -452,10 +525,13 @@ function CheckoutContent() {
                       </label>
                       <input
                         type="tel"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={10}
                         value={shippingInfo.phone}
                         onChange={(e) => updateShipping("phone", e.target.value)}
                         className="w-full px-4 py-3 rounded-xl bg-surface-container-low text-on-surface text-sm outline-none focus:bg-surface-container-highest focus:ring-2 focus:ring-primary/20 transition-all"
-                        placeholder="Phone number"
+                        placeholder="10-digit mobile number"
                         required
                         id="shipping-phone"
                       />
@@ -512,10 +588,13 @@ function CheckoutContent() {
                       </label>
                       <input
                         type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={6}
                         value={shippingInfo.zip}
                         onChange={(e) => updateShipping("zip", e.target.value)}
                         className="w-full px-4 py-3 rounded-xl bg-surface-container-low text-on-surface text-sm outline-none focus:bg-surface-container-highest focus:ring-2 focus:ring-primary/20 transition-all"
-                        placeholder="10001"
+                        placeholder="6-digit PIN code"
                         required
                         id="shipping-zip"
                       />

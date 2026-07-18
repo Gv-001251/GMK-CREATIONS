@@ -34,11 +34,13 @@ export const createOrderSchema = z.object({
       firstName: z.string().min(1, "First name is required"),
       lastName: z.string().min(1, "Last name is required"),
       email: z.string().email("Invalid email address"),
-      phone: z.string().min(10, "Phone number must be at least 10 digits"),
+      phone: z
+        .string()
+        .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit mobile number"),
       address: z.string().min(1, "Address is required"),
       city: z.string().min(1, "City is required"),
       state: z.string().min(1, "State is required"),
-      zip: z.string().min(1, "ZIP code is required"),
+      zip: z.string().regex(/^\d{6}$/, "Enter a valid 6-digit PIN code"),
     })
     .optional(),
   paymentMethod: z.enum(["online", "cod"]).default("online"),

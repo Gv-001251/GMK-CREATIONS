@@ -69,9 +69,9 @@ export default function AdminOrdersPage() {
     setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
   };
 
-  // Delete single order
+  // Delete single order (soft delete — the record is retained in the database)
   const handleDeleteOrderSingle = async (orderId: string) => {
-    if (!confirm(`Are you sure you want to permanently delete order "${orderId}"? This will delete the order record and clean up any associated custom 3D model files from B2 storage. This cannot be undone.`)) {
+    if (!confirm(`Remove order "${orderId}" from the list? The order record is kept safely in the database and can be restored if needed.`)) {
       return;
     }
 
@@ -87,7 +87,7 @@ export default function AdminOrdersPage() {
         throw new Error("Failed to delete order");
       }
 
-      toast.success("Order and associated files deleted successfully.");
+      toast.success("Order removed from the list. The record is retained in the database.");
       // Refresh local store
       fetchOrders();
       setSelectedOrderIds((prev) => prev.filter((id) => id !== orderId));
@@ -103,7 +103,7 @@ export default function AdminOrdersPage() {
   const handleDeleteOrdersBulk = async () => {
     if (selectedOrderIds.length === 0) return;
 
-    if (!confirm(`Are you sure you want to permanently delete the ${selectedOrderIds.length} selected orders? This will delete the order records and clean up any associated custom 3D model files from B2 storage. This cannot be undone.`)) {
+    if (!confirm(`Remove the ${selectedOrderIds.length} selected orders from the list? The order records are kept safely in the database and can be restored if needed.`)) {
       return;
     }
 
@@ -119,7 +119,7 @@ export default function AdminOrdersPage() {
         throw new Error("Failed to delete selected orders");
       }
 
-      toast.success("Selected orders and associated files deleted successfully.");
+      toast.success("Selected orders removed from the list. The records are retained in the database.");
       // Refresh local store
       fetchOrders();
       setSelectedOrderIds([]);
@@ -166,7 +166,7 @@ export default function AdminOrdersPage() {
         <div className="flex items-center justify-between p-4 rounded-2xl bg-destructive/10 border border-destructive/20 animate-slide-down">
           <span className="text-sm font-semibold text-destructive flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-destructive animate-pulse" />
-            {selectedOrderIds.length} order{selectedOrderIds.length > 1 ? "s" : ""} selected for permanent deletion
+            {selectedOrderIds.length} order{selectedOrderIds.length > 1 ? "s" : ""} selected for removal
           </span>
           <button
             onClick={handleDeleteOrdersBulk}

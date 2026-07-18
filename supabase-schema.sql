@@ -118,6 +118,11 @@ CREATE TABLE IF NOT EXISTS public.orders (
   razorpay_payment_id TEXT,
   razorpay_signature TEXT,
 
+  -- Soft delete: when set, the order is hidden from the admin list but the
+  -- record (and its items/files) are retained in the database so data is never
+  -- lost to an accidental deletion.
+  deleted_at TIMESTAMPTZ,
+
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
