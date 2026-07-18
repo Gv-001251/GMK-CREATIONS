@@ -4,6 +4,7 @@ import { safeParseRequest, createOrderSchema } from "@/lib/validations";
 import { getRazorpay } from "@/lib/razorpay";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 import { calculateOrderTotals, CUSTOM_PRINT_MIN_PRICE } from "@/lib/pricing";
+import { ONLINE_PAYMENT_ENABLED } from "@/lib/payment-config";
 
 export async function GET(_request: Request) {
   const supabase = await createClient();
@@ -67,6 +68,15 @@ export async function POST(request: Request) {
   const parsed = await safeParseRequest(request, createOrderSchema);
   if (!parsed.success) return parsed.response;
   const { items, shipping, shippingInfo, paymentMethod } = parsed.data;
+
+  // Online payment (Razorpay) is disabled until the account is validated.
+  // Reject any online-payment order server-side as a safety net.
+  if (paymentMethod === "online" && !ONLINE_PAYMENT_ENABLED) {
+    return Response.json(
+      { error: "Online payment is currently unavailable. Please use Cash on Delivery." },
+      { status: 400 }
+    );
+  }
 
   // A "custom print" is a user-uploaded model (has a storagePath, or an
   // "upload-" / legacy "custom-<ts>" id WITH an attached file). These are

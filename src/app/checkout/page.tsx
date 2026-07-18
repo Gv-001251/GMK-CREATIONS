@@ -11,6 +11,7 @@ import { useProductsStore } from "@/lib/store/products-store";
 import { getDeliveryEstimate } from "@/lib/utils/date-estimator";
 import { AuthGuard } from "@/components/auth-guard";
 import { calculateOrderTotals } from "@/lib/pricing";
+import { ONLINE_PAYMENT_ENABLED } from "@/lib/payment-config";
 import {
   ChevronRight,
   CreditCard,
@@ -89,7 +90,11 @@ function CheckoutContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">("online");
+  // Online payment is gated behind a feature flag while Razorpay is being
+  // validated. Default to COD and prevent selecting online when disabled.
+  const [paymentMethod, setPaymentMethod] = useState<"online" | "cod">(
+    ONLINE_PAYMENT_ENABLED ? "online" : "cod"
+  );
 
   useEffect(() => {
     fetchProducts();
@@ -535,14 +540,23 @@ function CheckoutContent() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Online Payment */}
                     <button
-                      onClick={() => setPaymentMethod("online")}
-                      className={`p-6 rounded-2xl text-left border-2 transition-all ${
-                        paymentMethod === "online"
+                      onClick={() => ONLINE_PAYMENT_ENABLED && setPaymentMethod("online")}
+                      disabled={!ONLINE_PAYMENT_ENABLED}
+                      aria-disabled={!ONLINE_PAYMENT_ENABLED}
+                      className={`relative p-6 rounded-2xl text-left border-2 transition-all ${
+                        !ONLINE_PAYMENT_ENABLED
+                          ? "bg-surface-container-low border-outline-variant opacity-60 cursor-not-allowed"
+                          : paymentMethod === "online"
                           ? "bg-primary/5 border-primary shadow-sm"
                           : "bg-surface-container-low border-outline-variant hover:bg-surface-container"
                       }`}
                       type="button"
                     >
+                      {!ONLINE_PAYMENT_ENABLED && (
+                        <span className="absolute top-4 right-4 px-2.5 py-1 rounded-full bg-surface-container text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant border border-outline-variant">
+                          Coming Soon
+                        </span>
+                      )}
                       <div className="flex items-center gap-3 mb-3">
                         <div className={`p-2.5 rounded-xl ${paymentMethod === "online" ? "bg-primary/10 text-primary" : "bg-surface-container text-on-surface-variant"}`}>
                           <CreditCard className="w-5 h-5" />
@@ -550,7 +564,9 @@ function CheckoutContent() {
                         <span className="font-heading font-bold text-sm text-on-surface">Online Payment</span>
                       </div>
                       <p className="text-xs text-on-surface-variant leading-relaxed">
-                        Pay securely with UPI, Cards, Wallets, or Net Banking via Razorpay.
+                        {ONLINE_PAYMENT_ENABLED
+                          ? "Pay securely with UPI, Cards, Wallets, or Net Banking via Razorpay."
+                          : "Online payment is temporarily unavailable. Please use Cash on Delivery."}
                       </p>
                     </button>
 
