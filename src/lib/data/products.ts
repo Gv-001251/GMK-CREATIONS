@@ -16,6 +16,8 @@ export interface Product {
   infillDensity: string;
   recommendedApplication: string;
   productionDays: number;
+  /** Product weight in grams — used to compute weight-based delivery charges */
+  weight?: number;
   featured?: boolean;
   isNew?: boolean;
   isDualColor?: boolean;

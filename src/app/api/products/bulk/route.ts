@@ -92,6 +92,11 @@ export async function POST(request: Request) {
     const printHours =
       Number(pick(row, ["Baseline Print Time (hrs)", "baselinePrintTime", "printTime"])) || 0;
 
+    // Weight in grams — drives the weight-based delivery charge at checkout.
+    const weight = Math.round(
+      parseNumber(pick(row, ["Baseline Weight (g)", "weight", "weightGrams", "weight_g"]))
+    );
+
     // Pricing: the customer pays the discounted price, and the original
     // selling price is kept as a struck-through label when a discount exists.
     const sellingRaw = pick(row, ["Selling Price", "sellingPrice", "price"]);
@@ -149,6 +154,7 @@ export async function POST(request: Request) {
           ? "Award / Recognition / Display"
           : "Devotional / Display / Collectible"),
       production_days: productionDays,
+      weight,
       badge: pick(row, ["badge", "Badge"]) || null,
       is_new: pick(row, ["isNew", "is_new"]).toLowerCase() === "true",
       image,

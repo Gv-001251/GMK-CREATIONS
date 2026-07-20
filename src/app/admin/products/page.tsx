@@ -34,6 +34,7 @@ const EMPTY_FORM = {
   infillDensity: "20% Gyroid",
   recommendedApplication: "Display / Prototyping",
   productionDays: "5",
+  weight: "",
   badge: "New",
   featured: false,
 };
@@ -136,6 +137,7 @@ export default function AdminProductsPage() {
       infillDensity: product.infillDensity,
       recommendedApplication: product.recommendedApplication,
       productionDays: product.productionDays.toString(),
+      weight: product.weight ? product.weight.toString() : "",
       badge: product.badge || "",
       featured: product.featured || false,
     });
@@ -296,6 +298,7 @@ export default function AdminProductsPage() {
           infillDensity: formData.infillDensity || editingProduct.infillDensity,
           recommendedApplication: formData.recommendedApplication || editingProduct.recommendedApplication,
           productionDays: parseInt(formData.productionDays) || editingProduct.productionDays,
+          weight: parseInt(formData.weight) || editingProduct.weight || 0,
           badge: formData.badge || undefined,
           featured: formData.featured,
         });
@@ -321,6 +324,7 @@ export default function AdminProductsPage() {
           infillDensity: formData.infillDensity || "20% Gyroid",
           recommendedApplication: formData.recommendedApplication || "General",
           productionDays: parseInt(formData.productionDays) || 5,
+          weight: parseInt(formData.weight) || 0,
           isNew: true,
           badge: formData.badge || "New",
         });
@@ -555,6 +559,18 @@ export default function AdminProductsPage() {
                 className={inputClass}
                 placeholder="5"
                 min="1"
+              />
+            </div>
+            {/* Weight (grams) — used for delivery charge calculation */}
+            <div>
+              <label className="block text-sm font-medium text-on-surface-variant mb-2">Weight (grams)</label>
+              <input
+                type="number"
+                value={formData.weight}
+                onChange={(e) => setField("weight", e.target.value)}
+                className={inputClass}
+                placeholder="e.g. 120"
+                min="0"
               />
             </div>
             {/* Badge */}

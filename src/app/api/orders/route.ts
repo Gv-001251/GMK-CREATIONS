@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { safeParseRequest, createOrderSchema } from "@/lib/validations";
 import { getRazorpay } from "@/lib/razorpay";
 import { sendOrderConfirmationEmail } from "@/lib/email";
-import { calculateOrderTotals, CUSTOM_PRINT_MIN_PRICE } from "@/lib/pricing";
+import { calculateOrderTotals, CUSTOM_PRINT_MIN_PRICE, DEFAULT_ITEM_WEIGHT_GRAMS } from "@/lib/pricing";
 import { ONLINE_PAYMENT_ENABLED } from "@/lib/payment-config";
 
 export async function GET(_request: Request) {
@@ -91,11 +91,12 @@ export async function POST(request: Request) {
   const catalogItems = items.filter((item) => !isCustomPrint(item));
   const catalogProductIds = catalogItems.map((item) => item.productId);
   let priceMap = new Map<string, number>();
+  const weightMap = new Map<string, number>();
 
   if (catalogProductIds.length > 0) {
     const { data: dbProducts, error: productLookupError } = await adminDb
       .from("products")
-      .select("id, price")
+      .select("id, price, weight")
       .in("id", catalogProductIds);
 
     if (productLookupError || !dbProducts) {
@@ -104,6 +105,9 @@ export async function POST(request: Request) {
     }
 
     priceMap = new Map(dbProducts.map((p: { id: string; price: number }) => [p.id, p.price]));
+    for (const p of dbProducts as { id: string; weight: number | null }[]) {
+      weightMap.set(p.id, Number(p.weight) || 0);
+    }
 
     // Verify catalog products exist
     for (const item of catalogItems) {
@@ -129,7 +133,20 @@ export async function POST(request: Request) {
     return sum + unitPrice * item.quantity;
   }, 0);
 
-  const { shippingCost, grandTotal } = calculateOrderTotals(subtotal);
+  // Total order weight (grams) for the delivery charge. Catalog items use the
+  // DB-recorded weight; custom uploads and any product missing a weight fall
+  // back to a default so shipping is never undercounted.
+  const totalWeight = items.reduce((sum, item) => {
+    const dbWeight = weightMap.get(item.productId) || 0;
+    const itemWeight = dbWeight > 0 ? dbWeight : DEFAULT_ITEM_WEIGHT_GRAMS;
+    return sum + itemWeight * item.quantity;
+  }, 0);
+
+  const { shippingCost, grandTotal } = calculateOrderTotals(
+    subtotal,
+    totalWeight,
+    shippingInfo?.state
+  );
 
   // Generate order ID
   const orderId = `ORD-${Date.now().toString(36).toUpperCase()}`;

@@ -10,7 +10,7 @@ import { useAuthStore } from "@/lib/store/auth-store";
 import { useProductsStore } from "@/lib/store/products-store";
 import { getDeliveryEstimate } from "@/lib/utils/date-estimator";
 import { AuthGuard } from "@/components/auth-guard";
-import { calculateOrderTotals } from "@/lib/pricing";
+import { calculateOrderTotals, DEFAULT_ITEM_WEIGHT_GRAMS } from "@/lib/pricing";
 import { ONLINE_PAYMENT_ENABLED } from "@/lib/payment-config";
 import {
   ChevronRight,
@@ -27,6 +27,48 @@ type Step = "shipping" | "payment" | "review";
 // localStorage key used to remember the customer's shipping details between
 // visits so they don't have to re-enter them for every order.
 const SHIPPING_STORAGE_KEY = "gmk_shipping_info";
+
+// All Indian states and union territories, for the checkout State dropdown.
+// A fixed list guarantees a consistent value so intrastate detection is exact.
+const INDIAN_STATES = [
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chhattisgarh",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jharkhand",
+  "Karnataka",
+  "Kerala",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal",
+  // Union Territories
+  "Andaman and Nicobar Islands",
+  "Chandigarh",
+  "Dadra and Nagar Haveli and Daman and Diu",
+  "Delhi",
+  "Jammu and Kashmir",
+  "Ladakh",
+  "Lakshadweep",
+  "Puducherry",
+];
 
 declare global {
   interface Window {
@@ -93,6 +135,8 @@ function CheckoutContent() {
   const [placedOrderId, setPlacedOrderId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // Per-field validation messages, keyed by ShippingInfo field name.
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof ShippingInfo, string>>>({});
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
   // Online payment is gated behind a feature flag while Razorpay is being
   // validated. Default to COD and prevent selecting online when disabled.
@@ -194,7 +238,24 @@ function CheckoutContent() {
     (sum, item) => sum + item.price * item.quantity,
     0
   );
-  const { shippingCost: shipping, grandTotal } = calculateOrderTotals(total);
+
+  // Total order weight (grams) — look each item's weight up from the catalog,
+  // falling back to a default when a product has no recorded weight or is a
+  // custom upload. Drives the weight-based delivery charge.
+  const totalWeight = items.reduce((sum, item) => {
+    const product = products.find((p) => p.id === item.productId);
+    const itemWeight =
+      product?.weight && product.weight > 0
+        ? product.weight
+        : DEFAULT_ITEM_WEIGHT_GRAMS;
+    return sum + itemWeight * item.quantity;
+  }, 0);
+
+  const { shippingCost: shipping, grandTotal } = calculateOrderTotals(
+    total,
+    totalWeight,
+    shippingInfo.state
+  );
 
   const steps = [
     { id: "shipping" as Step, label: "Shipping", icon: Truck },
@@ -225,37 +286,56 @@ function CheckoutContent() {
     if (field === "zip") nextValue = value.replace(/\D/g, "").slice(0, 6);
     setShippingInfo((prev) => ({ ...prev, [field]: nextValue }));
     setError("");
+    // Clear this field's error as soon as the customer edits it.
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  // Validate every shipping field and return a map of field → error message.
+  const validateShipping = (): Partial<Record<keyof ShippingInfo, string>> => {
+    const errs: Partial<Record<keyof ShippingInfo, string>> = {};
+
+    if (!shippingInfo.firstName.trim()) errs.firstName = "First name is required";
+    if (!shippingInfo.lastName.trim()) errs.lastName = "Last name is required";
+
+    if (!shippingInfo.email.trim()) errs.email = "Email is required";
+    else if (!isEmail(shippingInfo.email)) errs.email = "Enter a valid email address (e.g. name@example.com)";
+
+    if (!shippingInfo.phone.trim()) errs.phone = "Phone number is required";
+    else if (!isValidPhone(shippingInfo.phone)) errs.phone = "Enter a valid 10-digit mobile number";
+
+    if (!shippingInfo.address.trim()) errs.address = "Address is required";
+    if (!shippingInfo.city.trim()) errs.city = "City is required";
+    if (!shippingInfo.state.trim()) errs.state = "Please select a state";
+
+    if (!shippingInfo.zip.trim()) errs.zip = "PIN code is required";
+    else if (!isValidZip(shippingInfo.zip)) errs.zip = "Enter a valid 6-digit PIN code";
+
+    return errs;
   };
 
   const handleContinueToPayment = () => {
-    if (
-      !shippingInfo.firstName.trim() ||
-      !shippingInfo.lastName.trim() ||
-      !shippingInfo.email.trim() ||
-      !shippingInfo.phone.trim() ||
-      !shippingInfo.address.trim() ||
-      !shippingInfo.city.trim() ||
-      !shippingInfo.state.trim() ||
-      !shippingInfo.zip.trim()
-    ) {
-      setError("Please fill in all shipping fields");
-      return;
-    }
-    if (!isEmail(shippingInfo.email)) {
-      setError("Please enter a valid email address");
-      return;
-    }
-    if (!isValidPhone(shippingInfo.phone)) {
-      setError("Please enter a valid 10-digit mobile number");
-      return;
-    }
-    if (!isValidZip(shippingInfo.zip)) {
-      setError("Please enter a valid 6-digit PIN code");
+    const errs = validateShipping();
+    setFieldErrors(errs);
+    if (Object.keys(errs).length > 0) {
+      setError("Please fix the highlighted fields below.");
       return;
     }
     setError("");
     setCurrentStep("payment");
   };
+
+  // Shared input class that turns red when the field has a validation error.
+  const fieldClass = (field: keyof ShippingInfo) =>
+    `w-full px-4 py-3 rounded-xl bg-surface-container-low text-on-surface text-sm outline-none transition-all ${
+      fieldErrors[field]
+        ? "ring-2 ring-destructive/50 focus:ring-destructive/50"
+        : "focus:bg-surface-container-highest focus:ring-2 focus:ring-primary/20"
+    }`;
 
   const handlePlaceOrder = async () => {
     if (!razorpayLoaded && paymentMethod === "online") {
@@ -482,11 +562,17 @@ function CheckoutContent() {
                         onChange={(e) =>
                           updateShipping("firstName", e.target.value)
                         }
-                        className="w-full px-4 py-3 rounded-xl bg-surface-container-low text-on-surface text-sm outline-none focus:bg-surface-container-highest focus:ring-2 focus:ring-primary/20 transition-all"
+                        className={fieldClass("firstName")}
                         placeholder="John"
                         required
                         id="shipping-first-name"
                       />
+                      {fieldErrors.firstName && (
+                        <p className="mt-1.5 text-xs text-destructive flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3 shrink-0" />
+                          {fieldErrors.firstName}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-on-surface mb-2">
@@ -498,11 +584,17 @@ function CheckoutContent() {
                         onChange={(e) =>
                           updateShipping("lastName", e.target.value)
                         }
-                        className="w-full px-4 py-3 rounded-xl bg-surface-container-low text-on-surface text-sm outline-none focus:bg-surface-container-highest focus:ring-2 focus:ring-primary/20 transition-all"
+                        className={fieldClass("lastName")}
                         placeholder="Doe"
                         required
                         id="shipping-last-name"
                       />
+                      {fieldErrors.lastName && (
+                        <p className="mt-1.5 text-xs text-destructive flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3 shrink-0" />
+                          {fieldErrors.lastName}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -514,11 +606,17 @@ function CheckoutContent() {
                         type="email"
                         value={shippingInfo.email}
                         onChange={(e) => updateShipping("email", e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-surface-container-low text-on-surface text-sm outline-none focus:bg-surface-container-highest focus:ring-2 focus:ring-primary/20 transition-all"
+                        className={fieldClass("email")}
                         placeholder="john@example.com"
                         required
                         id="shipping-email"
                       />
+                      {fieldErrors.email && (
+                        <p className="mt-1.5 text-xs text-destructive flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3 shrink-0" />
+                          {fieldErrors.email}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-on-surface mb-2">
@@ -531,11 +629,17 @@ function CheckoutContent() {
                         maxLength={10}
                         value={shippingInfo.phone}
                         onChange={(e) => updateShipping("phone", e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-surface-container-low text-on-surface text-sm outline-none focus:bg-surface-container-highest focus:ring-2 focus:ring-primary/20 transition-all"
+                        className={fieldClass("phone")}
                         placeholder="10-digit mobile number"
                         required
                         id="shipping-phone"
                       />
+                      {fieldErrors.phone && (
+                        <p className="mt-1.5 text-xs text-destructive flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3 shrink-0" />
+                          {fieldErrors.phone}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div>
@@ -548,11 +652,17 @@ function CheckoutContent() {
                       onChange={(e) =>
                         updateShipping("address", e.target.value)
                       }
-                      className="w-full px-4 py-3 rounded-xl bg-surface-container-low text-on-surface text-sm outline-none focus:bg-surface-container-highest focus:ring-2 focus:ring-primary/20 transition-all"
+                      className={fieldClass("address")}
                       placeholder="123 Main St"
                       required
                       id="shipping-address"
                     />
+                    {fieldErrors.address && (
+                      <p className="mt-1.5 text-xs text-destructive flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3 shrink-0" />
+                        {fieldErrors.address}
+                      </p>
+                    )}
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
@@ -563,25 +673,44 @@ function CheckoutContent() {
                         type="text"
                         value={shippingInfo.city}
                         onChange={(e) => updateShipping("city", e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-surface-container-low text-on-surface text-sm outline-none focus:bg-surface-container-highest focus:ring-2 focus:ring-primary/20 transition-all"
+                        className={fieldClass("city")}
                         placeholder="City"
                         required
                         id="shipping-city"
                       />
+                      {fieldErrors.city && (
+                        <p className="mt-1.5 text-xs text-destructive flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3 shrink-0" />
+                          {fieldErrors.city}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-on-surface mb-2">
                         State *
                       </label>
-                      <input
-                        type="text"
+                      <select
                         value={shippingInfo.state}
                         onChange={(e) => updateShipping("state", e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-surface-container-low text-on-surface text-sm outline-none focus:bg-surface-container-highest focus:ring-2 focus:ring-primary/20 transition-all"
-                        placeholder="State"
+                        className={`${fieldClass("state")} appearance-none cursor-pointer`}
                         required
                         id="shipping-state"
-                      />
+                      >
+                        <option value="" disabled>
+                          Select state
+                        </option>
+                        {INDIAN_STATES.map((stateName) => (
+                          <option key={stateName} value={stateName}>
+                            {stateName}
+                          </option>
+                        ))}
+                      </select>
+                      {fieldErrors.state && (
+                        <p className="mt-1.5 text-xs text-destructive flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3 shrink-0" />
+                          {fieldErrors.state}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-on-surface mb-2">
@@ -594,17 +723,22 @@ function CheckoutContent() {
                         maxLength={6}
                         value={shippingInfo.zip}
                         onChange={(e) => updateShipping("zip", e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl bg-surface-container-low text-on-surface text-sm outline-none focus:bg-surface-container-highest focus:ring-2 focus:ring-primary/20 transition-all"
+                        className={fieldClass("zip")}
                         placeholder="6-digit PIN code"
                         required
                         id="shipping-zip"
                       />
+                      {fieldErrors.zip && (
+                        <p className="mt-1.5 text-xs text-destructive flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3 shrink-0" />
+                          {fieldErrors.zip}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <button
                     onClick={handleContinueToPayment}
-                    disabled={!isShippingValid}
-                    className="w-full py-4 rounded-full gradient-primary text-white font-semibold hover:shadow-lg hover:shadow-primary/20 transition-all mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full py-4 rounded-full gradient-primary text-white font-semibold hover:shadow-lg hover:shadow-primary/20 transition-all mt-4"
                   >
                     Continue to Payment
                   </button>
@@ -824,7 +958,9 @@ function CheckoutContent() {
                     <span className="font-medium">₹{total.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-on-surface-variant">Shipping</span>
+                    <span className="text-on-surface-variant">
+                      Shipping{!shippingInfo.state ? " (est.)" : ""}
+                    </span>
                     <span className="font-medium">
                       {shipping === 0 ? "Free" : `₹${shipping.toFixed(2)}`}
                     </span>

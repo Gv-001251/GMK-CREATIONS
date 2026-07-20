@@ -19,8 +19,9 @@ export default function CartPage() {
   const router = useRouter();
   const [promoCode, setPromoCode] = useState("");
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = total > 100 ? 0 : 12.99;
-  const grandTotal = total + shipping;
+  // Delivery is weight- and destination-based, so it's calculated at checkout
+  // once the shipping address (state) is known.
+  const grandTotal = total;
 
   const handleCheckout = () => {
     if (!isAuthenticated) {
@@ -173,20 +174,18 @@ export default function CartPage() {
                       <span className="text-sm font-medium">₹{total.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-on-surface-variant">Shipping</span>
-                      <span className="text-sm font-medium">
-                        {shipping === 0 ? "Free" : `₹${shipping.toFixed(2)}`}
+                      <span className="text-sm text-on-surface-variant">Delivery</span>
+                      <span className="text-sm font-medium text-on-surface-variant">
+                        Calculated at checkout
                       </span>
                     </div>
-                    {shipping === 0 && (
-                      <p className="text-xs text-emerald-600 font-medium">
-                        🎉 Free shipping on orders over ₹100
-                      </p>
-                    )}
+                    <p className="text-xs text-on-surface-variant">
+                      Delivery is based on order weight and destination.
+                    </p>
                   </div>
 
                   <div className="flex justify-between items-center pt-4 border-t border-outline-variant mb-6">
-                    <span className="font-heading font-bold text-lg">Total</span>
+                    <span className="font-heading font-bold text-lg">Subtotal</span>
                     <span className="font-heading font-bold text-xl">₹{grandTotal.toFixed(2)}</span>
                   </div>
 

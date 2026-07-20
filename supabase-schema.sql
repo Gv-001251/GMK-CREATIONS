@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS public.products (
   materials TEXT[] DEFAULT '{}',
   finishes TEXT[] DEFAULT '{}',
   dimensions TEXT,
+  weight INTEGER DEFAULT 0,
   layer_height TEXT,
   infill_density TEXT,
   recommended_application TEXT,

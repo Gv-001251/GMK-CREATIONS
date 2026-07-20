@@ -53,6 +53,7 @@ function rowToProduct(row: Record<string, unknown>): Product {
     infillDensity: (row.infill_density as string) || "",
     recommendedApplication: (row.recommended_application as string) || "",
     productionDays: (row.production_days as number) || 5,
+    weight: Number(row.weight) || 0,
     featured: (row.featured as boolean) || false,
     isNew,
     isDualColor: (row.is_dual_color as boolean) || 
@@ -178,6 +179,7 @@ export const useProductsStore = create<ProductsState>()(
       if (product.infillDensity !== undefined) row.infill_density = product.infillDensity;
       if (product.recommendedApplication !== undefined) row.recommended_application = product.recommendedApplication;
       if (product.productionDays !== undefined) row.production_days = product.productionDays;
+      if (product.weight !== undefined) row.weight = product.weight;
       if (product.featured !== undefined) row.featured = product.featured;
       if (product.isNew !== undefined) row.is_new = product.isNew;
 
@@ -215,6 +217,7 @@ export const useProductsStore = create<ProductsState>()(
         infill_density: product.infillDensity,
         recommended_application: product.recommendedApplication,
         production_days: product.productionDays,
+        weight: product.weight || 0,
         featured: product.featured || false,
         is_new: product.isNew || false,
       };
