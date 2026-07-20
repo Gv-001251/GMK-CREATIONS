@@ -1,7 +1,10 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/supabase/server";
 import { safeParseRequest, updateStatusSchema } from "@/lib/validations";
-import { sendOrderShippedEmail, sendOrderDeliveredEmail } from "@/lib/email";
+// Shipped/delivered customer emails are currently disabled — only the order
+// confirmation email (sent from the order/verify routes) is active. To
+// re-enable them, restore the import below and the email block further down.
+// import { sendOrderShippedEmail, sendOrderDeliveredEmail } from "@/lib/email";
 
 export async function PATCH(
   request: Request,
@@ -29,32 +32,9 @@ export async function PATCH(
     return Response.json({ error: "Failed to update status" }, { status: 500 });
   }
 
-  // Send status-specific customer emails (non-fatal)
-  try {
-    const { data: order } = await admin
-      .from("orders")
-      .select("user_name, user_email")
-      .eq("id", orderId)
-      .single();
-
-    if (order?.user_email) {
-      if (status === "shipped") {
-        await sendOrderShippedEmail({
-          orderId,
-          customerName: order.user_name || "Customer",
-          customerEmail: order.user_email,
-        });
-      } else if (status === "delivered") {
-        await sendOrderDeliveredEmail({
-          orderId,
-          customerName: order.user_name || "Customer",
-          customerEmail: order.user_email,
-        });
-      }
-    }
-  } catch (emailErr) {
-    console.error("Status email failed (non-fatal):", emailErr);
-  }
+  // Status-specific customer emails (shipped/delivered) are intentionally
+  // disabled for now — only the order confirmation email is sent. Re-enable by
+  // restoring the email import above and re-adding the send block here.
 
   // NOTE: Uploaded model files are intentionally NOT deleted here when an order
   // becomes delivered/cancelled. The files are retained so an admin can still
