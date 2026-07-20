@@ -56,6 +56,7 @@ function rowToProduct(row: Record<string, unknown>): Product {
     weight: Number(row.weight) || 0,
     featured: (row.featured as boolean) || false,
     isNew,
+    createdAt: (row.created_at as string) || undefined,
     isDualColor: (row.is_dual_color as boolean) || 
       (row.name as string)?.toLowerCase().includes("keychain") || 
       (row.name as string)?.toLowerCase().includes("nameplate") || 

@@ -169,6 +169,12 @@ export async function POST(request: Request) {
     new Map(sanitizedProducts.map((p) => [p.id, p])).values()
   );
 
+  // IMPORTANT: `created_at` is deliberately NOT included in the row objects
+  // above. On a fresh insert the DB default (now()) sets it; on a re-import
+  // (id conflict) an omitted column is left untouched by ON CONFLICT DO UPDATE,
+  // so a product keeps its ORIGINAL add date. This is what lets the time-based
+  // "New" badge survive re-imports instead of resetting. Do not add created_at
+  // to the upsert payload.
   const { data, error } = await supabase
     .from("products")
     .upsert(dedupedById, { onConflict: "id" })

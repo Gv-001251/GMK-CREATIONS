@@ -21,6 +21,8 @@ export interface Product {
   featured?: boolean;
   isNew?: boolean;
   isDualColor?: boolean;
+  /** ISO timestamp of when the product was added (drives the time-based "New" badge). */
+  createdAt?: string;
 }
 
 import { csvProducts } from "./csv-products";

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import type { Product } from "@/lib/data/products";
+import { isNewProduct } from "@/lib/utils/product-status";
 
 interface ProductCardProps {
   product: Product;
@@ -12,6 +13,13 @@ interface ProductCardProps {
 
 export function ProductCard({ product, variant = "default" }: ProductCardProps) {
   const isCompact = variant === "compact";
+
+  // A product shows the "New" badge only for a limited window after it was
+  // added (based on created_at). Bundled fallback products without a created_at
+  // fall back to their manual isNew flag.
+  const showNew = product.createdAt
+    ? isNewProduct(product.createdAt)
+    : !!product.isNew;
 
   return (
     <Link
@@ -32,9 +40,9 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
           />
 
           {/* Badges */}
-          {(product.badge || product.isNew) && (
+          {(product.badge || showNew) && (
             <div className="absolute top-2.5 left-2.5 sm:top-4 sm:left-4 flex flex-wrap gap-1.5 z-10">
-              {product.isNew && (
+              {showNew && (
                 <span className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-white text-[9px] sm:text-[10px] font-mono font-bold text-emerald-600 shadow-sm uppercase tracking-wider backdrop-blur-sm">
                   New
                 </span>
