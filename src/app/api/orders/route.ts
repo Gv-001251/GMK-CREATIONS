@@ -4,7 +4,7 @@ import { safeParseRequest, createOrderSchema } from "@/lib/validations";
 import { getRazorpay } from "@/lib/razorpay";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 import { calculateOrderTotals, CUSTOM_PRINT_MIN_PRICE, DEFAULT_ITEM_WEIGHT_GRAMS } from "@/lib/pricing";
-import { ONLINE_PAYMENT_ENABLED } from "@/lib/payment-config";
+import { ONLINE_PAYMENT_ENABLED, isCodAvailable } from "@/lib/payment-config";
 
 export async function GET(_request: Request) {
   const supabase = await createClient();
@@ -74,6 +74,18 @@ export async function POST(request: Request) {
   if (paymentMethod === "online" && !ONLINE_PAYMENT_ENABLED) {
     return Response.json(
       { error: "Online payment is currently unavailable. Please use Cash on Delivery." },
+      { status: 400 }
+    );
+  }
+
+  // Cash on Delivery is only serviceable within ~10km of Peelamedu, Coimbatore
+  // (gated by PIN code). Reject COD orders outside that zone as a safety net.
+  if (paymentMethod === "cod" && !isCodAvailable(shippingInfo?.zip)) {
+    return Response.json(
+      {
+        error:
+          "Cash on Delivery is only available within ~10km of Peelamedu, Coimbatore. Please choose online payment.",
+      },
       { status: 400 }
     );
   }

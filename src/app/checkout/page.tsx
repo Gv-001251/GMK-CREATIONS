@@ -11,7 +11,7 @@ import { useProductsStore } from "@/lib/store/products-store";
 import { getDeliveryEstimate } from "@/lib/utils/date-estimator";
 import { AuthGuard } from "@/components/auth-guard";
 import { calculateOrderTotals, DEFAULT_ITEM_WEIGHT_GRAMS } from "@/lib/pricing";
-import { ONLINE_PAYMENT_ENABLED } from "@/lib/payment-config";
+import { ONLINE_PAYMENT_ENABLED, isCodAvailable } from "@/lib/payment-config";
 import {
   ChevronRight,
   CreditCard,
@@ -256,6 +256,17 @@ function CheckoutContent() {
     totalWeight,
     shippingInfo.state
   );
+
+  // Cash on Delivery is only offered within ~10km of Peelamedu, Coimbatore,
+  // determined by the destination PIN code.
+  const codAvailable = isCodAvailable(shippingInfo.zip);
+
+  // If the destination isn't COD-eligible, don't leave COD selected.
+  useEffect(() => {
+    if (!codAvailable && paymentMethod === "cod") {
+      setPaymentMethod(ONLINE_PAYMENT_ENABLED ? "online" : "cod");
+    }
+  }, [codAvailable, paymentMethod]);
 
   const steps = [
     { id: "shipping" as Step, label: "Shipping", icon: Truck },
@@ -784,16 +795,25 @@ function CheckoutContent() {
                       </p>
                     </button>
 
-                    {/* Cash on Delivery */}
+                    {/* Cash on Delivery — only within ~10km of Peelamedu */}
                     <button
-                      onClick={() => setPaymentMethod("cod")}
-                      className={`p-6 rounded-2xl text-left border-2 transition-all ${
-                        paymentMethod === "cod"
+                      onClick={() => codAvailable && setPaymentMethod("cod")}
+                      disabled={!codAvailable}
+                      aria-disabled={!codAvailable}
+                      className={`relative p-6 rounded-2xl text-left border-2 transition-all ${
+                        !codAvailable
+                          ? "bg-surface-container-low border-outline-variant opacity-60 cursor-not-allowed"
+                          : paymentMethod === "cod"
                           ? "bg-primary/5 border-primary shadow-sm"
                           : "bg-surface-container-low border-outline-variant hover:bg-surface-container"
                       }`}
                       type="button"
                     >
+                      {!codAvailable && (
+                        <span className="absolute top-4 right-4 px-2.5 py-1 rounded-full bg-surface-container text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant border border-outline-variant">
+                          Local only
+                        </span>
+                      )}
                       <div className="flex items-center gap-3 mb-3">
                         <div className={`p-2.5 rounded-xl ${paymentMethod === "cod" ? "bg-primary/10 text-primary" : "bg-surface-container text-on-surface-variant"}`}>
                           <Truck className="w-5 h-5" />
@@ -801,7 +821,9 @@ function CheckoutContent() {
                         <span className="font-heading font-bold text-sm text-on-surface">Cash on Delivery</span>
                       </div>
                       <p className="text-xs text-on-surface-variant leading-relaxed">
-                        Pay in cash upon delivery at your doorstep. Safe and convenient.
+                        {codAvailable
+                          ? "Pay in cash upon delivery at your doorstep. Safe and convenient."
+                          : "Available only within ~10km of Peelamedu, Coimbatore. Please pay online."}
                       </p>
                     </button>
                   </div>
