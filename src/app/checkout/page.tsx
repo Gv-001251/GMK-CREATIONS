@@ -332,7 +332,8 @@ function CheckoutContent() {
           name: `${shippingInfo.firstName} ${shippingInfo.lastName}`,
           email: shippingInfo.email,
           contact: shippingInfo.phone,
-          method: "upi",
+          // No forced method — let the customer pick Card, UPI, Netbanking, or
+          // Wallet. Forcing "upi" opened the QR-only flow on desktop.
         },
         theme: { color: "#6d5cff" },
         modal: {
