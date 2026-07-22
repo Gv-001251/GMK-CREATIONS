@@ -208,7 +208,7 @@ export default function AdminUploadsPage() {
     selectableFiltered.length > 0 && selectableFiltered.every((u) => selectedIds.includes(u.id));
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
+    <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8">
       <div>
         <h1 className="font-heading text-3xl font-bold text-on-surface tracking-tight">Uploads</h1>
         <p className="text-on-surface-variant mt-2">

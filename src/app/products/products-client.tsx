@@ -8,6 +8,7 @@ import { Footer } from "@/components/footer";
 import { useProductsStore } from "@/lib/store/products-store";
 import { useRealtimeProducts } from "@/lib/hooks/use-realtime-admin";
 import { categories } from "@/lib/data/categories";
+import { collapseVariants } from "@/lib/utils/product-variants";
 import { SlidersHorizontal, X } from "lucide-react";
 import type { Product } from "@/lib/data/products";
 
@@ -99,8 +100,14 @@ export default function ProductsClient({ initialProducts, category }: ProductsCl
     return list;
   }, [categoryParam, activeFilter, activeProducts]);
 
-  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
-  const paginatedProducts = filteredProducts.slice(
+  // Collapse size-variants ("Base - Small/Medium/...") into one card per group.
+  const displayedProducts = useMemo(
+    () => collapseVariants(filteredProducts),
+    [filteredProducts]
+  );
+
+  const totalPages = Math.ceil(displayedProducts.length / productsPerPage);
+  const paginatedProducts = displayedProducts.slice(
     (currentPage - 1) * productsPerPage,
     currentPage * productsPerPage
   );
@@ -176,7 +183,7 @@ export default function ProductsClient({ initialProducts, category }: ProductsCl
           )}
 
           {/* Product Grid */}
-          {filteredProducts.length > 0 ? (
+          {displayedProducts.length > 0 ? (
             <ProductGrid products={paginatedProducts} columns={4} />
           ) : (
             <div className="text-center py-20 bg-surface-container-low rounded-3xl border border-outline-variant/30">

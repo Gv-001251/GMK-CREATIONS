@@ -360,7 +360,7 @@ export default function AdminProductsPage() {
   const inputClass = "w-full px-4 py-3 rounded-xl bg-surface-container border border-outline-variant text-on-surface text-sm outline-none focus:border-primary transition-all";
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
+    <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8">
       {/* Notification Banner */}
       {notification && (
         <div
@@ -386,19 +386,19 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Add Product Button */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h3 className="font-heading text-lg font-bold text-on-surface">
           Product Catalog ({products.length})
         </h3>
         <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-surface-container text-on-surface-variant text-sm font-semibold hover:bg-surface-container-high transition-all cursor-pointer">
+          <label className="flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full bg-surface-container text-on-surface-variant text-sm font-semibold hover:bg-surface-container-high transition-all cursor-pointer">
             <Upload className="w-4 h-4" />
             Import CSV
             <input type="file" accept=".csv" className="hidden" onChange={handleCsvImport} />
           </label>
           <button
             onClick={() => showForm && !isEditMode ? closeForm() : openAddForm()}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-full gradient-primary text-white text-sm font-semibold hover:shadow-lg hover:shadow-primary/20 transition-all"
+            className="flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full gradient-primary text-white text-sm font-semibold hover:shadow-lg hover:shadow-primary/20 transition-all"
           >
             <Plus className="w-4 h-4" />
             Add Product
@@ -408,7 +408,7 @@ export default function AdminProductsPage() {
 
       {/* ═══════════ Unified Add / Edit Product Form ═══════════ */}
       {showForm && (
-        <div className="p-8 rounded-2xl bg-surface-container-lowest border border-outline-variant shadow-sm animate-slide-down">
+        <div className="p-5 sm:p-8 rounded-2xl bg-surface-container-lowest border border-outline-variant shadow-sm animate-slide-down">
           <div className="flex items-center justify-between mb-6">
             <h4 className="font-heading text-lg font-semibold text-on-surface">
               {isEditMode ? `Edit: ${editingProduct?.name}` : "Create New Product"}
@@ -769,96 +769,158 @@ export default function AdminProductsPage() {
 
       {/* Products Table */}
       <div className="rounded-2xl bg-surface-container-lowest border border-outline-variant overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          {filteredProducts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-on-surface-variant">
-              <Package className="w-12 h-12 mb-4 opacity-30" />
-              <p className="text-sm font-medium">No products match your criteria.</p>
+        {filteredProducts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-on-surface-variant">
+            <Package className="w-12 h-12 mb-4 opacity-30" />
+            <p className="text-sm font-medium">No products match your criteria.</p>
+          </div>
+        ) : (
+          <>
+            {/* ── Desktop table ── */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead>
+                  <tr className="border-b border-outline-variant bg-surface-container">
+                    <th className="py-4 px-6 font-semibold text-on-surface-variant">#</th>
+                    <th className="py-4 px-6 font-semibold text-on-surface-variant">ID</th>
+                    <th className="py-4 px-6 font-semibold text-on-surface-variant">Product</th>
+                    <th className="py-4 px-6 font-semibold text-on-surface-variant">Category</th>
+                    <th className="py-4 px-6 font-semibold text-right text-on-surface-variant">Price</th>
+                    <th className="py-4 px-6 font-semibold text-center text-on-surface-variant">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredProducts.map((product, index) => (
+                    <tr
+                      key={product.id}
+                      className={`border-b border-outline-variant last:border-0 hover:bg-surface-container/50 transition-colors ${
+                        editingProduct?.id === product.id ? "bg-primary/5 ring-1 ring-inset ring-primary/20" : ""
+                      }`}
+                    >
+                      <td className="py-4 px-6">
+                        <span className="text-xs font-medium text-on-surface-variant">{index + 1}</span>
+                      </td>
+                      <td className="py-4 px-6">
+                        <span className="text-xs font-mono text-on-surface-variant bg-surface-container px-2 py-1 rounded-md border border-outline-variant/50">
+                          {product.id}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl overflow-hidden bg-surface-container border border-outline-variant shrink-0">
+                            <Image
+                              src={product.image || "/images/products/organic-sculptures.png"}
+                              alt={product.name}
+                              width={100}
+                              height={100}
+                              className="w-full h-full object-cover"
+                              unoptimized={(product.image || "").startsWith("http") || (product.image || "").includes("supabase")}
+                            />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-on-surface">{product.name}</p>
+                            <p className="text-xs text-on-surface-variant mt-1 max-w-xs truncate">{product.description}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6">
+                        <span className="px-3 py-1 rounded-full bg-surface-container border border-outline-variant text-xs font-semibold text-on-surface-variant">
+                          {product.category.replace("-", " ")}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6 text-right">
+                        <span className="font-heading font-bold text-on-surface">
+                          ₹{product.price.toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => openEditForm(product)}
+                            className={`p-2 rounded-xl border transition-colors ${
+                              editingProduct?.id === product.id
+                                ? "bg-primary/10 border-primary text-primary"
+                                : "bg-surface-container border-outline-variant text-on-surface-variant hover:text-on-surface hover:border-on-surface"
+                            }`}
+                            title="Edit product"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProduct(product.id, product.name)}
+                            className="p-2 rounded-xl bg-destructive/5 text-destructive hover:bg-destructive/10 transition-colors"
+                            title="Delete product"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          ) : (
-            <table className="w-full text-sm text-left">
-              <thead>
-                <tr className="border-b border-outline-variant bg-surface-container">
-                  <th className="py-4 px-6 font-semibold text-on-surface-variant">#</th>
-                  <th className="py-4 px-6 font-semibold text-on-surface-variant">ID</th>
-                  <th className="py-4 px-6 font-semibold text-on-surface-variant">Product</th>
-                  <th className="py-4 px-6 font-semibold text-on-surface-variant">Category</th>
-                  <th className="py-4 px-6 font-semibold text-right text-on-surface-variant">Price</th>
-                  <th className="py-4 px-6 font-semibold text-center text-on-surface-variant">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredProducts.map((product, index) => (
-                  <tr
-                    key={product.id}
-                    className={`border-b border-outline-variant last:border-0 hover:bg-surface-container/50 transition-colors ${
-                      editingProduct?.id === product.id ? "bg-primary/5 ring-1 ring-inset ring-primary/20" : ""
-                    }`}
-                  >
-                    <td className="py-4 px-6">
-                      <span className="text-xs font-medium text-on-surface-variant">{index + 1}</span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="text-xs font-mono text-on-surface-variant bg-surface-container px-2 py-1 rounded-md border border-outline-variant/50">
-                        {product.id}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-surface-container border border-outline-variant shrink-0">
-                          <Image
-                            src={product.image || "/images/products/organic-sculptures.png"}
-                            alt={product.name}
-                            width={100}
-                            height={100}
-                            className="w-full h-full object-cover"
-                            unoptimized={(product.image || "").startsWith("http") || (product.image || "").includes("supabase")}
-                          />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-on-surface">{product.name}</p>
-                          <p className="text-xs text-on-surface-variant mt-1 max-w-xs truncate">{product.description}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="px-3 py-1 rounded-full bg-surface-container border border-outline-variant text-xs font-semibold text-on-surface-variant">
-                        {product.category.replace("-", " ")}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <span className="font-heading font-bold text-on-surface">
+
+            {/* ── Mobile cards ── */}
+            <div className="md:hidden divide-y divide-outline-variant">
+              {filteredProducts.map((product, index) => (
+                <div
+                  key={product.id}
+                  className={`p-4 flex gap-3 ${
+                    editingProduct?.id === product.id ? "bg-primary/5" : ""
+                  }`}
+                >
+                  <div className="w-16 h-16 rounded-xl overflow-hidden bg-surface-container border border-outline-variant shrink-0">
+                    <Image
+                      src={product.image || "/images/products/organic-sculptures.png"}
+                      alt={product.name}
+                      width={100}
+                      height={100}
+                      className="w-full h-full object-cover"
+                      unoptimized={(product.image || "").startsWith("http") || (product.image || "").includes("supabase")}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-semibold text-on-surface text-sm leading-snug">
+                        <span className="text-on-surface-variant/60 mr-1">{index + 1}.</span>
+                        {product.name}
+                      </p>
+                      <span className="font-heading font-bold text-on-surface text-sm shrink-0">
                         ₹{product.price.toFixed(2)}
                       </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => openEditForm(product)}
-                          className={`p-2 rounded-xl border transition-colors ${
-                            editingProduct?.id === product.id
-                              ? "bg-primary/10 border-primary text-primary"
-                              : "bg-surface-container border-outline-variant text-on-surface-variant hover:text-on-surface hover:border-on-surface"
-                          }`}
-                          title="Edit product"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteProduct(product.id, product.name)}
-                          className="p-2 rounded-xl bg-destructive/5 text-destructive hover:bg-destructive/10 transition-colors"
-                          title="Delete product"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+                    </div>
+                    <p className="text-[11px] text-on-surface-variant mt-0.5 line-clamp-2">
+                      {product.description}
+                    </p>
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      <span className="text-[10px] font-mono text-on-surface-variant bg-surface-container px-2 py-0.5 rounded border border-outline-variant/50">
+                        {product.id}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full bg-surface-container border border-outline-variant text-[10px] font-semibold text-on-surface-variant">
+                        {product.category.replace("-", " ")}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-3">
+                      <button
+                        onClick={() => openEditForm(product)}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-outline-variant text-xs font-semibold text-on-surface-variant hover:text-on-surface transition-colors"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" /> Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProduct(product.id, product.name)}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-destructive/5 text-destructive hover:bg-destructive/10 text-xs font-semibold transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

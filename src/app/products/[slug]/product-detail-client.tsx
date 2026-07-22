@@ -12,6 +12,7 @@ import { useCartStore } from "@/lib/store/cart-store";
 import { useAuthStore } from "@/lib/store/auth-store";
 import { ChevronRight, Minus, Plus, ShoppingCart, Maximize2, LogIn, ChevronLeft, X, Star, CheckCircle2, MessageSquare, HelpCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { getDeliveryEstimate } from "@/lib/utils/date-estimator";
+import { getVariantSiblings, parseVariant } from "@/lib/utils/product-variants";
 import { toast } from "@/components/toast";
 
 interface MaterialInfo {
@@ -114,7 +115,7 @@ const MOCK_FAQS = [
 
 export default function ProductDetailClient() {
   const params = useParams();
-  const { fetchProducts, getProductBySlug, getRecommendedProducts, isLoading } = useProductsStore();
+  const { fetchProducts, getProductBySlug, getRecommendedProducts, isLoading, products: allProducts } = useProductsStore();
   const router = useRouter();
   const { addItem } = useCartStore();
   const { isAuthenticated, user } = useAuthStore();
@@ -284,6 +285,14 @@ export default function ProductDetailClient() {
   const finishInfo = getFinishInfo(activeFinish);
   const dynamicPrice = (product.price * materialInfo.multiplier) + finishInfo.surcharge;
 
+  // Size variants: sibling products that share this product's base name
+  // ("Base - Small/Medium/..."). When present, show a size selector and the
+  // clean base name as the title.
+  const variantSiblings = getVariantSiblings(product, allProducts);
+  const currentVariant = parseVariant(product.name);
+  const displayName =
+    variantSiblings.length > 1 && currentVariant ? currentVariant.base : product.name;
+
   const isDualColor = product ? (product.isDualColor || 
     product.name.toLowerCase().includes("keychain") || 
     product.name.toLowerCase().includes("nameplate") ||
@@ -351,7 +360,7 @@ export default function ProductDetailClient() {
             <ChevronRight className="w-3 h-3" />
             <Link href="/products" className="hover:text-primary transition-colors">Catalog</Link>
             <ChevronRight className="w-3 h-3" />
-            <span className="text-on-surface font-medium">{product.name}</span>
+            <span className="text-on-surface font-medium">{displayName}</span>
           </nav>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
@@ -580,11 +589,52 @@ export default function ProductDetailClient() {
                 {product.category.replace("-", " ")}
               </span>
               <h1 className="font-heading text-3xl md:text-4xl font-bold text-on-surface mt-2 tracking-tight">
-                {product.name}
+                {displayName}
               </h1>
               <p className="text-on-surface-variant mt-3 leading-relaxed">
                 {product.longDescription}
               </p>
+
+              {/* Size Selection (only when this product has size variants) */}
+              {variantSiblings.length > 1 && (
+                <div className="mt-8">
+                  <h3 className="font-heading text-sm font-semibold text-on-surface mb-3 flex items-center gap-2">
+                    <span>Select Size</span>
+                    {currentVariant && (
+                      <span className="text-xs text-on-surface-variant font-normal capitalize">
+                        ({currentVariant.size})
+                      </span>
+                    )}
+                  </h3>
+                  <div className="flex flex-wrap gap-2.5">
+                    {variantSiblings.map((v) => {
+                      const info = parseVariant(v.name);
+                      const isActive = v.id === product.id;
+                      return (
+                        <button
+                          key={v.id}
+                          type="button"
+                          onClick={() => {
+                            if (!isActive) router.push(`/products/${v.slug}`);
+                          }}
+                          className={`px-4 py-2.5 rounded-2xl border text-left transition-all ${
+                            isActive
+                              ? "bg-surface-container-high border-primary shadow-lg shadow-primary/5"
+                              : "bg-surface-container-low/40 border-outline-variant/30 hover:border-outline-variant hover:bg-surface-container-low/80"
+                          }`}
+                        >
+                          <span className="block text-sm font-semibold text-on-surface capitalize">
+                            {info?.size}
+                          </span>
+                          <span className="block text-xs text-on-surface-variant mt-0.5">
+                            ₹{v.price.toFixed(0)}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Material Selection */}
               <div className="mt-8">

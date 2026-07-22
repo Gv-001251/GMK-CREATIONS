@@ -16,7 +16,8 @@ export default function AdminLayout({
     <AuthGuard requiredRole="admin">
       <div className="flex h-screen bg-background overflow-hidden text-foreground">
         <AdminSidebar />
-        <div className="flex-1 overflow-y-auto">
+        {/* pt-14 on mobile clears the fixed admin top bar; none needed on desktop */}
+        <div className="flex-1 overflow-y-auto pt-14 md:pt-0">
           {children}
         </div>
       </div>

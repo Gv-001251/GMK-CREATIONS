@@ -151,7 +151,7 @@ export default function AdminOrdersPage() {
   const allOrdersSelected = currentOrders.length > 0 && currentOrders.every((o) => selectedOrderIds.includes(o.id));
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
+    <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="font-heading text-3xl font-bold text-on-surface tracking-tight">Orders</h1>
@@ -196,7 +196,7 @@ export default function AdminOrdersPage() {
         </div>
       ) : (
         <div className="rounded-2xl bg-surface-container-lowest border border-outline-variant overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm text-left border-collapse">
               <thead>
                 <tr className="border-b border-outline-variant bg-surface-container-low">
@@ -414,6 +414,155 @@ export default function AdminOrdersPage() {
               </tbody>
             </table>
           </div>
+
+          {/* ── Mobile cards ── */}
+          <div className="md:hidden divide-y divide-outline-variant">
+            {orders.map((order) => {
+              const isExpanded = expandedOrderId === order.id;
+              const orderStlFiles = order.items
+                .map((item) => {
+                  const { storagePath } = extractStoragePath(item.finish);
+                  return storagePath ? { storagePath, name: item.name } : null;
+                })
+                .filter((f): f is { storagePath: string; name: string } => !!f);
+
+              return (
+                <div
+                  key={order.id}
+                  className={`p-4 ${selectedOrderIds.includes(order.id) ? "bg-primary/5" : ""}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedOrderIds.includes(order.id)}
+                      onChange={() => handleSelectOrder(order.id)}
+                      className="mt-1 rounded border-outline-variant text-primary focus:ring-primary w-4 h-4 cursor-pointer shrink-0"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => toggleExpand(order.id)}
+                      className="flex-1 min-w-0 text-left"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono text-xs font-semibold text-on-surface truncate">{order.id}</span>
+                        <span className="font-heading font-bold text-on-surface text-sm shrink-0">₹{order.grand_total.toFixed(2)}</span>
+                      </div>
+                      <p className="text-sm font-semibold text-on-surface mt-1">
+                        {order.shipping_first_name} {order.shipping_last_name}
+                      </p>
+                      <p className="text-xs text-on-surface-variant truncate">{order.shipping_email}</p>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-on-surface-variant">
+                        <span>{order.items.reduce((s, i) => s + i.quantity, 0)} items</span>
+                        <span>·</span>
+                        <span>
+                          {new Date(order.created_at).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* Status + actions */}
+                  <div className="flex items-center justify-between gap-2 mt-3">
+                    <select
+                      value={order.status}
+                      onChange={(e) => updateOrderStatus(order.id, e.target.value as typeof statuses[number])}
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold border outline-none cursor-pointer ${statusColors[order.status] || "bg-surface-container text-on-surface-variant"}`}
+                    >
+                      {statuses.map((status) => (
+                        <option key={status} value={status} className="bg-background text-foreground">
+                          {status.charAt(0).toUpperCase() + status.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => toggleExpand(order.id)}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-outline-variant text-xs font-semibold text-on-surface-variant"
+                      >
+                        {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                        Details
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteOrderSingle(order.id)}
+                        disabled={isDeleting}
+                        className="p-2 rounded-lg border border-destructive/20 hover:bg-destructive/10 text-destructive transition-colors disabled:opacity-50"
+                        title="Delete Order"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Expanded details */}
+                  {isExpanded && (
+                    <div className="mt-3 space-y-3">
+                      {/* Shipping */}
+                      <div className="p-4 rounded-xl bg-surface-container-low border border-outline-variant">
+                        <h4 className="font-heading text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">
+                          Shipping Address
+                        </h4>
+                        <div className="text-sm space-y-0.5">
+                          <p className="font-semibold">{order.shipping_first_name} {order.shipping_last_name}</p>
+                          <p className="text-on-surface-variant">{order.shipping_address}</p>
+                          <p className="text-on-surface-variant">
+                            {order.shipping_city}, {order.shipping_state} {order.shipping_zip}
+                          </p>
+                          <p className="text-xs text-primary font-medium pt-1">{order.shipping_email}</p>
+                        </div>
+                      </div>
+
+                      {/* Items */}
+                      <div className="space-y-2">
+                        <h4 className="font-heading text-xs font-bold text-on-surface-variant uppercase tracking-wider">
+                          Items
+                        </h4>
+                        {order.items.map((item, idx) => {
+                          const { cleanFinish, storagePath } = extractStoragePath(item.finish);
+                          return (
+                            <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-surface-container-low border border-outline-variant">
+                              {item.image && (
+                                <div className="relative w-11 h-11 rounded-lg bg-surface-container-highest border border-outline-variant overflow-hidden shrink-0">
+                                  <Image
+                                    src={item.image}
+                                    alt={item.name}
+                                    fill
+                                    sizes="44px"
+                                    className="object-cover"
+                                    unoptimized={item.image.startsWith("data:")}
+                                  />
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <h5 className="text-sm font-bold text-on-surface leading-tight truncate">{item.name}</h5>
+                                <p className="text-[11px] text-on-surface-variant mt-0.5">{item.material} · {cleanFinish}</p>
+                                {storagePath && (
+                                  <p className="text-[11px] text-on-surface-variant mt-0.5 flex items-center gap-1">
+                                    <FileText className="w-3 h-3 shrink-0" />
+                                    <span className="truncate">{uploadedFileName(storagePath)}</span>
+                                  </p>
+                                )}
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className="text-[11px] text-on-surface-variant">₹{item.price.toFixed(2)} × {item.quantity}</p>
+                                <p className="text-sm font-bold text-on-surface">₹{(item.price * item.quantity).toFixed(2)}</p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
           {totalPages > 1 && (
             <div className="flex items-center justify-between p-6 bg-surface-container-low border-t border-outline-variant">
               <span className="text-sm text-on-surface-variant">

@@ -117,7 +117,7 @@ export default function AdminOverviewPage() {
   ];
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
+    <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto space-y-6 md:space-y-8">
       <div>
         <h1 className="font-heading text-3xl font-bold text-on-surface tracking-tight mb-8">Admin Overview</h1>
         <p className="text-on-surface-variant mt-2">Welcome to your store&apos;s control center.</p>
@@ -146,8 +146,8 @@ export default function AdminOverviewPage() {
       </div>
 
         {/* Sales Chart & Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 p-8 rounded-2xl bg-surface-container-lowest shadow-sm border border-outline-variant">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+        <div className="lg:col-span-2 p-5 sm:p-8 rounded-2xl bg-surface-container-lowest shadow-sm border border-outline-variant">
           <h3 className="font-heading text-lg font-bold text-on-surface mb-8">
             Monthly Revenue
           </h3>
@@ -191,7 +191,7 @@ export default function AdminOverviewPage() {
           )}
         </div>
 
-        <div className="p-8 rounded-2xl bg-surface-container-lowest shadow-sm border border-outline-variant flex flex-col">
+        <div className="p-5 sm:p-8 rounded-2xl bg-surface-container-lowest shadow-sm border border-outline-variant flex flex-col">
           <h3 className="font-heading text-lg font-bold text-on-surface mb-6">
             Quick Actions
           </h3>
@@ -236,7 +236,8 @@ export default function AdminOverviewPage() {
             No recent orders found.
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-outline-variant text-sm text-on-surface-variant">
@@ -321,6 +322,83 @@ export default function AdminOverviewPage() {
               </tbody>
             </table>
           </div>
+
+          {/* ── Mobile cards ── */}
+          <div className="md:hidden divide-y divide-outline-variant">
+            {getRecentOrders(5).map((order) => {
+              const date = new Date(order.created_at).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              });
+              const orderStlFiles = order.items
+                .map((item) => {
+                  const { storagePath } = extractStoragePath(item.finish);
+                  return storagePath ? { storagePath, name: item.name } : null;
+                })
+                .filter((f): f is { storagePath: string; name: string } => !!f);
+
+              return (
+                <div key={order.id} className="p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono text-xs font-semibold text-on-surface truncate">
+                      {order.id.slice(0, 8)}...
+                    </span>
+                    <span className="text-sm font-bold text-on-surface shrink-0">
+                      ₹{order.grand_total.toFixed(2)}
+                    </span>
+                  </div>
+                  <p className="text-sm font-semibold text-on-surface mt-1">
+                    {order.shipping_first_name || "Guest"} {order.shipping_last_name || ""}
+                  </p>
+                  <p className="text-xs text-on-surface-variant truncate">
+                    {order.shipping_email || "No email provided"}
+                  </p>
+                  <div className="flex items-center justify-between gap-2 mt-2">
+                    <span className="text-xs text-on-surface-variant">{date}</span>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                        order.status === "delivered"
+                          ? "bg-emerald-500/10 text-emerald-500"
+                          : order.status === "cancelled"
+                          ? "bg-red-500/10 text-red-500"
+                          : order.status === "processing"
+                          ? "bg-blue-500/10 text-blue-500"
+                          : "bg-amber-500/10 text-amber-500"
+                      }`}
+                    >
+                      {order.status}
+                    </span>
+                  </div>
+                  {orderStlFiles.length > 0 && (
+                    <div className="flex flex-col gap-1 mt-3">
+                      {orderStlFiles.map((file, fIdx) => {
+                        const cleanName = file.name.replace(/^Custom Print:\s*/i, "");
+                        return (
+                          <button
+                            key={fIdx}
+                            type="button"
+                            onClick={() => handleDownloadModel(file.storagePath, file.name)}
+                            disabled={downloadingPath === file.storagePath}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 text-xs font-semibold transition-all disabled:opacity-50 text-left w-full"
+                            title={`Download ${file.name}`}
+                          >
+                            {downloadingPath === file.storagePath ? (
+                              <Loader2 className="w-3 h-3 animate-spin shrink-0" />
+                            ) : (
+                              <Download className="w-3 h-3 shrink-0" />
+                            )}
+                            <span className="truncate">{cleanName}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          </>
         )}
       </div>
     </div>
