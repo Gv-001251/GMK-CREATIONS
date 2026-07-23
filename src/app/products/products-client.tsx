@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/navbar";
 import { ProductGrid } from "@/components/product-grid";
@@ -52,14 +52,28 @@ export default function ProductsClient({ initialProducts, category }: ProductsCl
 
   const activeProducts = hydrated ? storeProducts : initialProducts;
 
-  // Change page and bring the catalog back into view at the top
+  // Change page (the scroll-to-top happens in an effect AFTER the new page
+  // renders — see below — so it isn't interrupted when the last page is shorter).
   const goToPage = (page: number) => {
     const clamped = Math.min(Math.max(1, page), totalPages);
     setCurrentPage(clamped);
+  };
+
+  // Scroll to the top when the page changes, but only after the new page's
+  // content has committed. Doing it here (rather than inside goToPage) means the
+  // layout height is already the new, correct value, so the smooth scroll can't
+  // be interrupted by the page shrinking mid-animation (which left the last
+  // page occasionally not reaching the top).
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     if (typeof window !== "undefined") {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  };
+  }, [currentPage]);
 
   // Find active category if category parameter is present
   const activeCategory = useMemo(() => {

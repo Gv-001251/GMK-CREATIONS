@@ -104,17 +104,14 @@ export function RouteLoader() {
       setIsNavigating(true);
     };
 
-    const handlePopState = () => {
-      // Handles browser back and forward button clicks
-      setIsNavigating(true);
-    };
-
+    // NOTE: we intentionally do NOT show the loader on `popstate` (browser
+    // back/forward). Those navigations are near-instant in the SPA (often
+    // restored from cache), and triggering the overlay there caused it to get
+    // stuck on the destination page. Back/forward now navigate with no overlay.
     document.addEventListener("click", handleAnchorClick);
-    window.addEventListener("popstate", handlePopState);
 
     return () => {
       document.removeEventListener("click", handleAnchorClick);
-      window.removeEventListener("popstate", handlePopState);
     };
   }, []);
 
