@@ -12,7 +12,6 @@ import { finishes } from "@/lib/data/materials";
 import { Minus, Plus, ShoppingCart, Calculator, Box, Weight, Layers, Percent, Clock, Loader2 } from "lucide-react";
 import { STLAnalysis } from "@/lib/utils/stl-parser";
 import Link from "next/link";
-import { toast } from "@/components/toast";
 
 // Print speed estimate: ~30 cm³/hr for FDM printing
 const PRINT_SPEED_CM3_PER_HR = 30;
@@ -32,6 +31,9 @@ const finishMultipliers: Record<string, number> = {
 export default function UploadPage() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [analysis, setAnalysis] = useState<STLAnalysis | null>(null);
+  // True when the uploaded file is a reference file (image/PDF) rather than a
+  // 3D model — those are submitted for a manual quote instead of auto-priced.
+  const [isReferenceFile, setIsReferenceFile] = useState(false);
   const [scalePercent, setScalePercent] = useState(100); // default 100%
   const [unit, setUnit] = useState<"mm" | "cm" | "inch">("mm");
   const [activeInput, setActiveInput] = useState<"x" | "y" | "z" | null>(null);
@@ -50,6 +52,7 @@ export default function UploadPage() {
     uploadSpeed,
     uploadError,
     startUpload,
+    submitReferenceFile,
   } = useUploadStore();
 
   const isUploading = uploadStatus === "uploading";
@@ -213,6 +216,14 @@ export default function UploadPage() {
     }
   };
 
+  // Reference files (image/PDF) are uploaded to Supabase Storage as a
+  // quote request — no cart item is created and no payment is taken. The store
+  // handles success/error toasts, so we just trigger the upload here.
+  const handleSubmitReference = async () => {
+    if (!uploadedFile) return;
+    await submitReferenceFile(uploadedFile);
+  };
+
   return (
     <main>
       <Navbar />
@@ -228,7 +239,7 @@ export default function UploadPage() {
               Upload Your 3D Model
             </h1>
             <p className="text-on-surface-variant mt-3 leading-relaxed">
-              Upload your .STL or .OBJ models directly. We provide instant material analysis, precision slicing, and a quick quote for your custom print.
+              Upload your .STL or .OBJ models for instant material analysis, precision slicing, and a quick quote. Or attach a reference image/PDF and we&apos;ll email you a custom quote.
             </p>
           </div>
 
@@ -236,8 +247,15 @@ export default function UploadPage() {
             {/* Upload Area */}
             <div>
               <UploadFile 
-                onFileUploaded={(file) => {
+                onFileUploaded={(file, isReference) => {
                   setUploadedFile(file);
+                  setIsReferenceFile(!!isReference);
+                  // Reference files (image/PDF) aren't 3D-analysed, so clear any
+                  // previous model analysis and reset scale to defaults.
+                  if (isReference) {
+                    setAnalysis(null);
+                    setScalePercent(100);
+                  }
                   useUploadStore.setState({ uploadStatus: "idle", uploadProgress: 0, uploadError: null });
                 }} 
                 onAnalysisComplete={(results) => {
@@ -259,6 +277,7 @@ export default function UploadPage() {
                 onRemoveFile={() => {
                   setUploadedFile(null);
                   setAnalysis(null);
+                  setIsReferenceFile(false);
                   setScalePercent(100);
                   useUploadStore.setState({ uploadStatus: "idle", uploadProgress: 0, uploadError: null });
                 }}
@@ -408,6 +427,10 @@ export default function UploadPage() {
                 </div>
               )}
 
+              {/* Material + infill controls apply only to 3D models, not
+                  reference files (image/PDF) which get a manual quote. */}
+              {!isReferenceFile && (
+              <>
               {/* Material Selection */}
               <div className="mt-10">
                 <h3 className="font-heading text-lg font-bold text-on-surface mb-4">
@@ -481,12 +504,85 @@ export default function UploadPage() {
                   </p>
                 </div>
               </div>
+              </>
+              )}
 
+              {/* Reference-file note (image/PDF) */}
+              {isReferenceFile && (
+                <div className="mt-8 p-6 rounded-2xl bg-surface-container-low border border-outline-variant">
+                  <h3 className="font-heading text-lg font-bold text-on-surface mb-2">
+                    Reference File Attached
+                  </h3>
+                  <p className="text-sm text-on-surface-variant leading-relaxed">
+                    You&apos;ve attached an image or PDF. Our team will review your
+                    requirements and email you a custom quote — no material selection
+                    or payment is needed right now.
+                  </p>
+                </div>
+              )}
 
             </div>
 
             {/* Quote Summary */}
             <div>
+              {isReferenceFile ? (
+              /* ─── Reference file: submit-for-quote panel ─── */
+              <div className="sticky top-28 p-8 rounded-2xl bg-surface-container-low">
+                <div className="flex items-center gap-3 mb-6">
+                  <Calculator className="w-5 h-5 text-primary" />
+                  <h3 className="font-heading text-lg font-bold text-on-surface">
+                    Request a Quote
+                  </h3>
+                </div>
+
+                <div className="flex justify-between mb-4">
+                  <span className="text-sm text-on-surface-variant">File</span>
+                  <span className="text-sm font-medium text-on-surface truncate max-w-[200px]">
+                    {uploadedFile ? uploadedFile.name : "No file uploaded"}
+                  </span>
+                </div>
+
+                <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 text-xs text-on-surface-variant leading-relaxed mb-6">
+                  This is a reference file. Submit it and our team will review your
+                  requirements and email you a tailored quote. No payment is taken now.
+                </div>
+
+                {uploadStatus === "success" ? (
+                  <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-xs font-bold flex items-center gap-2 animate-slide-down">
+                    <span className="text-lg">✓</span>
+                    <span>Submitted! We&apos;ll email you a quote shortly.</span>
+                  </div>
+                ) : !isAuthenticated ? (
+                  <Link
+                    href="/login?redirect=/upload"
+                    className="flex items-center justify-center gap-2 w-full py-4 rounded-full gradient-primary text-white font-semibold hover:shadow-lg hover:shadow-primary/20 transition-all text-center"
+                  >
+                    Sign In to Submit
+                  </Link>
+                ) : (
+                  <button
+                    onClick={handleSubmitReference}
+                    disabled={!uploadedFile || isUploading}
+                    className="flex items-center justify-center gap-2 w-full py-4 rounded-full gradient-primary text-white font-semibold hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Submitting ({uploadProgress}%)
+                      </>
+                    ) : (
+                      <>Submit for Quote</>
+                    )}
+                  </button>
+                )}
+
+                {uploadStatus === "error" && (
+                  <p className="text-xs text-destructive font-medium mt-3">
+                    Upload failed: {uploadError}
+                  </p>
+                )}
+              </div>
+              ) : (
               <div className="sticky top-28 p-8 rounded-2xl bg-surface-container-low">
                 <div className="flex items-center gap-3 mb-6">
                   <Calculator className="w-5 h-5 text-primary" />
@@ -701,6 +797,7 @@ export default function UploadPage() {
                     : "Base estimated price. Real-time pricing applies after upload."}
                 </p>
               </div>
+              )}
             </div>
           </div>
         </div>

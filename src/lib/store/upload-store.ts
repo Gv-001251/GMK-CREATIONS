@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { useCartStore } from "./cart-store";
+import { createClient } from "@/lib/supabase/client";
 import { toast } from "@/components/toast";
 
 interface UploadOptions {
@@ -22,6 +23,7 @@ interface UploadState {
   uploadError: string | null;
   activeXHRs: XMLHttpRequest[];
   startUpload: (file: File, options: UploadOptions) => Promise<void>;
+  submitReferenceFile: (file: File) => Promise<boolean>;
   abortUpload: () => void;
 }
 
@@ -51,6 +53,57 @@ export const useUploadStore = create<UploadState>((set, get) => ({
       uploadError: null,
       activeXHRs: [],
     });
+  },
+
+  // Reference/quote-request files (images, PDFs) go to Supabase Storage and are
+  // NOT added to the paid cart. The admin reviews them and sends a quote.
+  submitReferenceFile: async (file: File) => {
+    get().abortUpload();
+    set({
+      uploadedFile: file,
+      uploadStatus: "uploading",
+      totalBytes: file.size,
+      uploadProgress: 0,
+      uploadedBytes: 0,
+      uploadSpeed: 0,
+    });
+
+    try {
+      // 1. Reserve a signed upload URL + record the file server-side.
+      const initRes = await fetch("/api/upload/supabase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: file.name, fileSize: file.size }),
+      });
+
+      if (!initRes.ok) {
+        const errData = await initRes.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to start upload");
+      }
+
+      const { bucket, path, token } = await initRes.json();
+
+      // 2. Upload directly to Supabase Storage via the signed URL.
+      const supabase = createClient();
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .uploadToSignedUrl(path, token, file, {
+          contentType: file.type || "application/octet-stream",
+        });
+
+      if (uploadError) {
+        throw new Error(uploadError.message || "Upload failed");
+      }
+
+      set({ uploadStatus: "success", uploadProgress: 100, activeXHRs: [] });
+      toast.success("File submitted! We'll review it and email you a quote.");
+      return true;
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : "Upload failed.";
+      set({ uploadStatus: "error", uploadError: errMsg });
+      toast.error(`Upload failed: ${errMsg}`);
+      return false;
+    }
   },
 
   startUpload: async (file: File, options: UploadOptions) => {

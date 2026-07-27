@@ -14,11 +14,15 @@ interface UploadedFile {
 }
 
 interface UploadFileProps {
-  onFileUploaded?: (file: File) => void;
+  onFileUploaded?: (file: File, isReference?: boolean) => void;
   onAnalysisComplete?: (analysis: STLAnalysis) => void;
   onRemoveFile?: () => void;
   compact?: boolean;
 }
+
+// Reference/quote-request files stored in Supabase (small images & PDFs).
+const REFERENCE_EXTS = ["jpg", "jpeg", "png", "webp", "pdf"];
+const MAX_REFERENCE_SIZE = 25 * 1024 * 1024; // 25MB
 
 export function UploadFile({ 
   onFileUploaded, 
@@ -29,6 +33,8 @@ export function UploadFile({
   const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyzed, setAnalyzed] = useState(false);
+  const [isReferenceFile, setIsReferenceFile] = useState(false);
+  const [sizeError, setSizeError] = useState<string | null>(null);
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -41,7 +47,16 @@ export function UploadFile({
         return `${(bytes / 1048576).toFixed(1)} MB`;
       };
 
-      const format = file.name.split(".").pop()?.toUpperCase() || "Unknown";
+      const ext = file.name.split(".").pop()?.toLowerCase() || "";
+      const format = ext.toUpperCase() || "Unknown";
+      const reference = REFERENCE_EXTS.includes(ext);
+
+      // Enforce the 25MB cap for reference files (images / PDFs).
+      if (reference && file.size > MAX_REFERENCE_SIZE) {
+        setSizeError("Reference files (images/PDF) must be 25MB or smaller.");
+        return;
+      }
+      setSizeError(null);
 
       setUploadedFile({
         file,
@@ -49,13 +64,22 @@ export function UploadFile({
         size: formatSize(file.size),
         format,
       });
+      setIsReferenceFile(reference);
 
+      onFileUploaded?.(file, reference);
+
+      // Reference files (images / PDFs) have no geometry to analyze — they're
+      // submitted for a manual quote, so we mark them ready immediately.
+      if (reference) {
+        setIsAnalyzing(false);
+        setAnalyzed(true);
+        return;
+      }
+
+      // --- 3D model: analyze geometry for the instant quote ---
       setIsAnalyzing(true);
       setAnalyzed(false);
 
-      onFileUploaded?.(file);
-
-      // Read file contents as ArrayBuffer
       const reader = new FileReader();
       reader.onload = (e) => {
         const arrayBuffer = e.target?.result;
@@ -96,7 +120,7 @@ export function UploadFile({
           }, 800);
         }
       };
-      
+
       reader.onerror = () => {
         setIsAnalyzing(false);
         setAnalyzed(false);
@@ -113,15 +137,21 @@ export function UploadFile({
       "model/stl": [".stl"],
       "model/obj": [".obj"],
       "application/octet-stream": [".stl", ".obj"],
+      "image/jpeg": [".jpg", ".jpeg"],
+      "image/png": [".png"],
+      "image/webp": [".webp"],
+      "application/pdf": [".pdf"],
     },
     maxFiles: 1,
-    maxSize: 2 * 1024 * 1024 * 1024, // 2GB
+    maxSize: 2 * 1024 * 1024 * 1024, // 2GB (per-type limits enforced in onDrop)
   });
 
   const removeFile = () => {
     setUploadedFile(null);
     setAnalyzed(false);
     setIsAnalyzing(false);
+    setIsReferenceFile(false);
+    setSizeError(null);
     onRemoveFile?.();
   };
 
@@ -151,7 +181,9 @@ export function UploadFile({
               <div className="flex items-center gap-2 mt-3">
                 <CheckCircle className="w-4 h-4 text-emerald-500" />
                 <span className="text-xs text-emerald-600 font-medium">
-                  Analysis complete — Ready for slicing
+                  {isReferenceFile
+                    ? "Reference file ready — submit for a quote"
+                    : "Analysis complete — Ready for slicing"}
                 </span>
               </div>
             )}
@@ -192,9 +224,12 @@ export function UploadFile({
             {isDragActive ? "Drop your file here" : "Drag & drop your 3D model"}
           </p>
           <p className="text-sm text-on-surface-variant mt-1">
-            Supports <span className="font-medium text-on-surface">.STL</span> and{" "}
-            <span className="font-medium text-on-surface">.OBJ</span> files up to 2GB
+            <span className="font-medium text-on-surface">.STL / .OBJ</span> models up to 2GB, or{" "}
+            <span className="font-medium text-on-surface">JPG, PNG, WEBP, PDF</span> reference files up to 25MB
           </p>
+          {sizeError && (
+            <p className="text-xs text-destructive font-medium mt-2">{sizeError}</p>
+          )}
         </div>
         <button
           type="button"

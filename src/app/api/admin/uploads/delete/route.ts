@@ -8,6 +8,10 @@ import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 // "delivered" or "cancelled" (or if it isn't attached to any order at all).
 const ACTIVE_ORDER_STATUSES = ["pending", "confirmed", "processing", "shipped"];
 
+// Reference/quote-request files (image/PDF) live in this Supabase bucket; 3D
+// model files live in Backblaze B2.
+const SUPABASE_BUCKET = "custom-uploads";
+
 export async function POST(request: Request) {
   const adminUser = await requireAdmin();
   if (!adminUser) {
@@ -40,6 +44,22 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient();
+
+  // Look up each upload's storage provider so deletions are routed to the right
+  // backend. Reference files (image/PDF) live in Supabase Storage; 3D models
+  // live in Backblaze B2 (the default for rows without an explicit provider).
+  const providerById = new Map<string, string>();
+  try {
+    const { data: rows } = await admin
+      .from("uploads")
+      .select("id, storage_provider")
+      .in("id", ids);
+    (rows || []).forEach((r: { id: number | string; storage_provider: string | null }) => {
+      providerById.set(String(r.id), r.storage_provider || "b2");
+    });
+  } catch (e) {
+    console.error("Failed to look up upload providers:", e);
+  }
 
   // ── Enforce order-status lock ──────────────────────────────────────────────
   // A file that belongs to an order still being fulfilled cannot be deleted.
@@ -94,11 +114,11 @@ export async function POST(request: Request) {
   }
 
   // Partition the request into files we may delete vs files locked by an order.
-  const deletable: { id: unknown; key: string }[] = [];
+  const deletable: { id: unknown; key: string; provider: string }[] = [];
   const blockedKeys: string[] = [];
   for (let i = 0; i < keys.length; i++) {
     if (lockedKeys.has(keys[i])) blockedKeys.push(keys[i]);
-    else deletable.push({ id: ids[i], key: keys[i] });
+    else deletable.push({ id: ids[i], key: keys[i], provider: providerById.get(String(ids[i])) || "b2" });
   }
 
   // Nothing can be deleted — every requested file is tied to an active order.
@@ -116,37 +136,58 @@ export async function POST(request: Request) {
   }
 
   try {
-    // Delete files from Backblaze B2 individually. B2 has no bulk-delete API, so
-    // we issue one DeleteObjectCommand per file and use allSettled so a single
-    // failure doesn't abort the batch — DB rows are removed only for files that
-    // were actually deleted, keeping B2 and the DB in sync.
+    // DB rows are removed only for files that were actually deleted from
+    // storage, keeping storage and the DB in sync.
     const deletedIds: unknown[] = [];
     const failures: { key: string; reason: string }[] = [];
 
-    console.log(`Deleting ${deletable.length} files from B2 bucket...`);
-    const results = await Promise.allSettled(
-      deletable.map(({ key }) =>
-        s3Client.send(
-          new DeleteObjectCommand({
-            Bucket: process.env.B2_BUCKET_NAME,
-            Key: key,
-          })
+    // Route each deletable file to its storage backend.
+    const b2Files = deletable.filter((d) => d.provider !== "supabase");
+    const supabaseFiles = deletable.filter((d) => d.provider === "supabase");
+
+    // Backblaze B2 has no bulk-delete API, so we issue one DeleteObjectCommand
+    // per file and use allSettled so a single failure doesn't abort the batch.
+    if (b2Files.length > 0) {
+      console.log(`Deleting ${b2Files.length} files from B2 bucket...`);
+      const results = await Promise.allSettled(
+        b2Files.map(({ key }) =>
+          s3Client.send(
+            new DeleteObjectCommand({
+              Bucket: process.env.B2_BUCKET_NAME,
+              Key: key,
+            })
+          )
         )
-      )
-    );
+      );
 
-    results.forEach((result, i) => {
-      if (result.status === "fulfilled") {
-        deletedIds.push(deletable[i].id);
+      results.forEach((result, i) => {
+        if (result.status === "fulfilled") {
+          deletedIds.push(b2Files[i].id);
+        } else {
+          const reason =
+            result.reason instanceof Error ? result.reason.message : String(result.reason);
+          console.error(`Failed to delete B2 object "${b2Files[i].key}":`, reason);
+          failures.push({ key: b2Files[i].key, reason });
+        }
+      });
+    }
+
+    // Supabase Storage supports removing multiple objects in a single call.
+    if (supabaseFiles.length > 0) {
+      console.log(`Deleting ${supabaseFiles.length} files from Supabase Storage...`);
+      const { error: removeError } = await admin.storage
+        .from(SUPABASE_BUCKET)
+        .remove(supabaseFiles.map((f) => f.key));
+
+      if (removeError) {
+        console.error("Failed to delete Supabase files:", removeError.message);
+        supabaseFiles.forEach((f) => failures.push({ key: f.key, reason: removeError.message }));
       } else {
-        const reason =
-          result.reason instanceof Error ? result.reason.message : String(result.reason);
-        console.error(`Failed to delete B2 object "${deletable[i].key}":`, reason);
-        failures.push({ key: deletable[i].key, reason });
+        supabaseFiles.forEach((f) => deletedIds.push(f.id));
       }
-    });
+    }
 
-    // Delete DB records only for files successfully removed from B2.
+    // Delete DB records only for files successfully removed from storage.
     if (deletedIds.length > 0) {
       console.log(`Deleting ${deletedIds.length} database records from uploads...`);
       const { error: dbError } = await admin

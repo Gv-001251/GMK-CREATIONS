@@ -13,6 +13,8 @@ interface UploadedFile {
   file_size: number;
   file_format: string;
   storage_path: string;
+  // "supabase" for reference files (image/PDF); defaults to "b2" for 3D models.
+  storage_provider?: string;
   created_at: string;
   // Set when the file belongs to an order still being fulfilled — such files
   // can only be deleted once the order is delivered or cancelled.
@@ -53,13 +55,13 @@ export default function AdminUploadsPage() {
   // Live-update: re-fetch whenever any uploads row changes in the DB
   useRealtimeAdmin({ onUploadsChange: fetchUploads });
 
-  const handleDownloadFile = async (path: string, fileName: string) => {
+  const handleDownloadFile = async (path: string, fileName: string, provider?: string) => {
     setDownloadingPath(path);
     try {
       const res = await fetch("/api/admin/models/sign", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ path }),
+        body: JSON.stringify({ path, provider }),
       });
 
       if (!res.ok) {
@@ -88,7 +90,7 @@ export default function AdminUploadsPage() {
 
   // Handle single deletion
   const handleDeleteSingle = async (id: number, key: string) => {
-    if (!confirm("Are you sure you want to permanently delete this file from B2 storage and database? This cannot be undone.")) {
+    if (!confirm("Are you sure you want to permanently delete this file from storage and database? This cannot be undone.")) {
       return;
     }
 
@@ -106,7 +108,7 @@ export default function AdminUploadsPage() {
         throw new Error(data.error || "Failed to delete file");
       }
 
-      toast.success("File deleted successfully from B2 storage and database.");
+      toast.success("File deleted successfully from storage and database.");
       fetchUploads();
     } catch (err: any) {
       console.error("Delete error:", err);
@@ -120,7 +122,7 @@ export default function AdminUploadsPage() {
   const handleDeleteBulk = async () => {
     if (selectedIds.length === 0) return;
     
-    if (!confirm(`Are you sure you want to permanently delete the ${selectedIds.length} selected files from B2 storage and database? This cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to permanently delete the ${selectedIds.length} selected files from storage and database? This cannot be undone.`)) {
       return;
     }
 
@@ -212,7 +214,7 @@ export default function AdminUploadsPage() {
       <div>
         <h1 className="font-heading text-3xl font-bold text-on-surface tracking-tight">Uploads</h1>
         <p className="text-on-surface-variant mt-2">
-          Browse, download, and delete custom 3D model files (.stl, .obj) uploaded by users.
+          Browse, download, and delete custom 3D model files (.stl, .obj) and reference files (image/PDF) uploaded by users.
         </p>
       </div>
 
@@ -339,7 +341,7 @@ export default function AdminUploadsPage() {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           type="button"
-                          onClick={() => handleDownloadFile(upload.storage_path, upload.file_name)}
+                          onClick={() => handleDownloadFile(upload.storage_path, upload.file_name, upload.storage_provider)}
                           disabled={downloadingPath === upload.storage_path}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl gradient-primary text-white text-xs font-semibold hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
