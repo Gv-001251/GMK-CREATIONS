@@ -254,11 +254,11 @@ export default function HomeClient() {
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ delay: i * 0.05, type: "spring", stiffness: 100 }}
                 whileHover={{ y: -8 }}
-                className="bg-white dark:bg-zinc-900 rounded-[40px] border border-slate-200/50 dark:border-zinc-800/50 p-[11px] flex flex-col group transition-all duration-300 hover:shadow-xl"
+                className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/50 dark:border-zinc-800/50 p-2.75 flex flex-col group transition-all duration-300 hover:shadow-xl"
               >
                 <Link href={`/products/${p.slug}`} className="flex flex-col h-full w-full">
                   {/* Image Container */}
-                  <div className="relative aspect-[71/78] overflow-hidden bg-slate-50 dark:bg-zinc-800 rounded-[32px] w-full">
+                  <div className="relative aspect-71/78 overflow-hidden bg-slate-50 dark:bg-zinc-800 rounded-[32px] w-full">
                     <Image
                       src={p.image || "/images/products/organic-sculptures.png"}
                       alt={p.name}
@@ -306,7 +306,7 @@ export default function HomeClient() {
       {/* ── SECTION 3: ABOUT GMK ── */}
       <section className="py-24 px-4 sm:px-6 bg-background" id="about">
         <div 
-          className="max-w-7xl mx-auto relative overflow-hidden rounded-[48px] p-12 md:py-26 md:px-16 border border-slate-800 shadow-xl bg-slate-950"
+          className="max-w-7xl mx-auto relative overflow-hidden rounded-3xl p-12 md:py-26 md:px-16 border border-slate-800 shadow-xl bg-slate-950"
         >
 
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
@@ -316,7 +316,7 @@ export default function HomeClient() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="relative aspect-video lg:aspect-[4/3] rounded-[32px] overflow-hidden border border-white/10 shadow-lg bg-slate-900 group"
+              className="relative aspect-video lg:aspect-4/3 rounded-[32px] overflow-hidden border border-white/10 shadow-lg bg-slate-900 group"
             >
               <Image
                 src="/images/home-img.jpg"
@@ -326,7 +326,7 @@ export default function HomeClient() {
                 className="object-cover group-hover:scale-102 transition-transform duration-500"
               />
               {/* Visual overlay for premium style */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent z-10" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent z-10" />
             </motion.div>
 
             {/* Right Layout Editorial */}
@@ -345,7 +345,7 @@ export default function HomeClient() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5 }}
-                  className="font-heading text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight [text-shadow:_0_2px_10px_rgba(0,0,0,0.4)]"
+                  className="font-heading text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight [text-shadow:0_2px_10px_rgba(0,0,0,0.4)]"
                 >
                   Crafting Precision,<br />Layer by Layer.
                 </motion.h2>
@@ -354,7 +354,7 @@ export default function HomeClient() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.1 }}
-                  className="mt-4 text-slate-100 leading-relaxed font-body text-sm sm:text-base font-medium [text-shadow:_0_1px_5px_rgba(0,0,0,0.3)]"
+                  className="mt-4 text-slate-100 leading-relaxed font-body text-sm sm:text-base font-medium [text-shadow:0_1px_5px_rgba(0,0,0,0.3)]"
                 >
                   At GMK 3D Creations, we bridge the gap between imagination and physical reality. Leveraging industrial-grade additive manufacturing and professional design services, we deliver micro-precise 3D prints for engineering, decor, and hobbyist communities.
                 </motion.p>
@@ -435,7 +435,7 @@ export default function HomeClient() {
                 {/* Dashed Connector Line */}
                 {idx < 4 && (
                   <div className="hidden md:block absolute top-10 left-[60%] right-[-40%] h-[1.5px] border-t border-dashed border-slate-300 z-0">
-                    <div className="absolute right-0 top-[-3px] w-1.5 h-1.5 border-r border-b border-slate-400 rotate-[-45deg]" />
+                    <div className="absolute right-0 -top-0.75 w-1.5 h-1.5 border-r border-b border-slate-400 -rotate-45" />
                   </div>
                 )}
 
@@ -451,7 +451,7 @@ export default function HomeClient() {
                 <h3 className="font-heading text-sm font-extrabold text-slate-950 mb-1.5">
                   {s.title}
                 </h3>
-                <p className="text-xs text-slate-500 leading-relaxed max-w-[160px]">
+                <p className="text-xs text-slate-500 leading-relaxed max-w-40">
                   {s.desc}
                 </p>
               </div>
@@ -521,7 +521,7 @@ export default function HomeClient() {
                 className="bg-white rounded-3xl border border-slate-200/50 p-8 flex flex-col gap-6 shadow-sm hover:shadow-md transition-all duration-300"
               >
                 {/* Large Illustration/Graphic */}
-                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${f.color} flex items-center justify-center text-slate-800`}>
+                <div className={`w-14 h-14 rounded-2xl bg-linear-to-br ${f.color} flex items-center justify-center text-slate-800`}>
                   <f.icon className="w-7 h-7" />
                 </div>
                 <div>
@@ -559,7 +559,7 @@ export default function HomeClient() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ delay: idx * 0.05 }}
-                className={`${item.size} relative rounded-3xl overflow-hidden group border border-slate-200/40 bg-slate-50 shadow-sm`}
+                className={`${item.size} break-inside-avoid w-full relative rounded-3xl overflow-hidden group border border-slate-200/40 bg-slate-50 shadow-sm`}
               >
                 <Image
                   src={item.img}
@@ -570,7 +570,7 @@ export default function HomeClient() {
                 />
                 
                 {/* Gradient overlay on hover */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
 
                 {/* Details revealed on hover */}
                 <div className="absolute inset-0 flex flex-col justify-end p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
@@ -625,7 +625,7 @@ export default function HomeClient() {
             {[...reviews, ...reviews].map((t, i) => (
               <div
                 key={i}
-                className="min-w-[280px] sm:min-w-[340px] max-w-[340px] flex-shrink-0 bg-white rounded-2xl p-6 border border-slate-200/50 flex flex-col gap-4 shadow-sm snap-align-start"
+                className="min-w-70 sm:min-w-85 max-w-85 shrink-0 bg-white rounded-2xl p-6 border border-slate-200/50 flex flex-col gap-4 shadow-sm snap-align-start"
               >
                 {/* Stars */}
                 <div className="flex gap-1">
@@ -644,7 +644,7 @@ export default function HomeClient() {
 
                 {/* Customer */}
                 <div className="flex items-center gap-3 border-t border-slate-50 pt-4 mt-2">
-                  <div className="relative w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-slate-100">
+                  <div className="relative w-9 h-9 rounded-full overflow-hidden shrink-0 bg-slate-100">
                     <img
                       src={reviewAvatars[i % reviewAvatars.length]}
                       alt={t.name}
@@ -670,7 +670,7 @@ export default function HomeClient() {
             style={{ backgroundImage: "url('/images/lets%20connect.jpeg')" }}
           >
             {/* Gradient overlay to keep text readable on the left while revealing the crinkly metallic background on the right */}
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 to-slate-950/60 md:bg-gradient-to-r md:from-slate-950/85 md:via-slate-950/45 md:to-transparent z-0 pointer-events-none" />
+            <div className="absolute inset-0 bg-linear-to-b from-slate-950/80 to-slate-950/60 md:bg-linear-to-r md:from-slate-950/85 md:via-slate-950/45 md:to-transparent z-0 pointer-events-none" />
 
             <div className="relative z-10 max-w-xl flex flex-col items-start text-left">
               <motion.div 

@@ -537,7 +537,7 @@ export default function UploadPage() {
 
                 <div className="flex justify-between mb-4">
                   <span className="text-sm text-on-surface-variant">File</span>
-                  <span className="text-sm font-medium text-on-surface truncate max-w-[200px]">
+                  <span className="text-sm font-medium text-on-surface truncate max-w-50">
                     {uploadedFile ? uploadedFile.name : "No file uploaded"}
                   </span>
                 </div>
@@ -637,7 +637,7 @@ export default function UploadPage() {
                 <div className="space-y-4 mb-8">
                   <div className="flex justify-between">
                     <span className="text-sm text-on-surface-variant">File</span>
-                    <span className="text-sm font-medium text-on-surface truncate max-w-[200px]">
+                    <span className="text-sm font-medium text-on-surface truncate max-w-50">
                       {uploadedFile ? uploadedFile.name : "No file uploaded"}
                     </span>
                   </div>
