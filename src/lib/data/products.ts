@@ -301,20 +301,7 @@ export const products: Product[] = [
 ];
 
 export function getProductBySlug(slug: string): Product | undefined {
+  // DEPRECATED: Use the products store or API instead.
+  // Kept only for backward compatibility with seed scripts.
   return products.find((p) => p.slug === slug);
-}
-
-export function getProductsByCategory(category: string): Product[] {
-  if (category === "all") return products;
-  return products.filter((p) => p.category === category);
-}
-
-export function getFeaturedProducts(): Product[] {
-  return products.filter((p) => p.featured);
-}
-
-export function getRecommendedProducts(excludeId?: string): Product[] {
-  return products
-    .filter((p) => p.id !== excludeId)
-    .slice(0, 4);
 }

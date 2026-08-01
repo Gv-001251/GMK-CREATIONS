@@ -77,8 +77,8 @@ function SignupForm() {
       <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 pt-28 pb-12 bg-background relative overflow-hidden">
         {/* Floating Premium Ambient Neon Glows */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
-          <div className="absolute top-[15%] left-[-10%] w-[380px] h-[380px] rounded-full bg-primary/8 blur-[110px] animate-pulse duration-5000" />
-          <div className="absolute bottom-[15%] right-[-10%] w-[420px] h-[420px] rounded-full bg-tertiary/10 blur-[130px] animate-pulse duration-7000" />
+          <div className="absolute top-[15%] left-[-10%] w-95 h-95 rounded-full bg-primary/8 blur-[110px] animate-pulse duration-5000" />
+          <div className="absolute bottom-[15%] right-[-10%] w-105 h-105 rounded-full bg-tertiary/10 blur-[130px] animate-pulse duration-7000" />
         </div>
 
         <div className="w-full max-w-md relative z-10">

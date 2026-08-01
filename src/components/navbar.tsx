@@ -133,7 +133,7 @@ export function Navbar() {
 
                     {/* Mega Menu Dropdown */}
                     {megaMenuOpen && (
-                      <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 w-[550px] rounded-3xl bg-background shadow-2xl border border-outline-variant/60 p-5 grid grid-cols-2 gap-3 animate-slide-down z-50">
+                      <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 w-137.5 rounded-3xl bg-background shadow-2xl border border-outline-variant/60 p-5 grid grid-cols-2 gap-3 animate-slide-down z-50">
                         {[
                           { title: "Home Decor", desc: "Vases, planters, and decorative lamps.", href: "/products?category=decor" },
                           { title: "Figurines", desc: "Detailed action figures and sculptures.", href: "/products?category=miniatures" },
@@ -191,7 +191,7 @@ export function Navbar() {
                   <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold">
                     {user.name.charAt(0).toUpperCase()}
                   </div>
-                  <span className="hidden md:inline text-sm font-medium text-on-surface max-w-[100px] truncate">
+                  <span className="hidden md:inline text-sm font-medium text-on-surface max-w-25 truncate">
                     {user.name}
                   </span>
                   <ChevronDown className={`hidden md:block w-3.5 h-3.5 text-on-surface-variant transition-transform ${userDropdownOpen ? "rotate-180" : ""}`} />

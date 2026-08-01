@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { type Product, products as defaultProducts } from "@/lib/data/products";
+import type { Product } from "@/lib/data/products";
 import { rowToProduct } from "@/lib/utils/product-mapper";
 
 interface ProductsState {
@@ -33,7 +33,7 @@ function mergeProducts(baseProducts: Product[], incomingProducts: Product[]): Pr
 
 export const useProductsStore = create<ProductsState>()(
   (set, get) => ({
-    products: defaultProducts,
+    products: [],
     isLoading: false,
 
     fetchProducts: async (limit = 1000, offset = 0) => {
@@ -76,13 +76,12 @@ export const useProductsStore = create<ProductsState>()(
             isLoading: false,
           }));
         } else {
-          // DB returned nothing — fall back to bundled defaults so the store isn't empty
-          if (offset === 0) set({ products: defaultProducts, isLoading: false });
-          else set({ isLoading: false });
+          // DB returned nothing — keep the store empty (products come only from the DB)
+          set({ isLoading: false });
         }
       } catch {
-        if (offset === 0) set({ products: defaultProducts, isLoading: false });
-        else set({ isLoading: false });
+        // DB unreachable — keep whatever products are already loaded (or empty)
+        set({ isLoading: false });
       }
     },
 
