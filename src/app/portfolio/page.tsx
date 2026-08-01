@@ -13,6 +13,7 @@ const scriptFont = Great_Vibes({
 
 const ferron = localFont({
   src: "../../../public/images/font/Ferron-Regular.otf",
+  preload: false,
 });
 
 

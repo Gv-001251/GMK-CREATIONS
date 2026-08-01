@@ -204,7 +204,7 @@ export default function UploadPage() {
         productId: `upload-${Date.now()}`,
         name: `Custom Print: ${uploadedFile.name}${scaleString}`,
         price: calculatedUnitPrice,
-        image: analysis?.thumbnail || "/images/hero-sphere.png",
+        image: analysis?.thumbnail || "/images/logo.jpeg",
         material: `${selectedMaterialData?.name || "PLA"}${weightString} @ ${infillPercent}% infill`,
         finish: `${finishes.find((f) => f.id === selectedFinish)?.name || "Matte"} (${sizeString})`,
         quantity,

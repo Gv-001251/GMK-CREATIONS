@@ -11,9 +11,9 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#6d5cff',
     icons: [
       {
-        src: '/images/hero-sphere.png',
+        src: '/images/logo.jpeg',
         sizes: 'any',
-        type: 'image/png',
+        type: 'image/jpeg',
       },
     ],
   };
