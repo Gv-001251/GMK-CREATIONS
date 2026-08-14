@@ -1,4 +1,4 @@
-import { Layers, Wrench, Briefcase, Cpu, Lamp, Gem, Palette, Trophy } from "lucide-react";
+import { Layers, Wrench, Briefcase, Cpu, Lamp, Gem, Palette, Trophy, Dumbbell } from "lucide-react";
 import { type LucideIcon } from "lucide-react";
 
 export interface Category {
@@ -18,4 +18,5 @@ export const categories: Category[] = [
   { id: "art", name: "Art", slug: "art", icon: Palette, productCount: 61 },
   { id: "trophy", name: "Trophy", slug: "trophy", icon: Trophy, productCount: 9 },
   { id: "jewelry", name: "Jewelry", slug: "jewelry", icon: Gem, productCount: 0 },
+  { id: "fitness", name: "Fitness", slug: "fitness", icon: Dumbbell, productCount: 0 },
 ];

@@ -140,6 +140,7 @@ export function Navbar() {
                           { title: "Industrial Parts", desc: "Functional prototypes and mechanical gears.", href: "/products?category=prototypes" },
                           { title: "Architecture", desc: "Scaled models and landscape replicas.", href: "/products?category=architecture" },
                           { title: "Accessories", desc: "Custom keychains and daily accessories.", href: "/products?category=edc-gear" },
+                          { title: "Fitness", desc: "Gym figures, trophies, and workout gear.", href: "/products?category=fitness" },
                           { title: "Custom Orders", desc: "Got a custom file? Upload it for an instant quote.", href: "/upload" },
                         ].map((cat) => (
                           <Link
@@ -312,6 +313,7 @@ export function Navbar() {
                             { title: "Industrial Parts", href: "/products?category=prototypes" },
                             { title: "Architecture", href: "/products?category=architecture" },
                             { title: "Accessories", href: "/products?category=edc-gear" },
+                            { title: "Fitness", href: "/products?category=fitness" },
                             { title: "Custom Orders", href: "/upload" },
                           ].map((cat) => (
                             <Link
