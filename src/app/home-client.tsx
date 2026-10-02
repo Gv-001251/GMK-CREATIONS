@@ -218,19 +218,19 @@ export default function HomeClient() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-background text-on-surface">
+    <main className="min-h-screen bg-[#09090b] text-white">
       <Navbar />
       <HeroSection />
 
       {/* ── SECTION 2: FEATURED CREATIONS ── */}
-      <section className="py-24 px-4 sm:px-6 bg-background">
+      <section className="py-24 px-4 sm:px-6 bg-[#09090b]">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <motion.h2 
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
-              className="font-heading text-3xl sm:text-4xl font-bold tracking-tight text-slate-900"
+              className="font-heading text-3xl sm:text-4xl font-bold tracking-tight text-white"
             >
               Featured Creations
             </motion.h2>
@@ -239,7 +239,7 @@ export default function HomeClient() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
               transition={{ delay: 0.1 }}
-              className="mt-3 text-base text-slate-500 max-w-xl mx-auto"
+              className="mt-3 text-base text-zinc-400 max-w-xl mx-auto"
             >
               Discover some of our most loved 3D printed products.
             </motion.p>
@@ -254,11 +254,11 @@ export default function HomeClient() {
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ delay: i * 0.05, type: "spring", stiffness: 100 }}
                 whileHover={{ y: -8 }}
-                className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200/50 dark:border-zinc-800/50 p-2.75 flex flex-col group transition-all duration-300 hover:shadow-xl"
+                className="bg-[#121216] rounded-2xl border border-white/10 p-2.75 flex flex-col group transition-all duration-300 hover:shadow-2xl hover:border-white/20"
               >
                 <Link href={`/products/${p.slug}`} className="flex flex-col h-full w-full">
                   {/* Image Container */}
-                  <div className="relative aspect-71/78 overflow-hidden bg-slate-50 dark:bg-zinc-800 rounded-[32px] w-full">
+                  <div className="relative aspect-71/78 overflow-hidden bg-[#1a1a22] rounded-[32px] w-full">
                     <Image
                       src={p.image || "/images/products/organic-sculptures.png"}
                       alt={p.name}
@@ -267,31 +267,31 @@ export default function HomeClient() {
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                       unoptimized={(p.image || "").startsWith("http") || (p.image || "").includes("supabase")}
                     />
-                    <span className="absolute top-4 left-4 px-4 py-1.5 rounded-xl bg-white text-[11px] font-mono font-bold text-slate-900 shadow-sm uppercase tracking-wider backdrop-blur-sm">
+                    <span className="absolute top-4 left-4 px-4 py-1.5 rounded-xl bg-black/70 backdrop-blur-md text-[11px] font-mono font-bold text-white shadow-sm uppercase tracking-wider border border-white/10">
                       {p.category.replace("-", " ")}
                     </span>
                   </div>
 
                   {/* Details */}
                   <div className="flex flex-col flex-1 pl-[7.61%] pr-[6.88%] pb-[5.16%] mt-[21.82px]">
-                    <h3 className="font-mono text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                    <h3 className="font-mono text-lg sm:text-xl font-bold text-white tracking-tight leading-snug group-hover:text-blue-400 transition-colors line-clamp-2">
                       {p.name}
                     </h3>
-                    <p className="font-mono text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-2 mb-6 leading-relaxed line-clamp-3 flex-1">
+                    <p className="font-mono text-[11px] sm:text-xs text-zinc-400 mt-2 mb-6 leading-relaxed line-clamp-3 flex-1">
                       {p.description}
                     </p>
                     <div className="flex items-end justify-between mt-auto">
                       <div className="flex flex-col">
                         {p.priceLabel && (
-                          <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500 line-through mb-1 block">
+                          <span className="font-mono text-[10px] text-zinc-500 line-through mb-1 block">
                             {p.priceLabel}
                           </span>
                         )}
-                        <span className="font-mono text-lg sm:text-xl font-bold text-slate-900 dark:text-white leading-none">
+                        <span className="font-mono text-lg sm:text-xl font-bold text-white leading-none">
                           ₹{p.price.toLocaleString("en-IN")}
                         </span>
                       </div>
-                      <div className="text-slate-900 dark:text-white transition-transform duration-300 group-hover:translate-x-1 mb-0.5">
+                      <div className="text-zinc-300 group-hover:text-white transition-transform duration-300 group-hover:translate-x-1 mb-0.5">
                         <ChevronRight className="w-7 h-7 stroke-[2.5px]" />
                       </div>
                     </div>
@@ -304,9 +304,9 @@ export default function HomeClient() {
       </section>
 
       {/* ── SECTION 3: ABOUT GMK ── */}
-      <section className="py-24 px-4 sm:px-6 bg-background" id="about">
+      <section className="py-24 px-4 sm:px-6 bg-[#09090b]" id="about">
         <div 
-          className="max-w-7xl mx-auto relative overflow-hidden rounded-3xl p-12 md:py-26 md:px-16 border border-slate-800 shadow-xl bg-slate-950"
+          className="max-w-7xl mx-auto relative overflow-hidden rounded-3xl p-12 md:py-26 md:px-16 border border-white/10 shadow-2xl bg-[#121216]"
         >
 
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
@@ -326,7 +326,7 @@ export default function HomeClient() {
                 className="object-cover group-hover:scale-102 transition-transform duration-500"
               />
               {/* Visual overlay for premium style */}
-              <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent z-10" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent z-10" />
             </motion.div>
 
             {/* Right Layout Editorial */}
@@ -336,7 +336,7 @@ export default function HomeClient() {
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
-                  className="text-xs font-extrabold text-white bg-primary border border-primary/20 px-3 py-1 rounded-full w-max block mb-3 uppercase tracking-widest shadow-md"
+                  className="text-xs font-extrabold text-white bg-blue-600/80 border border-blue-400/30 px-3 py-1 rounded-full w-max block mb-3 uppercase tracking-widest shadow-md"
                 >
                   Our Core Expertise
                 </motion.span>
@@ -345,7 +345,7 @@ export default function HomeClient() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5 }}
-                  className="font-heading text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight [text-shadow:0_2px_10px_rgba(0,0,0,0.4)]"
+                  className="font-heading text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight"
                 >
                   Crafting Precision,<br />Layer by Layer.
                 </motion.h2>
@@ -354,7 +354,7 @@ export default function HomeClient() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.1 }}
-                  className="mt-4 text-slate-100 leading-relaxed font-body text-sm sm:text-base font-medium [text-shadow:0_1px_5px_rgba(0,0,0,0.3)]"
+                  className="mt-4 text-zinc-300 leading-relaxed font-body text-sm sm:text-base font-normal"
                 >
                   At GMK 3D Creations, we bridge the gap between imagination and physical reality. Leveraging industrial-grade additive manufacturing and professional design services, we deliver micro-precise 3D prints for engineering, decor, and hobbyist communities.
                 </motion.p>
@@ -374,13 +374,13 @@ export default function HomeClient() {
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
                     transition={{ delay: idx * 0.05 }}
-                    className="bg-black/60 border border-white/10 backdrop-blur-md rounded-2xl p-5 shadow-sm flex flex-col gap-1 text-white"
+                    className="bg-black/50 border border-white/10 backdrop-blur-md rounded-2xl p-5 shadow-sm flex flex-col gap-1 text-white"
                   >
                     <span className="text-2xl font-black text-white font-heading">
                       <AnimatedNumber value={stat.end} />
                       {stat.suffix}
                     </span>
-                    <span className="text-xs font-semibold text-slate-200 leading-tight">
+                    <span className="text-xs font-semibold text-zinc-300 leading-tight">
                       {stat.label}
                     </span>
                   </motion.div>
@@ -392,13 +392,13 @@ export default function HomeClient() {
       </section>
 
       {/* ── SECTION 4: MATERIALS WE PRINT ── */}
-      <section className="py-24 px-4 sm:px-6 bg-background" id="materials">
+      <section className="py-24 px-4 sm:px-6 bg-[#09090b]" id="materials">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900">
+            <h2 className="font-heading text-3xl font-bold tracking-tight text-white">
               Materials We Print
             </h2>
-            <p className="mt-3 text-base text-slate-500 max-w-xl mx-auto">
+            <p className="mt-3 text-base text-zinc-400 max-w-xl mx-auto">
               Choose the perfect filament or resin matching your application strength and finish.
             </p>
           </div>
@@ -412,13 +412,13 @@ export default function HomeClient() {
       </section>
 
       {/* ── SECTION 5: HOW IT WORKS ── */}
-      <section className="py-24 px-4 sm:px-6 bg-background">
-        <div className="max-w-7xl mx-auto bg-[#eef2f6] rounded-[32px] p-8 md:p-14 border border-slate-200/60 shadow-sm relative overflow-hidden">
+      <section className="py-24 px-4 sm:px-6 bg-[#09090b]">
+        <div className="max-w-7xl mx-auto bg-[#121216] rounded-[32px] p-8 md:p-14 border border-white/10 shadow-2xl relative overflow-hidden">
           <div className="text-center mb-16 relative z-10">
-            <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900">
+            <h2 className="font-heading text-3xl font-bold tracking-tight text-white">
               How It Works
             </h2>
-            <p className="mt-3 text-sm text-slate-500 max-w-lg mx-auto">
+            <p className="mt-3 text-sm text-zinc-400 max-w-lg mx-auto">
               A streamlined, high-precision lifecycle from concept to delivery.
             </p>
           </div>
@@ -434,24 +434,24 @@ export default function HomeClient() {
               <div key={s.step} className="flex flex-col items-center text-center relative group">
                 {/* Dashed Connector Line */}
                 {idx < 4 && (
-                  <div className="hidden md:block absolute top-10 left-[60%] right-[-40%] h-[1.5px] border-t border-dashed border-slate-300 z-0">
-                    <div className="absolute right-0 -top-0.75 w-1.5 h-1.5 border-r border-b border-slate-400 -rotate-45" />
+                  <div className="hidden md:block absolute top-10 left-[60%] right-[-40%] h-[1.5px] border-t border-dashed border-white/20 z-0">
+                    <div className="absolute right-0 -top-0.75 w-1.5 h-1.5 border-r border-b border-white/40 -rotate-45" />
                   </div>
                 )}
 
                 {/* Circle Icon Badge */}
-                <div className="w-20 h-20 rounded-full bg-white border border-slate-200 flex items-center justify-center mb-5 shadow-sm text-primary group-hover:scale-105 group-hover:border-primary transition-all duration-300 z-10">
+                <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-5 shadow-sm text-blue-400 group-hover:scale-105 group-hover:border-blue-400 transition-all duration-300 z-10">
                   <s.icon className="w-8 h-8" />
                 </div>
 
                 {/* Step Content */}
-                <span className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-1">
+                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest block mb-1">
                   Step {s.step}
                 </span>
-                <h3 className="font-heading text-sm font-extrabold text-slate-950 mb-1.5">
+                <h3 className="font-heading text-sm font-extrabold text-white mb-1.5">
                   {s.title}
                 </h3>
-                <p className="text-xs text-slate-500 leading-relaxed max-w-40">
+                <p className="text-xs text-zinc-400 leading-relaxed max-w-40">
                   {s.desc}
                 </p>
               </div>
@@ -461,13 +461,13 @@ export default function HomeClient() {
       </section>
 
       {/* ── SECTION 6: WHY CHOOSE GMK ── */}
-      <section className="py-24 px-4 sm:px-6 bg-background" id="why-choose-gmk">
+      <section className="py-24 px-4 sm:px-6 bg-[#09090b]" id="why-choose-gmk">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900">
+            <h2 className="font-heading text-3xl font-bold tracking-tight text-white">
               Why Choose GMK
             </h2>
-            <p className="mt-3 text-base text-slate-500 max-w-xl mx-auto">
+            <p className="mt-3 text-base text-zinc-400 max-w-xl mx-auto">
               Engineered layer consistency and technical reliability at every turn.
             </p>
           </div>
@@ -478,37 +478,37 @@ export default function HomeClient() {
                 title: "High Precision Printing",
                 desc: "0.1mm accuracy layer height configuration delivers exceptional details in curves and structural profiles.",
                 icon: Boxes,
-                color: "from-blue-500/10 to-indigo-500/10"
+                color: "from-blue-500/20 to-indigo-500/20"
               },
               {
                 title: "Premium Materials",
                 desc: "PLA, PETG, and TPU sourced from trusted chemical hubs ensure durability and beautiful aesthetic finishes.",
                 icon: Sparkles,
-                color: "from-emerald-500/10 to-teal-500/10"
+                color: "from-emerald-500/20 to-teal-500/20"
               },
               {
                 title: "Fast Turnaround",
                 desc: "Equipped with high-speed cores, we ensure typical 3D printing orders are delivered inside 48 hours.",
                 icon: Clock,
-                color: "from-amber-500/10 to-orange-500/10"
+                color: "from-amber-500/20 to-orange-500/20"
               },
               {
                 title: "Custom Design Assistance",
                 desc: "Our CAD specialists provide validation reviews to fix manifold shells and support issues before printing.",
                 icon: Shield,
-                color: "from-purple-500/10 to-fuchsia-500/10"
+                color: "from-purple-500/20 to-fuchsia-500/20"
               },
               {
                 title: "Affordable Pricing",
                 desc: "Optimized toolpaths and zero baseline tooling cost ensure direct, affordable options for hobbyists and startups alike.",
                 icon: Coins,
-                color: "from-rose-500/10 to-pink-500/10"
+                color: "from-rose-500/20 to-pink-500/20"
               },
               {
                 title: "Quality Inspection Guarantee",
                 desc: "Every print goes through structural, flex, and dimensional checks to ensure error-free deliveries.",
                 icon: Award,
-                color: "from-teal-500/10 to-cyan-500/10"
+                color: "from-teal-500/20 to-cyan-500/20"
               }
             ].map((f, i) => (
               <motion.div
@@ -518,17 +518,17 @@ export default function HomeClient() {
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ delay: i * 0.05 }}
                 whileHover={{ y: -6 }}
-                className="bg-white rounded-3xl border border-slate-200/50 p-8 flex flex-col gap-6 shadow-sm hover:shadow-md transition-all duration-300"
+                className="bg-[#121216] rounded-3xl border border-white/10 p-8 flex flex-col gap-6 shadow-sm hover:shadow-xl hover:border-white/20 transition-all duration-300"
               >
                 {/* Large Illustration/Graphic */}
-                <div className={`w-14 h-14 rounded-2xl bg-linear-to-br ${f.color} flex items-center justify-center text-slate-800`}>
+                <div className={`w-14 h-14 rounded-2xl bg-linear-to-br ${f.color} flex items-center justify-center text-white border border-white/10`}>
                   <f.icon className="w-7 h-7" />
                 </div>
                 <div>
-                  <h3 className="font-heading text-lg font-bold text-slate-900 mb-2">
+                  <h3 className="font-heading text-lg font-bold text-white mb-2">
                     {f.title}
                   </h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">
+                  <p className="text-xs text-zinc-400 leading-relaxed">
                     {f.desc}
                   </p>
                 </div>
@@ -539,13 +539,13 @@ export default function HomeClient() {
       </section>
 
       {/* ── SECTION 7: LATEST PORTFOLIO ── */}
-      <section className="py-24 px-4 sm:px-6 bg-background border-t border-slate-100" id="portfolio">
+      <section className="py-24 px-4 sm:px-6 bg-[#09090b] border-t border-white/10" id="portfolio">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900">
+            <h2 className="font-heading text-3xl font-bold tracking-tight text-white">
               Latest Custom Products
             </h2>
-            <p className="mt-3 text-base text-slate-500 max-w-xl mx-auto">
+            <p className="mt-3 text-base text-zinc-400 max-w-xl mx-auto">
               Explore prints engineered for our clients and makers.
             </p>
           </div>
@@ -559,7 +559,7 @@ export default function HomeClient() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ delay: idx * 0.05 }}
-                className={`${item.size} break-inside-avoid w-full relative rounded-3xl overflow-hidden group border border-slate-200/40 bg-slate-50 shadow-sm`}
+                className={`${item.size} break-inside-avoid w-full relative rounded-3xl overflow-hidden group border border-white/10 bg-[#121216] shadow-sm`}
               >
                 <Image
                   src={item.img}
@@ -570,11 +570,11 @@ export default function HomeClient() {
                 />
                 
                 {/* Gradient overlay on hover */}
-                <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
 
                 {/* Details revealed on hover */}
                 <div className="absolute inset-0 flex flex-col justify-end p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-primary bg-primary/20 border border-primary/20 px-2 py-0.5 rounded-full w-max mb-2">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-blue-400 bg-blue-500/20 border border-blue-400/30 px-2 py-0.5 rounded-full w-max mb-2">
                     {item.material} · Print Time: {item.time}
                   </span>
                   <h3 className="font-heading text-base font-bold text-white mb-2 leading-tight">
@@ -582,7 +582,7 @@ export default function HomeClient() {
                   </h3>
                   <Link 
                     href="/products" 
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-white hover:text-primary transition-colors mt-1"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-white hover:text-blue-400 transition-colors mt-1"
                   >
                     View Project <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
@@ -594,7 +594,7 @@ export default function HomeClient() {
           <div className="flex justify-center mt-12">
             <Link
               href="/upload"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-slate-900 text-white font-semibold text-sm hover:bg-slate-800 transition-colors shadow-md"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white text-zinc-950 font-semibold text-sm hover:bg-zinc-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)]"
             >
               View Full Custom
               <ArrowRight className="w-4 h-4" />
@@ -604,13 +604,13 @@ export default function HomeClient() {
       </section>
 
       {/* ── SECTION 8: CUSTOMER TESTIMONIALS ── */}
-      <section className="py-24 px-4 sm:px-6 bg-background">
-        <div className="max-w-7xl mx-auto bg-[#eef2f6] rounded-[32px] p-8 md:p-14 border border-slate-200/60 shadow-sm overflow-hidden">
+      <section className="py-24 px-4 sm:px-6 bg-[#09090b]">
+        <div className="max-w-7xl mx-auto bg-[#121216] rounded-[32px] p-8 md:p-14 border border-white/10 shadow-2xl overflow-hidden">
           <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900">
+            <h2 className="font-heading text-3xl font-bold tracking-tight text-white">
               What Our Customers Say
             </h2>
-            <p className="mt-3 text-sm text-slate-500 max-w-sm mx-auto">
+            <p className="mt-3 text-sm text-zinc-400 max-w-sm mx-auto">
               Real feedback from creators, designers, and engineering teams.
             </p>
           </div>
@@ -625,7 +625,7 @@ export default function HomeClient() {
             {[...reviews, ...reviews].map((t, i) => (
               <div
                 key={i}
-                className="min-w-70 sm:min-w-85 max-w-85 shrink-0 bg-white rounded-2xl p-6 border border-slate-200/50 flex flex-col gap-4 shadow-sm snap-align-start"
+                className="min-w-70 sm:min-w-85 max-w-85 shrink-0 bg-[#17171d] rounded-2xl p-6 border border-white/10 flex flex-col gap-4 shadow-sm snap-align-start text-white"
               >
                 {/* Stars */}
                 <div className="flex gap-1">
@@ -633,18 +633,18 @@ export default function HomeClient() {
                     <Star key={s} className="w-4 h-4 text-yellow-400 fill-yellow-400 stroke-none" />
                   ))}
                   {Array.from({ length: 5 - t.stars }).map((_, s) => (
-                    <Star key={s} className="w-4 h-4 text-slate-200 fill-slate-200 stroke-none" />
+                    <Star key={s} className="w-4 h-4 text-zinc-600 fill-zinc-600 stroke-none" />
                   ))}
                 </div>
 
                 {/* Quote */}
-                <p className="text-xs sm:text-sm text-slate-700 leading-relaxed flex-1 italic">
+                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed flex-1 italic">
                   &ldquo;{t.quote}&rdquo;
                 </p>
 
                 {/* Customer */}
-                <div className="flex items-center gap-3 border-t border-slate-50 pt-4 mt-2">
-                  <div className="relative w-9 h-9 rounded-full overflow-hidden shrink-0 bg-slate-100">
+                <div className="flex items-center gap-3 border-t border-white/10 pt-4 mt-2">
+                  <div className="relative w-9 h-9 rounded-full overflow-hidden shrink-0 bg-zinc-800">
                     <img
                       src={reviewAvatars[i % reviewAvatars.length]}
                       alt={t.name}
@@ -652,8 +652,8 @@ export default function HomeClient() {
                     />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-slate-900">{t.name}</p>
-                    <p className="text-[10px] text-slate-400 font-semibold">{t.role} · {t.company}</p>
+                    <p className="text-xs font-bold text-white">{t.name}</p>
+                    <p className="text-[10px] text-zinc-400 font-semibold">{t.role} · {t.company}</p>
                   </div>
                 </div>
               </div>
@@ -663,14 +663,14 @@ export default function HomeClient() {
       </section>
 
       {/* ── SECTION 9: CALL TO ACTION ── */}
-      <section className="py-24 px-4 sm:px-6">
+      <section className="py-24 px-4 sm:px-6 bg-[#09090b]">
         <div className="max-w-7xl mx-auto">
           <div 
-            className="relative overflow-hidden rounded-[36px] bg-cover bg-center p-10 md:p-20 shadow-2xl border border-slate-800 text-white"
+            className="relative overflow-hidden rounded-[36px] bg-cover bg-center p-10 md:p-20 shadow-2xl border border-white/10 text-white"
             style={{ backgroundImage: "url('/images/lets%20connect.jpeg')" }}
           >
             {/* Gradient overlay to keep text readable on the left while revealing the crinkly metallic background on the right */}
-            <div className="absolute inset-0 bg-linear-to-b from-slate-950/80 to-slate-950/60 md:bg-linear-to-r md:from-slate-950/85 md:via-slate-950/45 md:to-transparent z-0 pointer-events-none" />
+            <div className="absolute inset-0 bg-linear-to-b from-black/85 to-black/70 md:bg-linear-to-r md:from-black/90 md:via-black/60 md:to-transparent z-0 pointer-events-none" />
 
             <div className="relative z-10 max-w-xl flex flex-col items-start text-left">
               <motion.div 
@@ -685,14 +685,14 @@ export default function HomeClient() {
                 Have an idea?<br />
                 Let&apos;s Bring It To Life.
               </h2>
-              <p className="text-sm text-slate-100 leading-relaxed mb-8 font-medium drop-shadow-[0_1px_5px_rgba(0,0,0,0.8)]">
+              <p className="text-sm text-zinc-300 leading-relaxed mb-8 font-normal drop-shadow-[0_1px_5px_rgba(0,0,0,0.8)]">
                 Upload your custom STL or OBJ models directly. We provide instant material analysis, precision slicing configurations, and rapid turnaround quotes.
               </p>
               
               <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                 <Link
                   href="/upload"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-primary hover:bg-primary/95 text-white font-semibold text-sm transition-colors shadow-lg"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-white text-zinc-950 font-semibold text-sm hover:bg-zinc-200 transition-all shadow-lg"
                   id="upload-cta"
                 >
                   Start Your Project

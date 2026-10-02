@@ -63,21 +63,21 @@ export const toast = {
 const typeConfig = {
   success: {
     icon: CheckCircle,
-    bg: "bg-emerald-500/15",
-    border: "border-emerald-500/30",
-    iconColor: "text-emerald-400",
+    bg: "bg-white",
+    border: "border-emerald-500/40",
+    iconColor: "text-emerald-600",
   },
   error: {
     icon: AlertCircle,
-    bg: "bg-rose-500/15",
-    border: "border-rose-500/30",
-    iconColor: "text-rose-400",
+    bg: "bg-white",
+    border: "border-rose-500/40",
+    iconColor: "text-rose-600",
   },
   info: {
     icon: Info,
-    bg: "bg-blue-500/15",
-    border: "border-blue-500/30",
-    iconColor: "text-blue-400",
+    bg: "bg-white",
+    border: "border-blue-500/40",
+    iconColor: "text-blue-600",
   },
 };
 
@@ -94,18 +94,18 @@ function ToastItem({ toast: t }: { toast: Toast }) {
   return (
     <div
       className={`
-        flex items-start gap-3 px-4 py-3 rounded-xl border backdrop-blur-xl
-        ${config.bg} ${config.border}
+        flex items-start gap-3 px-4 py-3.5 rounded-xl border bg-white
+        ${config.border}
         ${t.exiting ? "animate-slide-out" : "animate-slide-in"}
-        max-w-sm w-full shadow-2xl
+        max-w-sm w-full shadow-2xl ring-1 ring-black/5
       `}
       role="alert"
     >
       <Icon className={`w-5 h-5 mt-0.5 shrink-0 ${config.iconColor}`} />
-      <p className="text-sm text-white flex-1 leading-relaxed">{t.message}</p>
+      <p className="text-sm font-semibold text-black flex-1 leading-relaxed">{t.message}</p>
       <button
         onClick={dismiss}
-        className="text-[#a0a0b0] hover:text-white transition-colors shrink-0 cursor-pointer"
+        className="text-neutral-400 hover:text-black transition-colors shrink-0 cursor-pointer p-0.5"
         aria-label="Dismiss notification"
       >
         <X className="w-4 h-4" />

@@ -81,28 +81,28 @@ export function Navbar() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-background/95 shadow-sm backdrop-blur-md py-3"
-            : "bg-background py-4"
+            ? "bg-[#09090b]/90 shadow-2xl backdrop-blur-xl border-b border-white/10 py-3"
+            : "bg-[#09090b]/50 backdrop-blur-md py-4"
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
           {/* Left: Hamburger + Logo */}
-          <div className="flex items-center gap-1.5 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="lg:hidden p-2 rounded-lg hover:bg-surface-container transition-colors"
+              className="lg:hidden p-2 rounded-xl hover:bg-white/10 transition-colors text-white"
               aria-label="Menu"
             >
               {mobileOpen ? (
-                <X className="w-5 h-5 text-on-surface" />
+                <X className="w-5 h-5 text-white" />
               ) : (
-                <Menu className="w-5 h-5 text-on-surface" />
+                <Menu className="w-5 h-5 text-white" />
               )}
             </button>
             <Link href="/" className="flex items-center gap-2 group">
-              <span className="font-heading text-sm sm:text-base md:text-lg font-extrabold tracking-tight text-on-surface">
+              <span className="font-heading text-sm sm:text-base md:text-lg font-bold tracking-wider text-white uppercase group-hover:text-white/80 transition-colors">
                 GMK - 3D CREATIONS
               </span>
             </Link>
@@ -123,36 +123,36 @@ export function Navbar() {
                       href="/products"
                       className={`text-sm font-medium transition-colors flex items-center gap-1 pb-1 ${
                         pathname.startsWith("/products")
-                          ? "text-primary font-semibold"
-                          : "text-on-surface-variant hover:text-on-surface"
+                          ? "text-white font-semibold"
+                          : "text-zinc-300 hover:text-white"
                       }`}
                     >
                       {link.label}
-                      <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${megaMenuOpen ? "rotate-180 text-primary" : "text-on-surface-variant"}`} />
+                      <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${megaMenuOpen ? "rotate-180 text-white" : "text-zinc-400"}`} />
                     </Link>
 
                     {/* Mega Menu Dropdown */}
                     {megaMenuOpen && (
-                      <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 w-137.5 rounded-3xl bg-background shadow-2xl border border-outline-variant/60 p-5 grid grid-cols-2 gap-3 animate-slide-down z-50">
+                      <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-140 rounded-3xl bg-[#121216]/98 shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-white/10 p-5 grid grid-cols-2 gap-3 animate-slide-down z-50 backdrop-blur-2xl">
                         {[
-                          { title: "Home Decor", desc: "Vases, planters, and decorative lamps.", href: "/products?category=decor" },
-                          { title: "Figurines", desc: "Detailed action figures and sculptures.", href: "/products?category=miniatures" },
-                          { title: "Industrial Parts", desc: "Functional prototypes and mechanical gears.", href: "/products?category=prototypes" },
-                          { title: "Architecture", desc: "Scaled models and landscape replicas.", href: "/products?category=architecture" },
-                          { title: "Accessories", desc: "Custom keychains and daily accessories.", href: "/products?category=edc-gear" },
-                          { title: "Fitness", desc: "Gym figures, trophies, and workout gear.", href: "/products?category=fitness" },
-                          { title: "Custom Orders", desc: "Got a custom file? Upload it for an instant quote.", href: "/upload" },
+                          { title: "Figurines & Collectibles", desc: "Detailed action figures, sculptures & tabletop models.", href: "/products?category=miniatures" },
+                          { title: "Architectural Models", desc: "Precision scale models & landscape replicas.", href: "/products?category=architecture" },
+                          { title: "Functional Parts", desc: "High-tolerance mechanical prototypes & gears.", href: "/products?category=prototypes" },
+                          { title: "Home Decor & Art", desc: "Parametric vases, planters, and ambient lamps.", href: "/products?category=decor" },
+                          { title: "Fashion & Accessories", desc: "Custom keychains, rings, and EDC items.", href: "/products?category=edc-gear" },
+                          { title: "Fitness & Trophies", desc: "Gym sculptures, awards, and workout gear.", href: "/products?category=fitness" },
+                          { title: "Custom 3D Printing", desc: "Upload your CAD / STL for instant slicing.", href: "/upload" },
                         ].map((cat) => (
                           <Link
                             key={cat.title}
                             href={cat.href}
                             onClick={() => setMegaMenuOpen(false)}
-                            className="flex flex-col gap-0.5 p-3 rounded-2xl hover:bg-primary/4 border border-transparent hover:border-primary/10 transition-all duration-200 group/item"
+                            className="flex flex-col gap-0.5 p-3 rounded-2xl hover:bg-white/5 border border-transparent hover:border-white/10 transition-all duration-200 group/item"
                           >
-                            <span className="text-sm font-bold text-on-surface group-hover/item:text-primary transition-colors">
+                            <span className="text-sm font-semibold text-zinc-100 group-hover/item:text-white transition-colors">
                               {cat.title}
                             </span>
-                            <span className="text-[11px] text-on-surface-variant leading-normal">
+                            <span className="text-[11px] text-zinc-400 leading-normal">
                               {cat.desc}
                             </span>
                           </Link>
@@ -169,8 +169,8 @@ export function Navbar() {
                   onClick={(e) => handleNavLinkClick(e, link.label, link.href)}
                   className={`text-sm font-medium transition-colors relative pb-1 ${
                     pathname === link.href
-                      ? "text-primary font-semibold border-b-2 border-primary"
-                      : "text-on-surface-variant hover:text-on-surface"
+                      ? "text-white font-semibold border-b-2 border-white"
+                      : "text-zinc-300 hover:text-white"
                   }`}
                 >
                   {link.label}
@@ -179,33 +179,33 @@ export function Navbar() {
             })}
           </div>
 
-          {/* Right: User + Cart */}
-          <div className="flex items-center gap-2">
+          {/* Right: User + Cart + Get a Quote */}
+          <div className="flex items-center gap-3">
             {/* User Auth */}
             {mounted && isAuthenticated && user ? (
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-surface-container transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-white/10 transition-colors text-zinc-200"
                   id="user-menu-button"
                 >
-                  <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold">
+                  <div className="w-8 h-8 rounded-full bg-linear-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
                     {user.name.charAt(0).toUpperCase()}
                   </div>
-                  <span className="hidden md:inline text-sm font-medium text-on-surface max-w-25 truncate">
+                  <span className="hidden md:inline text-sm font-medium text-zinc-200 max-w-25 truncate">
                     {user.name}
                   </span>
-                  <ChevronDown className={`hidden md:block w-3.5 h-3.5 text-on-surface-variant transition-transform ${userDropdownOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`hidden md:block w-3.5 h-3.5 text-zinc-400 transition-transform ${userDropdownOpen ? "rotate-180" : ""}`} />
                 </button>
 
                 {/* Dropdown Menu */}
                 {userDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl bg-surface-container-lowest shadow-ambient-lg border border-outline-variant overflow-hidden animate-slide-down z-50">
-                    <div className="px-4 py-3 border-b border-outline-variant">
-                      <p className="text-sm font-medium text-on-surface truncate">{user.name}</p>
-                      <p className="text-xs text-on-surface-variant truncate">{user.email}</p>
+                  <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl bg-[#141418] shadow-2xl border border-white/10 overflow-hidden animate-slide-down z-50">
+                    <div className="px-4 py-3 border-b border-white/10">
+                      <p className="text-sm font-medium text-white truncate">{user.name}</p>
+                      <p className="text-xs text-zinc-400 truncate">{user.email}</p>
                       {user.role === "admin" && (
-                        <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold uppercase tracking-wider">
+                        <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 text-[10px] font-semibold uppercase tracking-wider">
                           <Shield className="w-3 h-3" />
                           Admin
                         </span>
@@ -217,23 +217,23 @@ export function Navbar() {
                         <Link
                           href="/admin"
                           onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container transition-colors"
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-200 hover:bg-white/5 transition-colors"
                         >
-                          <Shield className="w-4 h-4 text-primary" />
+                          <Shield className="w-4 h-4 text-blue-400" />
                           Admin Dashboard
                         </Link>
                       )}
                       <Link
                         href="/orders"
                         onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container transition-colors"
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-200 hover:bg-white/5 transition-colors"
                       >
-                        <ShoppingBag className="w-4 h-4 text-on-surface-variant" />
+                        <ShoppingBag className="w-4 h-4 text-zinc-400" />
                         My Orders
                       </Link>
                       <button
                         onClick={handleLogout}
-                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-destructive hover:bg-destructive/5 transition-colors"
+                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
                         id="logout-button"
                       >
                         <LogOut className="w-4 h-4" />
@@ -246,24 +246,24 @@ export function Navbar() {
             ) : (
               <Link
                 href="/login"
-                className="flex items-center gap-2 px-2.5 sm:px-4 py-2 rounded-full hover:bg-surface-container transition-colors text-sm font-medium text-on-surface-variant hover:text-on-surface"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-white/10 transition-colors text-sm font-medium text-zinc-300 hover:text-white"
                 id="login-link"
               >
-                <User className="w-4 h-4" />
-                <span className="hidden md:inline">Login</span>
+                <User className="w-4 h-4 text-zinc-400" />
+                <span>Login</span>
               </Link>
             )}
 
             {/* Cart */}
             <button
               onClick={toggleCart}
-              className="relative p-2.5 rounded-full hover:bg-surface-container transition-colors"
+              className="relative p-2 rounded-full hover:bg-white/10 text-zinc-300 hover:text-white transition-colors"
               aria-label="Shopping cart"
               id="cart-button"
             >
-              <ShoppingCart className="w-5 h-5 text-on-surface" />
+              <ShoppingCart className="w-5 h-5" />
               {mounted && itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full gradient-primary text-[10px] font-bold text-white flex items-center justify-center animate-scale-in">
+                <span className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full bg-blue-600 text-[10px] font-bold text-white flex items-center justify-center animate-scale-in shadow-md">
                   {itemCount}
                 </span>
               )}
@@ -272,7 +272,7 @@ export function Navbar() {
             {/* Get a Quote CTA */}
             <Link
               href="/upload"
-              className="hidden sm:inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full gradient-primary text-white text-sm font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all duration-300 ml-1"
+              className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-white text-zinc-950 text-sm font-semibold hover:bg-zinc-200 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_25px_rgba(255,255,255,0.35)] hover:scale-102"
               id="get-quote-cta"
             >
               Get a Quote
@@ -282,7 +282,7 @@ export function Navbar() {
 
         {/* Mobile Menu */}
         {mobileOpen && (
-          <div className="lg:hidden absolute top-full left-0 right-0 bg-background shadow-lg animate-slide-down border-t border-border">
+          <div className="lg:hidden absolute top-full left-0 right-0 bg-[#0c0c0e]/95 backdrop-blur-2xl shadow-2xl animate-slide-down border-t border-white/10">
             <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col gap-4">
               {navLinks.map((link) => {
                 if (link.isMegaMenu) {
@@ -292,28 +292,28 @@ export function Navbar() {
                         <Link
                           href="/products"
                           onClick={() => setMobileOpen(false)}
-                          className="text-base font-semibold text-on-surface hover:text-primary transition-colors grow"
+                          className="text-base font-semibold text-white hover:text-blue-400 transition-colors grow"
                         >
                           {link.label}
                         </Link>
                         <button
                           onClick={() => setMobileMegaOpen(!mobileMegaOpen)}
-                          className="p-2 rounded-lg hover:bg-surface-container transition-colors"
+                          className="p-2 rounded-lg hover:bg-white/10 transition-colors"
                           aria-label="Toggle products categories"
                         >
-                          <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${mobileMegaOpen ? "rotate-180 text-primary" : ""}`} />
+                          <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${mobileMegaOpen ? "rotate-180 text-white" : "text-zinc-400"}`} />
                         </button>
                       </div>
 
                       {mobileMegaOpen && (
-                        <div className="pl-4 flex flex-col gap-3 border-l border-outline-variant/60 py-1">
+                        <div className="pl-4 flex flex-col gap-3 border-l border-white/10 py-1">
                           {[
-                            { title: "Home Decor", href: "/products?category=decor" },
-                            { title: "Figurines", href: "/products?category=miniatures" },
-                            { title: "Industrial Parts", href: "/products?category=prototypes" },
-                            { title: "Architecture", href: "/products?category=architecture" },
-                            { title: "Accessories", href: "/products?category=edc-gear" },
-                            { title: "Fitness", href: "/products?category=fitness" },
+                            { title: "Figurines & Collectibles", href: "/products?category=miniatures" },
+                            { title: "Architectural Models", href: "/products?category=architecture" },
+                            { title: "Functional Parts", href: "/products?category=prototypes" },
+                            { title: "Home Decor & Art", href: "/products?category=decor" },
+                            { title: "Fashion & Accessories", href: "/products?category=edc-gear" },
+                            { title: "Fitness & Trophies", href: "/products?category=fitness" },
                             { title: "Custom Orders", href: "/upload" },
                           ].map((cat) => (
                             <Link
@@ -323,7 +323,7 @@ export function Navbar() {
                                 setMobileOpen(false);
                                 setMobileMegaOpen(false);
                               }}
-                              className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors py-1"
+                              className="text-sm font-medium text-zinc-300 hover:text-white transition-colors py-1"
                             >
                               {cat.title}
                             </Link>
@@ -339,8 +339,8 @@ export function Navbar() {
                     href={link.href}
                     className={`text-base font-medium transition-colors py-2 ${
                       pathname === link.href
-                        ? "text-primary font-semibold"
-                        : "text-on-surface hover:text-primary"
+                        ? "text-white font-semibold"
+                        : "text-zinc-300 hover:text-white"
                     }`}
                     onClick={(e) => {
                       setMobileOpen(false);
@@ -353,22 +353,22 @@ export function Navbar() {
               })}
 
               {/* Mobile auth links */}
-              <div className="border-t border-outline-variant pt-4 mt-2">
+              <div className="border-t border-white/10 pt-4 mt-2">
                 {mounted && isAuthenticated && user ? (
                   <>
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold">
+                      <div className="w-8 h-8 rounded-full bg-linear-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
                         {user.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-on-surface">{user.name}</p>
-                        <p className="text-xs text-on-surface-variant">{user.email}</p>
+                        <p className="text-sm font-medium text-white">{user.name}</p>
+                        <p className="text-xs text-zinc-400">{user.email}</p>
                       </div>
                     </div>
                     {user.role === "admin" && (
                       <Link
                         href="/admin"
-                        className="flex items-center gap-3 py-2 text-sm font-medium text-primary"
+                        className="flex items-center gap-3 py-2 text-sm font-medium text-blue-400"
                         onClick={() => setMobileOpen(false)}
                       >
                         <Shield className="w-4 h-4" />
@@ -377,10 +377,10 @@ export function Navbar() {
                     )}
                     <Link
                       href="/orders"
-                      className="flex items-center gap-3 py-2 text-sm font-medium text-on-surface"
+                      className="flex items-center gap-3 py-2 text-sm font-medium text-zinc-200"
                       onClick={() => setMobileOpen(false)}
                     >
-                      <ShoppingBag className="w-4 h-4 text-on-surface-variant" />
+                      <ShoppingBag className="w-4 h-4 text-zinc-400" />
                       My Orders
                     </Link>
                     <button
@@ -388,7 +388,7 @@ export function Navbar() {
                         await handleLogout();
                         setMobileOpen(false);
                       }}
-                      className="flex items-center gap-3 py-2 text-sm font-medium text-destructive"
+                      className="flex items-center gap-3 py-2 text-sm font-medium text-red-400"
                     >
                       <LogOut className="w-4 h-4" />
                       Sign Out
@@ -397,7 +397,7 @@ export function Navbar() {
                 ) : (
                   <Link
                     href="/login"
-                    className="flex items-center gap-3 py-2 text-sm font-medium text-primary"
+                    className="flex items-center gap-3 py-2 text-sm font-medium text-white"
                     onClick={() => setMobileOpen(false)}
                   >
                     <User className="w-4 h-4" />

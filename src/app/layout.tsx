@@ -57,9 +57,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body
-        className={`${spaceGrotesk.variable} ${manrope.variable} antialiased`}
+        suppressHydrationWarning
+        className={`${spaceGrotesk.variable} ${manrope.variable} bg-[#09090b] text-white antialiased`}
       >
         <ClientProviders>{children}</ClientProviders>
       </body>

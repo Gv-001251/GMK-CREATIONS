@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useProductsStore } from "@/lib/store/products-store";
 import Papa from "papaparse";
 import type { Product } from "@/lib/data/products";
+import { toast } from "@/components/toast";
 import {
   Package,
   Edit3,
@@ -165,8 +166,11 @@ export default function AdminProductsPage() {
       try {
         await removeProduct(productId);
         setNotification({ type: "success", message: `"${productName}" deleted successfully!` });
+        toast.success(`"${productName}" deleted successfully!`);
       } catch (err: any) {
-        setNotification({ type: "error", message: `Failed to delete: ${err.message}` });
+        const errorMsg = `Failed to delete: ${err.message}`;
+        setNotification({ type: "error", message: errorMsg });
+        toast.error(errorMsg);
       }
     }
   };
@@ -190,7 +194,9 @@ export default function AdminProductsPage() {
     });
 
     if (errors.length > 0) {
-      setUploadError(errors.join(". "));
+      const errMsg = errors.join(". ");
+      setUploadError(errMsg);
+      toast.error(errMsg);
     }
 
     if (validFiles.length === 0) return;
@@ -226,14 +232,25 @@ export default function AdminProductsPage() {
       
       setImageUrls((prev) => [...prev, ...successfulUrls]);
       
-      if (successfulUrls.length < validFiles.length) {
-        setUploadError((prev) => 
-          (prev ? prev + ". " : "") + 
-          `Some images failed to upload (${validFiles.length - successfulUrls.length} failed)`
+      if (successfulUrls.length > 0) {
+        toast.success(
+          successfulUrls.length === 1
+            ? "Product image added successfully!"
+            : `${successfulUrls.length} product images added successfully!`
         );
       }
+
+      if (successfulUrls.length < validFiles.length) {
+        const partialFailMsg = `Some images failed to upload (${validFiles.length - successfulUrls.length} failed)`;
+        setUploadError((prev) => 
+          (prev ? prev + ". " : "") + partialFailMsg
+        );
+        toast.error(partialFailMsg);
+      }
     } catch {
-      setUploadError("An error occurred during multi-upload.");
+      const failMsg = "An error occurred during image upload.";
+      setUploadError(failMsg);
+      toast.error(failMsg);
     } finally {
       setUploading(false);
       setInFlightCount(0);
@@ -266,9 +283,13 @@ export default function AdminProductsPage() {
     newUrls.splice(index, 1);
     newUrls.unshift(targetUrl);
     setImageUrls(newUrls);
+    toast.success("Set as primary product image");
   };
 
-  const removeImageUrl = (index: number) => setImageUrls((prev) => prev.filter((_, i) => i !== index));
+  const removeImageUrl = (index: number) => {
+    setImageUrls((prev) => prev.filter((_, i) => i !== index));
+    toast.info("Product image removed");
+  };
 
   // ── Save (Add or Update) ──
   const handleSave = async () => {
@@ -304,6 +325,7 @@ export default function AdminProductsPage() {
         });
 
         setNotification({ type: "success", message: `"${formData.name}" updated successfully!` });
+        toast.success(`"${formData.name}" updated successfully!`);
       } else {
         // ── CREATE new product ──
         const slug = formData.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
@@ -330,11 +352,14 @@ export default function AdminProductsPage() {
         });
 
         setNotification({ type: "success", message: `"${formData.name}" saved to database and is now live!` });
+        toast.success(`"${formData.name}" saved to database and is now live!`);
       }
 
       closeForm();
     } catch (err: any) {
-      setNotification({ type: "error", message: `Failed to save product: ${err.message}` });
+      const errorMsg = `Failed to save product: ${err.message}`;
+      setNotification({ type: "error", message: errorMsg });
+      toast.error(errorMsg);
     } finally {
       setSaving(false);
     }
@@ -366,14 +391,14 @@ export default function AdminProductsPage() {
         <div
           className={`flex items-center justify-between px-6 py-4 rounded-2xl text-sm font-medium animate-slide-down ${
             notification.type === "success"
-              ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20"
-              : "bg-destructive/10 text-destructive border border-destructive/20"
+              ? "bg-emerald-500/15 border border-emerald-500/30"
+              : "bg-destructive/15 border border-destructive/30"
           }`}
         >
-          <span>{notification.message}</span>
+          <span className="text-black font-semibold">{notification.message}</span>
           <button
             onClick={() => setNotification(null)}
-            className="p-1 rounded-full hover:bg-black/5 transition-colors ml-4"
+            className="p-1 rounded-full hover:bg-black/10 text-black transition-colors ml-4"
           >
             <X className="w-4 h-4" />
           </button>
